@@ -47,10 +47,6 @@
 			<Add library="user32" />
 			<Add library="kernel32" />
 		</Linker>
-		<Unit filename="DevIL.dll" />
-		<Unit filename="ILU.dll" />
-		<Unit filename="data\font.png" />
-		<Unit filename="data\test.png" />
 		<Unit filename="inugami\camera.cpp" />
 		<Unit filename="inugami\camera.h" />
 		<Unit filename="inugami\interface.cpp" />

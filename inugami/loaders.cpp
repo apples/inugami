@@ -33,9 +33,9 @@ bool loadImageFromFile(const std::string &fileName, std::vector<char> &target)
                 iluFlipImage();
             }
 
-            target.resize(imageInfo.SizeOfData+8);
+            target.resize(imageInfo.SizeOfData+sizeof(int)*2);
             *reinterpret_cast<int*>(&target[0]) = imageInfo.Width;
-            *reinterpret_cast<int*>(&target[4]) = imageInfo.Height;
+            *reinterpret_cast<int*>(&target[sizeof(int)]) = imageInfo.Height;
 
             char *data = reinterpret_cast<char*>(ilGetData());
 

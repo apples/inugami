@@ -26,7 +26,7 @@ struct
 
 struct
 {
-    GLuint *font, *shieldTex;
+    Texture font, shieldTex;
     Mesh *shield;
 } gameData;
 
@@ -70,8 +70,7 @@ void init()
     tp.clamp = false;
     tp.smooth = true;
     gameData.font = renderer->loadTexture("data/font.png", tp);
-    gameData.shieldTex = renderer->loadTexture("data/shield.png", tp);
-    gameData.shield = renderer->loadMesh("data/shield.obj");
+    gameData.shieldTex = renderer->loadTexture("data/walls.png", tp);
 
     gameState.rot = 0.0f;
 

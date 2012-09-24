@@ -219,14 +219,14 @@ bool Renderer::setMode(RenderMode m, RenderFace s)
     return true;
 }
 
-GLuint* Renderer::loadTexture(const char *fileName, const TexParams &p)
+Texture Renderer::loadTexture(const char *fileName, const TexParams &p)
 {
     std::string foo;
     foo.assign(fileName);
     return loadTexture(foo, p);
 }
 
-GLuint* Renderer::loadTexture(const std::string &fileName, const TexParams &p)
+Texture Renderer::loadTexture(const std::string &fileName, const TexParams &p)
 {
     auto i = textures.find(fileName);
     if (i != textures.end())
@@ -273,7 +273,12 @@ GLuint* Renderer::loadTexture(const std::string &fileName, const TexParams &p)
         0, GL_RGBA, GL_UNSIGNED_BYTE, &data[8]
     );
 
-    return &textures[fileName].id;
+    Texture rval;
+    rval.width = *reinterpret_cast<int*>(&data[0]);
+    rval.height = *reinterpret_cast<int*>(&data[sizeof(int)]);
+    rval.id = &textures[fileName].id
+
+    return rval;
 }
 
 void Renderer::setTexture(GLuint *tex)

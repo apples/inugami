@@ -3,5 +3,7 @@
 *.exe
 *.db
 *.layout
+*.depend
+*.out
 obj/*
 bin/*

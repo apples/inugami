@@ -25,6 +25,12 @@ class Renderer
 {
 public:
 
+    struct Texture
+    {
+        int width, height;
+        GLuint *id;
+    };
+
     /** @brief Item types for use with a @a PrintBuffer.
      */
     enum PrintItem
@@ -136,8 +142,6 @@ public:
         bool clamp;     ///< Texture coordinate clamping.
     };
 
-    typedef GLuint* TexID;
-
     Renderer(const RenderParams &params);
     ~Renderer();
 
@@ -185,17 +189,17 @@ public:
      * @sa loadTexture(const std::string &, const TexParams &)
      * @sa dropTexture()
      */
-    GLuint* loadTexture(const char *fileName, const TexParams &p);
+    Texture loadTexture(const char *fileName, const TexParams &p);
 
     /** @brief Loads a texture.
      * Loads a texture from disk. Textures are unloaded using @a dropTexture().
      * @param filename File to be loaded.
      * @param p Texture parameters.
-     * @return Pointer to the loaded texture or @a nullptr if failure.
+     * @return Texture info (0 size and null id if failure).
      * @sa loadTexture(const char *, const TexParams &)
      * @sa dropTexture()
      */
-    GLuint* loadTexture(const std::string &fileName, const TexParams &p);
+    Texture loadTexture(const std::string &fileName, const TexParams &p);
 
     /** @brief Sets the specified texture as the active texture.
      * Sets a texture to be used for future drawing.  The texture must have
