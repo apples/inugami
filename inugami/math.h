@@ -26,6 +26,30 @@ T wrap(T x, T low, T high)
 }
 
 template <typename T>
+T high(T x, T y)
+{
+    return (x>y)?x:y;
+}
+
+template <typename T>
+T low(T x, T y)
+{
+    return (x>y)?y:x;
+}
+
+template <typename T>
+T high(T x, T y, T z)
+{
+    return (x>y) ? ((x>z)?x:z) : ((y>z)?y:z);
+}
+
+template <typename T>
+T low(T x, T y, T z)
+{
+    return (x>y) ? ((y>z)?z:y) : ((x>z)?z:y);
+}
+
+template <typename T>
 int sgn(T x)
 {
     return (T(0) < x) - (x < T(0));

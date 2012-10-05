@@ -26,7 +26,7 @@ struct
 
 struct
 {
-    Texture font, shieldTex;
+    Renderer::Texture font, shieldTex;
     Mesh *shield;
 } gameData;
 
@@ -70,7 +70,8 @@ void init()
     tp.clamp = false;
     tp.smooth = true;
     gameData.font = renderer->loadTexture("data/font.png", tp);
-    gameData.shieldTex = renderer->loadTexture("data/walls.png", tp);
+    gameData.shieldTex = renderer->loadTexture("data/shield.png", tp);
+    gameData.shield = renderer->loadMesh("data/shield.obj");
 
     gameState.rot = 0.0f;
 
@@ -93,7 +94,6 @@ void draw()
 
     renderer->setTexture(gameData.font);
     glScalef(8.0, 8.0, 1.0);
-    renderer->printer << Renderer::PrintItem::COLOR << 1.0f << 1.0f << 1.0f;
     renderer->printer << "Rot: " << gameState.rot << '\n';
     renderer->printer.print();
 

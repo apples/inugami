@@ -2,6 +2,7 @@
 #define INUGAMI_RENDERER_H
 
 #include "mesh.h"
+#include "camera.h"
 
 #include <list>
 #include <vector>
@@ -29,7 +30,7 @@ public:
     {
         int width, height;
         GLuint *id;
-    };
+    } nullTex;
 
     /** @brief Item types for use with a @a PrintBuffer.
      */
@@ -204,10 +205,10 @@ public:
     /** @brief Sets the specified texture as the active texture.
      * Sets a texture to be used for future drawing.  The texture must have
      * been loaded using @a loadTexture().
-     * @param tex Texture to be activated.
+     * @param in Texture to be activated.
      * @sa loadTexture()
      */
-    void setTexture(GLuint *tex);
+    void setTexture(const Texture &in);
 
     /** @brief Reloads all textures.
      * Reloads all textures from disk using the parameters supplied when first
@@ -274,12 +275,15 @@ public:
      */
     PrintBuffer printer;
 
+    Camera cam;
+
 private:
     struct TextureRecord
     {
         GLuint id;
         int users;
         TexParams params;
+        int width, height;
     };
 
     struct MeshRecord

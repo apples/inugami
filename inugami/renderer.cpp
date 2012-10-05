@@ -45,7 +45,9 @@ Renderer::Renderer(const RenderParams &params) :
     windowTitle = "Inugami";
     windowTitleShowFPS = false;
     glfwSetWindowTitle("Inugami");
-    glfwSwapInterval(0);
+
+    if (rparams.vsync) glfwSwapInterval(1);
+    else glfwSwapInterval(0);
 
     glEnable(GL_TEXTURE_2D);
     glShadeModel(GL_FLAT);
@@ -93,6 +95,8 @@ Renderer::Renderer(const RenderParams &params) :
         glEnd();
         glEndList();
     }
+
+    nullTex.id = nullptr;
 }
 
 Renderer::~Renderer()
@@ -219,26 +223,32 @@ bool Renderer::setMode(RenderMode m, RenderFace s)
     return true;
 }
 
-Texture Renderer::loadTexture(const char *fileName, const TexParams &p)
+Renderer::Texture Renderer::loadTexture(const char *fileName, const TexParams &p)
 {
     std::string foo;
     foo.assign(fileName);
     return loadTexture(foo, p);
 }
 
-Texture Renderer::loadTexture(const std::string &fileName, const TexParams &p)
+Renderer::Texture Renderer::loadTexture(const std::string &fileName, const TexParams &p)
 {
     auto i = textures.find(fileName);
     if (i != textures.end())
     {
         ++i->second.users;
-        return &i->second.id;
+        Texture rval;
+        rval.width = i->second.width;
+        rval.height = i->second.height;
+        rval.id = &i->second.id;
+        return rval;
     }
 
     std::vector<char> data;
     if (!loadImageFromFile(fileName, data))
     {
-        return nullptr;
+        Texture rval;
+        rval.id = nullptr;
+        return rval;
     }
 
     glGenTextures(1, &textures[fileName].id);
@@ -276,20 +286,23 @@ Texture Renderer::loadTexture(const std::string &fileName, const TexParams &p)
     Texture rval;
     rval.width = *reinterpret_cast<int*>(&data[0]);
     rval.height = *reinterpret_cast<int*>(&data[sizeof(int)]);
-    rval.id = &textures[fileName].id
+    rval.id = &textures[fileName].id;
+
+    textures[fileName].width = rval.width;
+    textures[fileName].height = rval.height;
 
     return rval;
 }
 
-void Renderer::setTexture(GLuint *tex)
+void Renderer::setTexture(const Texture &in)
 {
-    if (tex == nullptr)
+    if (in.id == nullptr)
     {
         glBindTexture(GL_TEXTURE_2D, blankTexture);
     }
     else
     {
-        glBindTexture(GL_TEXTURE_2D, *tex);
+        glBindTexture(GL_TEXTURE_2D, *in.id);
     }
 }
 
@@ -298,7 +311,7 @@ void Renderer::reloadTextures()
     for (auto i : textures)
     {
         std::vector<char> data;
-        loadImageFromFile(i.first.c_str(), data);
+        loadImageFromFile(i.first, data);
         glBindTexture(GL_TEXTURE_2D, i.second.id);
 
         if (i.second.params.smooth)
@@ -374,7 +387,7 @@ void Renderer::reloadMeshes()
 {
     for (auto i : meshes)
     {
-        loadObjFromFile(i.first.c_str(), i.second.mesh);
+        loadObjFromFile(i.first, i.second.mesh);
     }
 }
 
