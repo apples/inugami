@@ -2,10 +2,18 @@
 
 namespace Inugami {
 
+bool Mesh::Vertex::operator==(const Vertex &in)
+{
+    return (pos==in.pos&&norm==in.norm&&uv==in.uv);
+}
+
+bool Mesh::Triangle::operator==(const Triangle &in)
+{
+    return (v[0]==in.v[0]&&v[1]==in.v[1]&&v[2]==in.v[2]);
+}
+
 Mesh::Mesh() :
-    displayList(0),
-    vertices(0), normals(0), texCoords(0), triangles(0),
-    listCreated(false)
+    vertices(0), triangles(0)
 {
     //ctor
 }
@@ -15,42 +23,26 @@ Mesh::~Mesh()
     //dtor
 }
 
-void Mesh::createList()
-{
-    if (!listCreated)
-    {
-        displayList = glGenLists(1);
-        glNewList(displayList, GL_COMPILE);
-        drawImmediate();
-        glEndList();
-    }
-}
-
-void Mesh::drawList()
-{
-    glCallList(displayList);
-}
-
-void Mesh::drawImmediate()
+void Mesh::draw()
 {
     glBegin(GL_TRIANGLES);
-    for (auto i : triangles)
+    for (Triangle &i : triangles)
     {
         for (int j=0; j<3; ++j)
         {
             glTexCoord2f(
-                texCoords[i.vertices[j].uv].u,
-                texCoords[i.vertices[j].uv].v
+                vertices[i.v[j]].uv.x(),
+                vertices[i.v[j]].uv.y()
             );
             glNormal3f(
-                normals[i.vertices[j].norm].x,
-                normals[i.vertices[j].norm].y,
-                normals[i.vertices[j].norm].z
+                vertices[i.v[j]].norm.x(),
+                vertices[i.v[j]].norm.y(),
+                vertices[i.v[j]].norm.z()
             );
             glVertex3f(
-                vertices[i.vertices[j].pos].x,
-                vertices[i.vertices[j].pos].y,
-                vertices[i.vertices[j].pos].z
+                vertices[i.v[j]].pos.x(),
+                vertices[i.v[j]].pos.y(),
+                vertices[i.v[j]].pos.z()
             );
         }
     }

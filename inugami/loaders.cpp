@@ -1,8 +1,12 @@
 #include "loaders.h"
 
+#include "math.h"
+#include "utility.h"
+
 #include <IL/il.h>
 #include <IL/ilu.h>
 
+#include <array>
 #include <fstream>
 #include <string>
 #include <sstream>
@@ -57,8 +61,17 @@ bool loadImageFromFile(const std::string &fileName, std::vector<char> &target)
 bool loadObjFromFile(const std::string& fileName, Mesh& target)
 {
     std::ifstream inFile(fileName.c_str());
-    std::string inString, command, tmp[8];
+    std::string inString, command, pointstr[8], elem[3];
     std::stringstream ss, ss2;
+
+    std::vector<Vector<float, 3>> positions;
+    std::vector<Vector<float, 3>> normals;
+    std::vector<Vector<float, 2>> texcoords;
+
+    struct VDATA {VDATA():p(-1),n(-1),t(-1){} int p, n, t;};
+    std::vector<std::array<VDATA, 3>> tris;
+
+    //READ FILE
 
     while (std::getline(inFile, inString))
     {
@@ -71,55 +84,98 @@ bool loadObjFromFile(const std::string& fileName, Mesh& target)
 
         if (command == "v")
         {
-            target.vertices.push_back(Mesh::Vertex3());
-            ss >> target.vertices.back().x;
-            ss >> target.vertices.back().y;
-            ss >> target.vertices.back().z;
+            positions.push_back(Vector<float, 3>());
+            ss >> positions.back().x();
+            ss >> positions.back().y();
+            ss >> positions.back().z();
             continue;
         }
 
         if (command == "vn")
         {
-            target.normals.push_back(Mesh::Vertex3());
-            ss >> target.normals.back().x;
-            ss >> target.normals.back().y;
-            ss >> target.normals.back().z;
+            normals.push_back(Vector<float, 3>());
+            ss >> normals.back().x();
+            ss >> normals.back().y();
+            ss >> normals.back().z();
             continue;
         }
 
         if (command == "vt")
         {
-            target.texCoords.push_back(Mesh::Vertex2());
-            ss >> target.texCoords.back().u;
-            ss >> target.texCoords.back().v;
-            target.texCoords.back().v = 1.0-target.texCoords.back().v;
+            texcoords.push_back(Vector<float, 2>());
+            ss >> texcoords.back().x();
+            ss >> texcoords.back().y();
+            texcoords.back().y() = 1.0-texcoords.back().y();
             continue;
         }
 
         if (command == "f")
         {
-            int i=0;
-            while (ss >> tmp[i]) ++i;
+            int np=0;
+            while (ss >> pointstr[np]) ++np;
 
-            if (i == 3)
+            if (np == 3)
             {
-                target.triangles.push_back(Mesh::Triangle());
-                for (int j=0; j<i; ++j)
+                tris.push_back(std::array<VDATA, 3>());
+                for (int i=0; i<np; ++i)
                 {
-                    for (char &c : tmp[j]) if (c == '/') c = ' ';
+                    size_t firstSlash = pointstr[i].find("/");
+                    if (firstSlash != std::string::npos)
+                    {
+                        elem[0] = pointstr[i].substr(0,firstSlash);
+                        pointstr[i] = pointstr[i].substr(firstSlash+1);
+                        size_t secondSlash = pointstr[i].find("/");
+                        if (secondSlash != std::string::npos)
+                        {
+                            elem[1] = pointstr[i].substr(0,secondSlash);
+                            elem[2] = pointstr[i].substr(secondSlash+1);
+                        }
+                        else
+                        {
+                            elem[1] = pointstr[i];
+                            elem[2] = "0";
+                        }
+                    }
+                    else
+                    {
+                        elem[0] = pointstr[i];
+                        elem[1] = "0";
+                        elem[2] = "0";
+                    }
+
                     ss2.clear();
-                    ss2.str(tmp[j]);
-                    ss2 >> target.triangles.back().vertices[j].pos;
-                    ss2 >> target.triangles.back().vertices[j].uv;
-                    ss2 >> target.triangles.back().vertices[j].norm;
-                    --target.triangles.back().vertices[j].pos;
-                    --target.triangles.back().vertices[j].uv;
-                    --target.triangles.back().vertices[j].norm;
+                    ss2.str("");
+                    ss2 << elem[0] << " " << elem[1] << " " << elem[2];
+                    ss2 >> tris.back()[i].p;
+                    ss2 >> tris.back()[i].t;
+                    ss2 >> tris.back()[i].n;
+                    --tris.back()[i].p;
+                    --tris.back()[i].t;
+                    --tris.back()[i].n;
                 }
             }
 
             continue;
         }
+    }
+
+    target.vertices.reserve(high(positions.size(), normals.size(), texcoords.size()));
+    target.triangles.reserve(tris.size());
+
+    //FORMAT DATA
+
+    for (std::array<VDATA, 3> &vd : tris)
+    {
+        Mesh::Triangle tri;
+        for (int i=0; i<3; ++i)
+        {
+            Mesh::Vertex v;
+            if (positions.size()>0) v.pos = positions[vd[i].p];
+            if (normals.size()>0) v.norm = normals[vd[i].n];
+            if (texcoords.size()>0) v.uv = texcoords[vd[i].t];
+            tri.v[i] = addOnce(target.vertices, v);
+        }
+        addOnce(target.triangles, tri);
     }
 
     return true;

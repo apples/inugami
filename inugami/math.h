@@ -72,25 +72,25 @@ T toDegrees(T x)
 template <typename T>
 T sin(T x)
 {
-    return std::sin(x);
+    return std::sin(float(x));
 }
 
 template <typename T>
 T cos(T x)
 {
-    return std::cos(x);
+    return std::cos(float(x));
 }
 
 template <typename T>
 T asin(T x)
 {
-    return std::asin(x);
+    return std::asin(float(x));
 }
 
 template <typename T>
 T acos(T x)
 {
-    return std::acos(x);
+    return std::acos(float(x));
 }
 
 template <typename T>

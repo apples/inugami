@@ -15,7 +15,8 @@ Renderer::RenderParams::RenderParams() :
     vsync(false),
     fov(90.0),
     nearClip(0.1), farClip(100.0),
-    fsaaSamples(4)
+    fsaaSamples(4),
+    mode2D()
 {
     //Not much else to do here...
 }
@@ -28,7 +29,9 @@ Renderer::RenderParams::Mode2D_t::Mode2D_t() :
 }
 
 Renderer::Renderer(const RenderParams &params) :
-    printer(this)
+    printer(this),
+    windowTitle("Inugami"),
+    windowTitleShowFPS(false)
 {
     rparams = params;
     aspectRatio = static_cast<double>(rparams.width)/static_cast<double>(rparams.height);
@@ -42,9 +45,7 @@ Renderer::Renderer(const RenderParams &params) :
 
     if (glfwOpenWindow(rparams.width, rparams.height, 8, 8, 8, 8, 8, 0, (rparams.fullscreen)? GLFW_FULLSCREEN : GLFW_WINDOW) != GL_TRUE) throw;
 
-    windowTitle = "Inugami";
-    windowTitleShowFPS = false;
-    glfwSetWindowTitle("Inugami");
+    glfwSetWindowTitle(windowTitle.c_str());
 
     if (rparams.vsync) glfwSwapInterval(1);
     else glfwSwapInterval(0);
@@ -417,10 +418,9 @@ const Renderer::RenderParams& Renderer::getParams()
     return rparams;
 }
 
-Renderer::PrintBuffer::PrintBuffer(Renderer* p)
-{
-    parent = p;
-}
+Renderer::PrintBuffer::PrintBuffer(Renderer* p) :
+    buffer(0), parent(p)
+{}
 
 void Renderer::PrintBuffer::print()
 {

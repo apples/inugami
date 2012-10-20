@@ -1,6 +1,8 @@
 #ifndef INUGAMI_MESH_H
 #define INUGAMI_MESH_H
 
+#include "mathtypes.h"
+
 #include <vector>
 #include <GL/glfw.h>
 
@@ -9,27 +11,34 @@ namespace Inugami {
 class Mesh
 {
 public:
-    struct Vertex3 {float x, y, z;};
-    struct Vertex2{float u, v;};
-    struct VertexData {int pos; int norm; int uv;};
-    struct Triangle {VertexData vertices[3];};
+    class Vertex
+    {
+    public:
+        bool operator==(const Vertex &in);
+        Vector<float, 3> pos;
+        Vector<float, 3> norm;
+        Vector<float, 2> uv;
+    };
+
+    class Triangle
+    {
+    public:
+        bool operator==(const Triangle &in);
+        int v[3];
+    };
 
     Mesh();
     virtual ~Mesh();
 
-    void createList();
+    void init();
+    void draw();
 
-    void drawList();
-    void drawImmediate();
-
-    std::vector<Vertex3> vertices;
-    std::vector<Vertex3> normals;
-    std::vector<Vertex2> texCoords;
+    std::vector<Vertex> vertices;
     std::vector<Triangle> triangles;
 
 private:
-    bool listCreated;
-    GLuint displayList;
+    bool initted;
+    GLuint vbo;
 };
 
 } // namespace Inugami

@@ -38,6 +38,55 @@ public:
         data[3] = d;
     }
 
+    Vector<T, S>(const Vector<T, S> &in)
+    {
+        for (int i=0; i<S; ++i) data[i] = in.data[i];
+    }
+
+    T &x()
+    {
+        return data[0];
+    }
+
+    T &y()
+    {
+        static_assert(S>=2, "Vector must have at least 2 components.");
+        return data[1];
+    }
+
+    T &z()
+    {
+        static_assert(S>=3, "Vector must have at least 3 components.");
+        return data[2];
+    }
+
+    const T &x() const
+    {
+        return data[0];
+    }
+
+    const T &y() const
+    {
+        static_assert(S>=2, "Vector must have at least 2 components.");
+        return data[1];
+    }
+
+    const T &z() const
+    {
+        static_assert(S>=3, "Vector must have at least 3 components.");
+        return data[2];
+    }
+
+    T magnitude() const
+    {
+        T sum = T(0);
+        for (int i=0; i<S; ++i)
+        {
+            sum += data[i]*data[i];
+        }
+        return std::sqrt(sum);
+    }
+
     template <int S2>
     Vector<T, 3> cross(const Vector<T, S2> &in) const
     {
@@ -185,6 +234,15 @@ public:
         return *this;
     }
 
+    bool operator==(const Vector<T, S> &in) const
+    {
+        for (int i=0; i<S; ++i)
+        {
+            if (data[i] != in.data[i]) return false;
+        }
+        return true;
+    }
+
     template <int S2>
     Vector<T, S> &set(const Vector<T, S2> &in, int offset)
     {
@@ -221,6 +279,14 @@ public:
     Matrix<T, R, C>(const T &in)
     {
         for (int i=0; i<R; ++i) for (int j=0; j<C; ++j) data[i].data[j] = in;
+    }
+
+    Matrix<T, R, C>(const Matrix<T, R, C> &in)
+    {
+        for (int i=0; i<R; ++i)
+        {
+            data[i] = in.data[i];
+        }
     }
 
     Matrix<T, R, C> &operator=(const Matrix<T, R, C> &in)
@@ -285,15 +351,17 @@ template <typename T>
 class Quaternion
 {
 public:
-    Quaternion<T>() : v(T(0)), w(0), x(v[0]), y(v[1]), z(v[2]) {}
+    Quaternion<T>() : v(T(0)), w(0) {}
 
     template <int S>
     Quaternion<T>(const T &s, const Vector<T, S> &vin) :
-        v(vin.data[0], vin.data[1], vin.data[2]),
-        w(s),
-        x(v[0]),
-        y(v[1]),
-        z(v[2])
+        v(vin),
+        w(s)
+    {}
+
+    Quaternion<T>(const Quaternion<T> &in) :
+        v(in.v),
+        w(in.w)
     {}
 
     Quaternion<T> &operator=(const Quaternion<T> &in)
@@ -305,7 +373,7 @@ public:
 
     Quaternion<T> &normalize()
     {
-        T s = std::sqrt(w*w+x*x+y*y+z*z);
+        T s = std::sqrt(w*w+v.x()*v.x()+v.y()*v.y()+v.z()*v.z());
         w /= s;
         v /= s;
         return *this;
@@ -345,17 +413,17 @@ public:
     Matrix<T, 4, 4> getMatrix() const
     {
         Matrix<T, 4, 4> r;
-        r[0][0] = 1 -2*y*y -2*z*z;
-        r[0][1] =    2*x*y -2*z*w;
-        r[0][2] =    2*x*z +2*y*w;
+        r[0][0] = 1 -2*v.y()*v.y() -2*v.z()*v.z();
+        r[0][1] =    2*v.x()*v.y() -2*v.z()*w;
+        r[0][2] =    2*v.x()*v.z() +2*v.y()*w;
         r[0][3] = 0;
-        r[1][0] =    2*x*y +2*z*w;
-        r[1][1] = 1 -2*x*x -2*z*z;
-        r[1][2] =    2*y*z -2*x*w;
+        r[1][0] =    2*v.x()*v.y() +2*v.z()*w;
+        r[1][1] = 1 -2*v.x()*v.x() -2*v.z()*v.z();
+        r[1][2] =    2*v.y()*v.z() -2*v.x()*w;
         r[1][3] = 0;
-        r[2][0] =    2*x*z -2*y*w;
-        r[2][1] =    2*y*z +2*x*w;
-        r[2][2] = 1 -2*x*x -2*y*y;
+        r[2][0] =    2*v.x()*v.z() -2*v.y()*w;
+        r[2][1] =    2*v.y()*v.z() +2*v.x()*w;
+        r[2][2] = 1 -2*v.x()*v.x() -2*v.y()*v.y();
         r[2][3] = 0;
         r[3][0] = 0;
         r[3][1] = 0;
@@ -365,7 +433,7 @@ public:
     }
 
     Vector<T, 3> v;
-    T w, &x, &y, &z;
+    T w;
 };
 
 template <typename T>

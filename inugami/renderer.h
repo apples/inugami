@@ -59,6 +59,10 @@ public:
     {
     public:
         PrintBuffer(Renderer *p);
+
+        PrintBuffer(const PrintBuffer &) = delete;
+        PrintBuffer &operator=(const PrintBuffer &) = delete;
+
         void print();
 
         static const unsigned int itemDataSizeIncrement;
