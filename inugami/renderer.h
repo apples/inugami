@@ -3,12 +3,12 @@
 
 #include "mesh.h"
 #include "camera.h"
+#include "opengl.h"
 
 #include <list>
 #include <vector>
 #include <map>
 #include <string>
-#include <GL/glfw.h>
 
 namespace Inugami {
 
@@ -143,6 +143,8 @@ public:
      */
     struct TexParams
     {
+        bool operator==(const TexParams &in) const;
+        bool operator<(const TexParams &in) const;
         bool smooth;    ///< Bilinear filering.
         bool clamp;     ///< Texture coordinate clamping.
     };
@@ -226,7 +228,7 @@ public:
      * the texture will remain in memory.
      * @sa loadTexture()
      */
-    void dropTexture(GLuint *target);
+    void dropTexture(const Texture &in);
 
     /** @brief Loads a texture.
      * Loads a mesh from disk. Meshes are unloaded using @a dropMesh().
@@ -273,6 +275,12 @@ public:
      */
     const RenderParams& getParams();
 
+    /** @brief Dumps state to a stream.
+     * Dumps readable information about everything to the specified stream.
+     * @param out Output stream.
+     */
+    void dumpState(std::ostream &&out);
+
     /** @brief Custom PrintBuffer.
      * Instead of creating your own print buffer, it is possible to use this one
      * for trivial use, such as debug information.
@@ -282,11 +290,17 @@ public:
     Camera cam;
 
 private:
+    struct TextureIndex
+    {
+        bool operator<(const TextureIndex &in) const;
+        std::string fileName;
+        TexParams params;
+    };
+
     struct TextureRecord
     {
         GLuint id;
         int users;
-        TexParams params;
         int width, height;
     };
 
@@ -308,7 +322,7 @@ private:
     float aspectRatio;
 
     GLuint blankTexture;
-    std::map<std::string, TextureRecord> textures;
+    std::map<TextureIndex, TextureRecord> textures;
     std::map<std::string, MeshRecord> meshes;
 
     std::string windowTitle;

@@ -3,6 +3,7 @@
 #include "loaders.h"
 
 #include <iomanip>
+#include <ostream>
 #include <sstream>
 
 namespace Inugami {
@@ -28,6 +29,25 @@ Renderer::RenderParams::Mode2D_t::Mode2D_t() :
     //Not much else to do here...
 }
 
+bool Renderer::TexParams::operator==(const TexParams &in) const
+{
+    return (smooth==in.smooth && clamp==in.clamp);
+}
+
+bool Renderer::TexParams::operator<(const TexParams &in) const
+{
+    if (!smooth && in.smooth) return true;
+    if (smooth == in.smooth && !clamp && in.clamp) return true;
+    return false;
+}
+
+bool Renderer::TextureIndex::operator<(const TextureIndex &in) const
+{
+    if (fileName < in.fileName) return true;
+    if (fileName == in.fileName && params < in.params) return true;
+    return false;
+}
+
 Renderer::Renderer(const RenderParams &params) :
     printer(this),
     windowTitle("Inugami"),
@@ -44,6 +64,7 @@ Renderer::Renderer(const RenderParams &params) :
     glfwOpenWindowHint(GLFW_FSAA_SAMPLES, rparams.fsaaSamples);
 
     if (glfwOpenWindow(rparams.width, rparams.height, 8, 8, 8, 8, 8, 0, (rparams.fullscreen)? GLFW_FULLSCREEN : GLFW_WINDOW) != GL_TRUE) throw;
+    if (glewInit() != GLEW_OK) throw;
 
     glfwSetWindowTitle(windowTitle.c_str());
 
@@ -65,6 +86,8 @@ Renderer::Renderer(const RenderParams &params) :
     glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST);
 
     glEnableClientState(GL_VERTEX_ARRAY);
+    glEnableClientState(GL_NORMAL_ARRAY);
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
     //Generate the blank texture
     unsigned int whitePixel = 0xffffffff;
@@ -226,14 +249,17 @@ bool Renderer::setMode(RenderMode m, RenderFace s)
 
 Renderer::Texture Renderer::loadTexture(const char *fileName, const TexParams &p)
 {
-    std::string foo;
-    foo.assign(fileName);
+    std::string foo(fileName);
     return loadTexture(foo, p);
 }
 
 Renderer::Texture Renderer::loadTexture(const std::string &fileName, const TexParams &p)
 {
-    auto i = textures.find(fileName);
+    TextureIndex ti;
+    ti.fileName = fileName;
+    ti.params = p;
+
+    auto i = textures.find(ti);
     if (i != textures.end())
     {
         ++i->second.users;
@@ -252,11 +278,10 @@ Renderer::Texture Renderer::loadTexture(const std::string &fileName, const TexPa
         return rval;
     }
 
-    glGenTextures(1, &textures[fileName].id);
-    textures[fileName].params = p;
-    textures[fileName].users = 1;
+    glGenTextures(1, &textures[ti].id);
+    textures[ti].users = 1;
 
-    glBindTexture(GL_TEXTURE_2D, textures[fileName].id);
+    glBindTexture(GL_TEXTURE_2D, textures[ti].id);
 
     if (p.smooth)
     {
@@ -287,10 +312,10 @@ Renderer::Texture Renderer::loadTexture(const std::string &fileName, const TexPa
     Texture rval;
     rval.width = *reinterpret_cast<int*>(&data[0]);
     rval.height = *reinterpret_cast<int*>(&data[sizeof(int)]);
-    rval.id = &textures[fileName].id;
+    rval.id = &textures[ti].id;
 
-    textures[fileName].width = rval.width;
-    textures[fileName].height = rval.height;
+    textures[ti].width = rval.width;
+    textures[ti].height = rval.height;
 
     return rval;
 }
@@ -312,10 +337,10 @@ void Renderer::reloadTextures()
     for (auto i : textures)
     {
         std::vector<char> data;
-        loadImageFromFile(i.first, data);
+        loadImageFromFile(i.first.fileName, data);
         glBindTexture(GL_TEXTURE_2D, i.second.id);
 
-        if (i.second.params.smooth)
+        if (i.first.params.smooth)
         {
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -326,7 +351,7 @@ void Renderer::reloadTextures()
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         }
 
-        if (i.second.params.clamp)
+        if (i.first.params.clamp)
         {
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
@@ -344,12 +369,12 @@ void Renderer::reloadTextures()
     }
 }
 
-void Renderer::dropTexture(GLuint* target)
+void Renderer::dropTexture(const Texture &in)
 {
     auto i = textures.begin();
     while (i != textures.end())
     {
-        if (i->second.id == *target)
+        if (i->second.id == *in.id)
         {
             if (--i->second.users == 0) textures.erase(i);
             break;
@@ -360,8 +385,7 @@ void Renderer::dropTexture(GLuint* target)
 
 Mesh* Renderer::loadMesh(const char *fileName)
 {
-    std::string foo;
-    foo.assign(fileName);
+    std::string foo(fileName);
     return loadMesh(foo);
 }
 
@@ -381,7 +405,7 @@ Mesh* Renderer::loadMesh(const std::string &fileName)
         return nullptr;
     }
 
-    return &meshes[fileName].mesh;
+    return &meshes[fileName].mesh.init();
 }
 
 void Renderer::reloadMeshes()
@@ -389,6 +413,7 @@ void Renderer::reloadMeshes()
     for (auto i : meshes)
     {
         loadObjFromFile(i.first, i.second.mesh);
+        i.second.mesh.init();
     }
 }
 
@@ -416,6 +441,62 @@ void Renderer::setWindowTitle(const char *text, bool showFPS)
 const Renderer::RenderParams& Renderer::getParams()
 {
     return rparams;
+}
+
+void Renderer::dumpState(std::ostream &&out)
+{
+    auto bool2text = [](bool in){return in?"True":"False";};
+
+    out << "Address: " << this << "\n";
+    out << "Current average framerate: " << getAverageFrameRate() << "\n";
+
+    const RenderParams &rp = getParams();
+    out << "Render params:\n";
+    out << "  Dimensions: " << rp.width << "x" << rp.height << "\n";
+    out << "  Fullscreen: " << bool2text(rp.fullscreen) << "\n";
+    out << "  VSync:      " << bool2text(rp.vsync) << "\n";
+    out << "  FOV:        " << rp.fov << "\n";
+    out << "  Clipping:   " << rp.nearClip << ":" << rp.farClip << "\n";
+    out << "  FSAA:       " << rp.fsaaSamples << "\n";
+    out << "  Mode 2D:\n";
+    out << "    Dimensions: " << rp.mode2D.width << "x" << rp.mode2D.height << "\n";
+    out << "    Clipping:   " << rp.mode2D.nearClip << ":" << rp.mode2D.farClip << "\n";
+
+    {
+        out << "Textures:\n";
+        int i=0;
+        for (auto p : textures)
+        {
+            out << "  Index: " << i++ << "\n";
+            out << "    Name:       \"" << p.first.fileName << "\"\n";
+            out << "    Dimensions: " << p.second.width << "x" << p.second.height << "\n";
+            out << "    Params:\n";
+            out << "      Smooth:   " << bool2text(p.first.params.smooth) << "\n";
+            out << "      Clamp:    " << bool2text(p.first.params.clamp) << "\n";
+            out << "    OpenGL ID:  " << p.second.id << "\n";
+            out << "    Users:      " << p.second.users << "\n";
+        }
+    }
+
+    {
+        out << "Meshes:\n";
+        int i=0;
+        for (auto p : meshes)
+        {
+            out << "  Index: " << i++ << "\n";
+            out << "    Name:           \"" << p.first << "\"\n";
+            out << "    Vertices:       " << p.second.mesh.vertices.size() << "\n";
+            out << "    Triangles:      " << p.second.mesh.triangles.size() << "\n";
+            out << "    Initialized :   " << bool2text(p.second.mesh.initted) << "\n";
+            if (p.second.mesh.initted)
+            {
+                out << "    Vertex Buffer:  " << p.second.mesh.vbo << "\n";
+                out << "    Element Buffer: " << p.second.mesh.ele << "\n";
+            }
+        }
+    }
+
+    out.flush();
 }
 
 Renderer::PrintBuffer::PrintBuffer(Renderer* p) :

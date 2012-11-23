@@ -8,7 +8,7 @@
 		<Build>
 			<Target title="Debug">
 				<Option output="Game_d" prefix_auto="1" extension_auto="1" />
-				<Option object_output="obj\Debug\" />
+				<Option object_output="obj/Debug/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Compiler>
@@ -22,7 +22,7 @@
 			</Target>
 			<Target title="Release">
 				<Option output="Game" prefix_auto="1" extension_auto="1" />
-				<Option object_output="obj\Release\" />
+				<Option object_output="obj/Release/" />
 				<Option type="0" />
 				<Option compiler="gcc" />
 				<Compiler>
@@ -40,6 +40,7 @@
 		<Linker>
 			<Add library="DevIL" />
 			<Add library="ILU" />
+			<Add library="glew32" />
 			<Add library="glfw" />
 			<Add library="opengl32" />
 			<Add library="glu32" />
@@ -47,20 +48,24 @@
 			<Add library="user32" />
 			<Add library="kernel32" />
 		</Linker>
-		<Unit filename="inugami\camera.cpp" />
-		<Unit filename="inugami\camera.h" />
-		<Unit filename="inugami\interface.cpp" />
-		<Unit filename="inugami\interface.h" />
-		<Unit filename="inugami\loaders.cpp" />
-		<Unit filename="inugami\loaders.h" />
-		<Unit filename="inugami\math.h" />
-		<Unit filename="inugami\mathtypes.h" />
-		<Unit filename="inugami\mesh.cpp" />
-		<Unit filename="inugami\mesh.h" />
-		<Unit filename="inugami\renderer.cpp" />
-		<Unit filename="inugami\renderer.h" />
-		<Unit filename="inugami\scheduler.cpp" />
-		<Unit filename="inugami\scheduler.h" />
+		<Unit filename="inugami/camera.cpp" />
+		<Unit filename="inugami/camera.h" />
+		<Unit filename="inugami/interface.cpp" />
+		<Unit filename="inugami/interface.h" />
+		<Unit filename="inugami/loaders.cpp" />
+		<Unit filename="inugami/loaders.h" />
+		<Unit filename="inugami/math.h" />
+		<Unit filename="inugami/mathtypes.h" />
+		<Unit filename="inugami/mesh.cpp" />
+		<Unit filename="inugami/mesh.h" />
+		<Unit filename="inugami/opengl.h" />
+		<Unit filename="inugami/renderer.cpp" />
+		<Unit filename="inugami/renderer.h" />
+		<Unit filename="inugami/scheduler.cpp" />
+		<Unit filename="inugami/scheduler.h" />
+		<Unit filename="inugami/spritesheet.cpp" />
+		<Unit filename="inugami/spritesheet.h" />
+		<Unit filename="inugami/utility.h" />
 		<Unit filename="main.cpp" />
 		<Extensions>
 			<code_completion />

@@ -32,7 +32,7 @@ bool loadImageFromFile(const std::string &fileName, std::vector<char> &target)
         {
             ILinfo imageInfo;
             iluGetImageInfo(&imageInfo);
-            if (imageInfo.Origin == IL_ORIGIN_LOWER_LEFT)
+            if (imageInfo.Origin == IL_ORIGIN_UPPER_LEFT)
             {
                 iluFlipImage();
             }
@@ -105,7 +105,6 @@ bool loadObjFromFile(const std::string& fileName, Mesh& target)
             texcoords.push_back(Vector<float, 2>());
             ss >> texcoords.back().x();
             ss >> texcoords.back().y();
-            texcoords.back().y() = 1.0-texcoords.back().y();
             continue;
         }
 

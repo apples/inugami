@@ -1,9 +1,11 @@
 #include "inugami/scheduler.h"
 #include "inugami/interface.h"
 #include "inugami/renderer.h"
+#include "inugami/spritesheet.h"
 #include "inugami/math.h"
 
 #include <GL/glfw.h>
+#include <fstream>
 #include <sstream>
 #include <iomanip>
 
@@ -27,6 +29,7 @@ struct
 struct
 {
     Renderer::Texture font, shieldTex;
+    Spritesheet *opopo;
     Mesh *shield;
 } gameData;
 
@@ -41,8 +44,8 @@ int main()
     renparams.fov = 90.0;
     renparams.vsync = false;
     renparams.fsaaSamples = 4;
-    renparams.mode2D.width = 16.0;
-    renparams.mode2D.height = 9.0;
+    renparams.mode2D.width = 160.0;
+    renparams.mode2D.height = 90.0;
     renparams.mode2D.nearClip = -1.0;
     renparams.mode2D.farClip = 1.0;
     try {renderer = new Renderer(renparams);}
@@ -73,6 +76,13 @@ void init()
     gameData.shieldTex = renderer->loadTexture("data/shield.png", tp);
     gameData.shield = renderer->loadMesh("data/shield.obj");
 
+    try{
+    gameData.opopo = new Spritesheet(renderer, "data/font.png", 8, 8);
+    }
+    catch (...)
+    {
+
+    }
     gameState.rot = 0.0f;
 
     renderer->setWindowTitle("Inugami Test", true);
@@ -82,13 +92,18 @@ void draw()
 {
     renderer->beginFrame();
 
-    renderer->setMode(Renderer::RenderMode::RM_3D, Renderer::RenderFace::RF_BOTH);
-
-    renderer->setTexture(gameData.shieldTex);
+    renderer->setMode(Renderer::RenderMode::RM_3D, Renderer::RenderFace::RF_FRONT);
 
     glTranslatef(0.0, -1.5, -3.0);
     glRotatef(gameState.rot, 0.0, 1.0, 0.0);
-    gameData.shield->drawImmediate();
+    renderer->setTexture(gameData.shieldTex);
+    gameData.shield->draw();
+
+    renderer->setMode(Renderer::RenderMode::RM_2D, Renderer::RenderFace::RF_BOTH);
+
+    glRotatef(gameState.rot, 0.0, 0.0, 1.0);
+    renderer->setTexture(gameData.opopo->getTex());
+    gameData.opopo->getMesh(4, 1).draw();
 
     renderer->setMode(Renderer::RenderMode::RM_INTERFACE, Renderer::RenderFace::RF_BOTH);
 
@@ -110,6 +125,8 @@ void tick()
     if (interface->keyState('E'))
         gameState.rot = wrap(gameState.rot+=1.0, 0.0f, 360.0f)
     ;
+
+    if (interface->keyPressed(GLFW_KEY_F1)) renderer->dumpState(std::ofstream("dump.txt"));
 }
 
 void idle()

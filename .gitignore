@@ -5,5 +5,6 @@
 *.layout
 *.depend
 *.out
+*.xml
 obj/*
 bin/*

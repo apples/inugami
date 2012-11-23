@@ -2,16 +2,17 @@
 #define INUGAMI_MESH_H
 
 #include "mathtypes.h"
+#include "opengl.h"
 
 #include <vector>
-#include <GL/glfw.h>
 
 namespace Inugami {
 
 class Mesh
 {
+friend class Renderer;
 public:
-    class Vertex
+    class __attribute__((__packed__)) Vertex
     {
     public:
         bool operator==(const Vertex &in);
@@ -20,25 +21,26 @@ public:
         Vector<float, 2> uv;
     };
 
-    class Triangle
+    class __attribute__((__packed__)) Triangle
     {
     public:
         bool operator==(const Triangle &in);
-        int v[3];
+        unsigned int v[3];
     };
 
     Mesh();
     virtual ~Mesh();
 
-    void init();
+    Mesh &init();
     void draw();
+    void drawImmediate();
 
     std::vector<Vertex> vertices;
     std::vector<Triangle> triangles;
 
 private:
     bool initted;
-    GLuint vbo;
+    GLuint vbo, ele;
 };
 
 } // namespace Inugami

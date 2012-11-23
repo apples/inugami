@@ -1,9 +1,10 @@
 #ifndef INUGAMI_INTERFACE_H
 #define INUGAMI_INTERFACE_H
 
+#include "opengl.h"
+
 #include <bitset>
 #include <list>
-#include <GL/glfw.h>
 
 namespace Inugami {
 

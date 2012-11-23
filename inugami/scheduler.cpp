@@ -1,8 +1,7 @@
 #include "scheduler.h"
 
 #include "math.h"
-
-#include <GL/glfw.h>
+#include "opengl.h"
 
 namespace Inugami {
 

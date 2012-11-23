@@ -13,7 +13,8 @@ bool Mesh::Triangle::operator==(const Triangle &in)
 }
 
 Mesh::Mesh() :
-    vertices(0), triangles(0)
+    vertices(0), triangles(0),
+    initted(false)
 {
     //ctor
 }
@@ -23,7 +24,34 @@ Mesh::~Mesh()
     //dtor
 }
 
+Mesh &Mesh::init()
+{
+    glGenBuffers(1, &vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex)*vertices.size(), &vertices[0], GL_STATIC_DRAW);
+
+    glGenBuffers(1, &ele);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ele);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Triangle)*triangles.size(), &triangles[0], GL_STATIC_DRAW);
+
+    initted = true;
+    return *this;
+}
+
 void Mesh::draw()
+{
+    if (!initted) throw;
+
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glVertexPointer(3, GL_FLOAT, sizeof(Vertex), 0);
+    glNormalPointer(GL_FLOAT, sizeof(Vertex), (GLvoid*)(sizeof(Vector<float, 3>)));
+    glTexCoordPointer(2, GL_FLOAT, sizeof(Vertex), (GLvoid*)(sizeof(Vector<float, 3>)*2));
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ele);
+    glDrawElements(GL_TRIANGLES, triangles.size()*3, GL_UNSIGNED_INT, 0);
+}
+
+void Mesh::drawImmediate()
 {
     glBegin(GL_TRIANGLES);
     for (Triangle &i : triangles)
@@ -48,5 +76,6 @@ void Mesh::draw()
     }
     glEnd();
 }
+
 
 } // namespace Inugami
