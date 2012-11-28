@@ -35,10 +35,14 @@ public:
     void draw();
     void drawImmediate();
 
+    int addVertex(const Vertex &in);
+    int addTriangle(const Triangle &in);
+    void reserve(int v, int t);
+
+private:
     std::vector<Vertex> vertices;
     std::vector<Triangle> triangles;
 
-private:
     bool initted;
     GLuint vbo, ele;
 };

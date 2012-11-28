@@ -7,7 +7,7 @@ namespace Inugami
 {
 
 template <typename T, int S>
-class Vector
+class __attribute__((__packed__)) Vector
 {
     static_assert(S>0, "S must be at least 1.");
 public:
@@ -270,7 +270,7 @@ Vector<T, S> operator*(const T &in, const Vector<T, S> &vec)
 }
 
 template <typename T, int R, int C>
-class Matrix
+class __attribute__((__packed__)) Matrix
 {
     static_assert(R>0, "R must be at least 1.");
     static_assert(C>0, "C must be at least 1.");
@@ -348,7 +348,7 @@ public:
 };
 
 template <typename T>
-class Quaternion
+class __attribute__((__packed__)) Quaternion
 {
 public:
     Quaternion<T>() : v(T(0)), w(0) {}
@@ -443,7 +443,7 @@ Quaternion<T> quatFromAxisAngle(const T &angle, const Vector<T, 3> &axis)
 }
 
 template <typename T>
-class Transformation
+class __attribute__((__packed__)) Transformation
 {
 public:
     Transformation<T>() : loc(T(0)), rot(T(1), Vector<T, 3>(T(0))) {loc[3]=1.0;}

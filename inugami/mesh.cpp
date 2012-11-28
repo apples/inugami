@@ -1,5 +1,7 @@
 #include "mesh.h"
 
+#include "utility.h"
+
 namespace Inugami {
 
 bool Mesh::Vertex::operator==(const Vertex &in)
@@ -14,18 +16,30 @@ bool Mesh::Triangle::operator==(const Triangle &in)
 
 Mesh::Mesh() :
     vertices(0), triangles(0),
-    initted(false)
-{
-    //ctor
-}
+    initted(false),
+    vbo(0), ele(0)
+{}
 
 Mesh::~Mesh()
 {
-    //dtor
+    if (initted)
+    {
+        glDeleteBuffers(1, &vbo);
+        glDeleteBuffers(1, &ele);
+    }
 }
 
 Mesh &Mesh::init()
 {
+    if (initted)
+    {
+        glDeleteBuffers(1, &vbo);
+        glDeleteBuffers(1, &ele);
+    }
+
+    vertices.shrink_to_fit();
+    triangles.shrink_to_fit();
+
     glGenBuffers(1, &vbo);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex)*vertices.size(), &vertices[0], GL_STATIC_DRAW);
@@ -77,5 +91,20 @@ void Mesh::drawImmediate()
     glEnd();
 }
 
+int Mesh::addVertex(const Vertex &in)
+{
+    return addOnce(vertices, in);
+}
+
+int Mesh::addTriangle(const Triangle &in)
+{
+    return addOnce(triangles, in);
+}
+
+void Mesh::reserve(int v, int t)
+{
+    if (v>=0) vertices.reserve(v);
+    if (t>=0) triangles.reserve(t);
+}
 
 } // namespace Inugami

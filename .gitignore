@@ -6,5 +6,6 @@
 *.depend
 *.out
 *.xml
+*.txt
 obj/*
 bin/*

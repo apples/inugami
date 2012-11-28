@@ -34,7 +34,7 @@
 			</Target>
 		</Build>
 		<Compiler>
-			<Add option="-std=c++0x" />
+			<Add option="-std=c++11" />
 			<Add option="-Wall" />
 		</Compiler>
 		<Linker>
@@ -48,10 +48,13 @@
 			<Add library="user32" />
 			<Add library="kernel32" />
 		</Linker>
+		<Unit filename="inugami/animatedsprite.cpp" />
+		<Unit filename="inugami/animatedsprite.h" />
 		<Unit filename="inugami/camera.cpp" />
 		<Unit filename="inugami/camera.h" />
 		<Unit filename="inugami/interface.cpp" />
 		<Unit filename="inugami/interface.h" />
+		<Unit filename="inugami/inugami.h" />
 		<Unit filename="inugami/loaders.cpp" />
 		<Unit filename="inugami/loaders.h" />
 		<Unit filename="inugami/math.h" />
@@ -65,6 +68,8 @@
 		<Unit filename="inugami/scheduler.h" />
 		<Unit filename="inugami/spritesheet.cpp" />
 		<Unit filename="inugami/spritesheet.h" />
+		<Unit filename="inugami/texture.cpp" />
+		<Unit filename="inugami/texture.h" />
 		<Unit filename="inugami/utility.h" />
 		<Unit filename="main.cpp" />
 		<Extensions>

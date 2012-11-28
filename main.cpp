@@ -1,8 +1,4 @@
-#include "inugami/scheduler.h"
-#include "inugami/interface.h"
-#include "inugami/renderer.h"
-#include "inugami/spritesheet.h"
-#include "inugami/math.h"
+#include "inugami/inugami.h"
 
 #include <GL/glfw.h>
 #include <fstream>
@@ -28,8 +24,9 @@ struct
 
 struct
 {
-    Renderer::Texture font, shieldTex;
+    Texture *font, *shieldTex;
     Spritesheet *opopo;
+    AnimatedSprite *derf;
     Mesh *shield;
 } gameData;
 
@@ -69,15 +66,17 @@ int main()
 
 void init()
 {
-    Renderer::TexParams tp;
-    tp.clamp = false;
-    tp.smooth = true;
-    gameData.font = renderer->loadTexture("data/font.png", tp);
-    gameData.shieldTex = renderer->loadTexture("data/shield.png", tp);
+    gameData.font = new Texture("data/font.png", false, false);
+    gameData.shieldTex = new Texture("data/shield.png", true, false);
     gameData.shield = renderer->loadMesh("data/shield.obj");
 
     try{
-    gameData.opopo = new Spritesheet(renderer, "data/font.png", 8, 8);
+        gameData.opopo = new Spritesheet("data/font.png", 8, 8);
+        gameData.derf = new AnimatedSprite();
+        gameData.derf->setSpritesheet(gameData.opopo);
+        gameData.derf->setSprites({{4,1}, {4,2}, {4,3}, {4,4}});
+        gameData.derf->setSequence({{0,60}, {1,60}, {2,60}, {3,60}});
+        gameData.derf->setMode(AnimatedSprite::Mode::NORMAL);
     }
     catch (...)
     {
@@ -94,20 +93,19 @@ void draw()
 
     renderer->setMode(Renderer::RenderMode::RM_3D, Renderer::RenderFace::RF_FRONT);
 
-    glTranslatef(0.0, -1.5, -3.0);
-    glRotatef(gameState.rot, 0.0, 1.0, 0.0);
-    renderer->setTexture(gameData.shieldTex);
+    glTranslatef(0.0f, -1.5f, -3.0f);
+    glRotatef(gameState.rot, 0.0f, 1.0f, 0.0f);
+    gameData.shieldTex->bind();
     gameData.shield->draw();
 
     renderer->setMode(Renderer::RenderMode::RM_2D, Renderer::RenderFace::RF_BOTH);
 
     glRotatef(gameState.rot, 0.0, 0.0, 1.0);
-    renderer->setTexture(gameData.opopo->getTex());
-    gameData.opopo->getMesh(4, 1).draw();
+    gameData.derf->draw();
 
     renderer->setMode(Renderer::RenderMode::RM_INTERFACE, Renderer::RenderFace::RF_BOTH);
 
-    renderer->setTexture(gameData.font);
+    gameData.font->bind();
     glScalef(8.0, 8.0, 1.0);
     renderer->printer << "Rot: " << gameState.rot << '\n';
     renderer->printer.print();
@@ -125,6 +123,8 @@ void tick()
     if (interface->keyState('E'))
         gameState.rot = wrap(gameState.rot+=1.0, 0.0f, 360.0f)
     ;
+
+    if (gameData.derf->done()) gameData.derf->reset();
 
     if (interface->keyPressed(GLFW_KEY_F1)) renderer->dumpState(std::ofstream("dump.txt"));
 }

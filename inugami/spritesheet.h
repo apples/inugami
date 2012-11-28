@@ -1,7 +1,11 @@
 #ifndef INUGAMI_SPRITESHEET_H
 #define INUGAMI_SPRITESHEET_H
 
-#include "renderer.h"
+#include "mesh.h"
+#include "texture.h"
+
+#include <map>
+#include <vector>
 
 namespace Inugami
 {
@@ -9,22 +13,30 @@ namespace Inugami
 class Spritesheet
 {
 public:
-    Spritesheet(Renderer *r, const char *fileName, unsigned int w, unsigned int h);
-    Spritesheet(Renderer *r, const std::string &fileName, unsigned int w, unsigned int h);
+    Spritesheet(const char *fileName, unsigned int w, unsigned int h);
+    Spritesheet(const std::string &fileName, unsigned int w, unsigned int h);
     virtual ~Spritesheet();
 
+    void draw(unsigned int r, unsigned int c);
+
     Mesh &getMesh(unsigned int r, unsigned int c);
-    Renderer::Texture &getTex();
+    Texture &getTex();
 
 private:
-    void init(Renderer *r, const std::string &fileName, unsigned int w, unsigned int h);
+    struct Dimensions
+    {
+        bool operator<(const Dimensions &in) const;
+        unsigned int w, h;
+    };
 
-    Renderer *renderer;
+    void init(const std::string &fileName, unsigned int w, unsigned int h);
 
-    Renderer::Texture tex;
-    std::vector<Mesh> sprites;
+    Texture tex;
+    std::vector<Mesh> *sprites;
 
-    unsigned int tilesW, tilesH;
+    Dimensions dim;
+
+    static std::map<Dimensions, std::vector<Mesh>> pool;
 };
 
 } // namespace Inugami

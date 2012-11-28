@@ -4,11 +4,13 @@
 #include "mesh.h"
 #include "camera.h"
 #include "opengl.h"
+#include "spritesheet.h"
 
 #include <list>
-#include <vector>
 #include <map>
+#include <utility>
 #include <string>
+#include <vector>
 
 namespace Inugami {
 
@@ -25,13 +27,6 @@ namespace Inugami {
 class Renderer
 {
 public:
-
-    struct Texture
-    {
-        int width, height;
-        GLuint *id;
-    } nullTex;
-
     /** @brief Item types for use with a @a PrintBuffer.
      */
     enum PrintItem
@@ -138,17 +133,6 @@ public:
         RF_BOTH         ///< Both front and back face.
     };
 
-    /** @brief Texture loading parameters.
-     * Specifies texture parameters for use when laoding a texture.
-     */
-    struct TexParams
-    {
-        bool operator==(const TexParams &in) const;
-        bool operator<(const TexParams &in) const;
-        bool smooth;    ///< Bilinear filering.
-        bool clamp;     ///< Texture coordinate clamping.
-    };
-
     Renderer(const RenderParams &params);
     ~Renderer();
 
@@ -187,48 +171,6 @@ public:
      * @return @a True if success, @false if fail.
      */
     bool setMode(RenderMode m, RenderFace s);
-
-    /** @brief Loads a texture.
-     * Loads a texture from disk. Textures are unloaded using @a dropTexture().
-     * @param filename File to be loaded.
-     * @param p Texture parameters.
-     * @return Pointer to the loaded texture or @a nullptr if failure.
-     * @sa loadTexture(const std::string &, const TexParams &)
-     * @sa dropTexture()
-     */
-    Texture loadTexture(const char *fileName, const TexParams &p);
-
-    /** @brief Loads a texture.
-     * Loads a texture from disk. Textures are unloaded using @a dropTexture().
-     * @param filename File to be loaded.
-     * @param p Texture parameters.
-     * @return Texture info (0 size and null id if failure).
-     * @sa loadTexture(const char *, const TexParams &)
-     * @sa dropTexture()
-     */
-    Texture loadTexture(const std::string &fileName, const TexParams &p);
-
-    /** @brief Sets the specified texture as the active texture.
-     * Sets a texture to be used for future drawing.  The texture must have
-     * been loaded using @a loadTexture().
-     * @param in Texture to be activated.
-     * @sa loadTexture()
-     */
-    void setTexture(const Texture &in);
-
-    /** @brief Reloads all textures.
-     * Reloads all textures from disk using the parameters supplied when first
-     * loading them using @a loadTexture().
-     * @sa loadTexture()
-     */
-    void reloadTextures();
-
-    /** @brief Drops a texture.
-     * Unloads a texture. Until all users of the texture call @a dropTexture(),
-     * the texture will remain in memory.
-     * @sa loadTexture()
-     */
-    void dropTexture(const Texture &in);
 
     /** @brief Loads a texture.
      * Loads a mesh from disk. Meshes are unloaded using @a dropMesh().
@@ -290,20 +232,6 @@ public:
     Camera cam;
 
 private:
-    struct TextureIndex
-    {
-        bool operator<(const TextureIndex &in) const;
-        std::string fileName;
-        TexParams params;
-    };
-
-    struct TextureRecord
-    {
-        GLuint id;
-        int users;
-        int width, height;
-    };
-
     struct MeshRecord
     {
         int users;
@@ -321,8 +249,6 @@ private:
     RenderParams rparams;
     float aspectRatio;
 
-    GLuint blankTexture;
-    std::map<TextureIndex, TextureRecord> textures;
     std::map<std::string, MeshRecord> meshes;
 
     std::string windowTitle;

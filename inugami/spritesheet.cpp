@@ -4,95 +4,98 @@
 
 namespace Inugami {
 
-Spritesheet::Spritesheet(Renderer* r, const char* fileName, unsigned int w, unsigned int h)
+std::map<Spritesheet::Dimensions, std::vector<Mesh>> Spritesheet::pool;
+
+bool Spritesheet::Dimensions::operator<(const Dimensions &in) const
 {
-    init(r, std::string(fileName), w, h);
+    if (w < in.w) return true;
+    if (w == in.w) if (h < in.h) return true;
+    return false;
 }
 
-Spritesheet::Spritesheet(Renderer* r, const std::string& fileName, unsigned int w, unsigned int h)
-{
-    init(r, fileName, w, h);
-}
+Spritesheet::Spritesheet(const char* fileName, unsigned int w, unsigned int h) :
+    Spritesheet(std::string(fileName), w, h)
+{}
 
-Spritesheet::~Spritesheet()
+Spritesheet::Spritesheet(const std::string& fileName, unsigned int w, unsigned int h) :
+    tex(fileName, false, false)
 {
-    renderer->dropTexture(tex);
-}
-
-Mesh &Spritesheet::getMesh(unsigned int r, unsigned int c)
-{
-    if (c>tilesW || r>tilesH) throw;
-    return sprites[r*tilesW+c];
-}
-
-Renderer::Texture &Spritesheet::getTex()
-{
-    return tex;
-}
-
-void Spritesheet::init(Renderer *r, const std::string &fileName, unsigned int w, unsigned int h)
-{
-    renderer = r;
     auto pow2 = [](unsigned int i) {return (i!=0 && (i&(i-1))==0);};
 
     //Throw if dimensions aren't powers of two
     if (!pow2(w) || !pow2(h)) throw;
 
-    Renderer::TexParams tp;
-    tp.clamp = false;
-    tp.smooth = false;
-    tex = renderer->loadTexture(fileName, tp);
-    if (!pow2(tex.width) || !pow2(tex.height))
+    dim.w = tex.getWidth()/w;
+    dim.h = tex.getHeight()/h;
+
+    sprites = &pool[dim];
+
+    if (sprites->size() == 0)
     {
-        renderer->dropTexture(tex);
-        throw;
-    }
+        sprites->resize(dim.w * dim.h);
 
-    tilesW = tex.width/w;
-    tilesH = tex.width/h;
-    sprites.resize(tilesW * tilesH);
+        Mesh::Vertex vert;
+        vert.pos.z() = 0.0f;
+        vert.norm.x() = 0.0f;
+        vert.norm.y() = 0.0f;
+        vert.norm.z() = 1.0f;
 
-    Mesh::Vertex vert;
-    vert.pos.z() = 0.0f;
-    vert.norm.x() = 0.0f;
-    vert.norm.y() = 0.0f;
-    vert.norm.z() = 1.0f;
+        Vector<float, 2> uvStep;
+        uvStep.x() = float(w)/float(tex.getWidth());
+        uvStep.y() = float(h)/float(tex.getHeight());
 
-    Vector<float, 2> uvStep;
-    uvStep.x() = float(w)/float(tex.width);
-    uvStep.y() = float(h)/float(tex.height);
-
-    for (unsigned int r = 0; r<tilesH; ++r)
-    {
-        for (unsigned int c = 0; c<tilesW; ++c)
+        for (unsigned int r = 0; r<dim.h; ++r)
         {
-            float u = float(c)*uvStep.x();
-            float v = 1.0f-float(r)*uvStep.y();
+            for (unsigned int c = 0; c<dim.w; ++c)
+            {
+                float u = float(c)*uvStep.x();
+                float v = 1.0f-float(r)*uvStep.y();
 
-            Mesh &mesh = sprites[r*tilesW +c];
-            Mesh::Triangle tri;
+                Mesh &mesh = (*sprites)[r*dim.w +c];
+                Mesh::Triangle tri;
 
-            vert.pos.x() = -float(w/2);
-            vert.pos.y() = float(h/2);
-            vert.uv.x() = u;
-            vert.uv.y() = v;
-            tri.v[0] = addOnce(mesh.vertices, vert);
-            vert.pos.y() = -float(h/2);
-            vert.uv.y() = v-uvStep.y()+1.953125e-3f; //Constant prevents rounding errors
-            tri.v[1] = addOnce(mesh.vertices, vert);
-            vert.pos.x() = float(w/2);
-            vert.uv.x() = u+uvStep.x();
-            tri.v[2] = addOnce(mesh.vertices, vert);
-            mesh.triangles.push_back(tri);
-            tri.v[1] = tri.v[2];
-            vert.pos.y() = float(h/2);
-            vert.uv.y() = v;
-            tri.v[2] = addOnce(mesh.vertices, vert);
-            mesh.triangles.push_back(tri);
+                vert.pos.x() = -float(w/2);
+                vert.pos.y() = float(h/2);
+                vert.uv.x() = u;
+                vert.uv.y() = v;
+                tri.v[0] = mesh.addVertex(vert);
+                vert.pos.y() = -float(h/2);
+                vert.uv.y() = v-uvStep.y()+1.953125e-3f; //Constant prevents rounding errors
+                tri.v[1] = mesh.addVertex(vert);
+                vert.pos.x() = float(w/2);
+                vert.uv.x() = u+uvStep.x();
+                tri.v[2] = mesh.addVertex(vert);
+                mesh.addTriangle(tri);
+                tri.v[1] = tri.v[2];
+                vert.pos.y() = float(h/2);
+                vert.uv.y() = v;
+                tri.v[2] = mesh.addVertex(vert);
+                mesh.addTriangle(tri);
 
-            mesh.init();
+                mesh.init();
+            }
         }
     }
+}
+
+Spritesheet::~Spritesheet()
+{}
+
+void Spritesheet::draw(unsigned int r, unsigned int c)
+{
+    getTex().bind();
+    getMesh(r, c).draw();
+}
+
+Mesh &Spritesheet::getMesh(unsigned int r, unsigned int c)
+{
+    if (c>dim.w || r>dim.h) throw;
+    return (*sprites)[r*dim.w+c];
+}
+
+Texture &Spritesheet::getTex()
+{
+    return tex;
 }
 
 } // namespace Inugami

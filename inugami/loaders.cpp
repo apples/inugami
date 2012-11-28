@@ -158,8 +158,7 @@ bool loadObjFromFile(const std::string& fileName, Mesh& target)
         }
     }
 
-    target.vertices.reserve(high(positions.size(), normals.size(), texcoords.size()));
-    target.triangles.reserve(tris.size());
+    target.reserve(high(positions.size(), normals.size(), texcoords.size()), tris.size());
 
     //FORMAT DATA
 
@@ -172,9 +171,9 @@ bool loadObjFromFile(const std::string& fileName, Mesh& target)
             if (positions.size()>0) v.pos = positions[vd[i].p];
             if (normals.size()>0) v.norm = normals[vd[i].n];
             if (texcoords.size()>0) v.uv = texcoords[vd[i].t];
-            tri.v[i] = addOnce(target.vertices, v);
+            tri.v[i] = target.addVertex(v);
         }
-        addOnce(target.triangles, tri);
+        target.addTriangle(tri);
     }
 
     return true;

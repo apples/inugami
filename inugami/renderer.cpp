@@ -29,25 +29,6 @@ Renderer::RenderParams::Mode2D_t::Mode2D_t() :
     //Not much else to do here...
 }
 
-bool Renderer::TexParams::operator==(const TexParams &in) const
-{
-    return (smooth==in.smooth && clamp==in.clamp);
-}
-
-bool Renderer::TexParams::operator<(const TexParams &in) const
-{
-    if (!smooth && in.smooth) return true;
-    if (smooth == in.smooth && !clamp && in.clamp) return true;
-    return false;
-}
-
-bool Renderer::TextureIndex::operator<(const TextureIndex &in) const
-{
-    if (fileName < in.fileName) return true;
-    if (fileName == in.fileName && params < in.params) return true;
-    return false;
-}
-
 Renderer::Renderer(const RenderParams &params) :
     printer(this),
     windowTitle("Inugami"),
@@ -89,16 +70,6 @@ Renderer::Renderer(const RenderParams &params) :
     glEnableClientState(GL_NORMAL_ARRAY);
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
-    //Generate the blank texture
-    unsigned int whitePixel = 0xffffffff;
-    glGenTextures(1, &blankTexture);
-    glBindTexture(GL_TEXTURE_2D, blankTexture);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, &whitePixel);
-
     //Generate lists for fonts
     fontLists = glGenLists(256);
     for (unsigned int i=0; i<256; ++i)
@@ -119,8 +90,6 @@ Renderer::Renderer(const RenderParams &params) :
         glEnd();
         glEndList();
     }
-
-    nullTex.id = nullptr;
 }
 
 Renderer::~Renderer()
@@ -247,142 +216,6 @@ bool Renderer::setMode(RenderMode m, RenderFace s)
     return true;
 }
 
-Renderer::Texture Renderer::loadTexture(const char *fileName, const TexParams &p)
-{
-    std::string foo(fileName);
-    return loadTexture(foo, p);
-}
-
-Renderer::Texture Renderer::loadTexture(const std::string &fileName, const TexParams &p)
-{
-    TextureIndex ti;
-    ti.fileName = fileName;
-    ti.params = p;
-
-    auto i = textures.find(ti);
-    if (i != textures.end())
-    {
-        ++i->second.users;
-        Texture rval;
-        rval.width = i->second.width;
-        rval.height = i->second.height;
-        rval.id = &i->second.id;
-        return rval;
-    }
-
-    std::vector<char> data;
-    if (!loadImageFromFile(fileName, data))
-    {
-        Texture rval;
-        rval.id = nullptr;
-        return rval;
-    }
-
-    glGenTextures(1, &textures[ti].id);
-    textures[ti].users = 1;
-
-    glBindTexture(GL_TEXTURE_2D, textures[ti].id);
-
-    if (p.smooth)
-    {
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    }
-    else
-    {
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    }
-
-    if (p.clamp)
-    {
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-    }
-    else
-    {
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    }
-
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, *reinterpret_cast<int*>(&data[0]), *reinterpret_cast<int*>(&data[4]),
-        0, GL_RGBA, GL_UNSIGNED_BYTE, &data[8]
-    );
-
-    Texture rval;
-    rval.width = *reinterpret_cast<int*>(&data[0]);
-    rval.height = *reinterpret_cast<int*>(&data[sizeof(int)]);
-    rval.id = &textures[ti].id;
-
-    textures[ti].width = rval.width;
-    textures[ti].height = rval.height;
-
-    return rval;
-}
-
-void Renderer::setTexture(const Texture &in)
-{
-    if (in.id == nullptr)
-    {
-        glBindTexture(GL_TEXTURE_2D, blankTexture);
-    }
-    else
-    {
-        glBindTexture(GL_TEXTURE_2D, *in.id);
-    }
-}
-
-void Renderer::reloadTextures()
-{
-    for (auto i : textures)
-    {
-        std::vector<char> data;
-        loadImageFromFile(i.first.fileName, data);
-        glBindTexture(GL_TEXTURE_2D, i.second.id);
-
-        if (i.first.params.smooth)
-        {
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        }
-        else
-        {
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        }
-
-        if (i.first.params.clamp)
-        {
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-        }
-        else
-        {
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        }
-
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, *reinterpret_cast<int*>(&data[0]), *reinterpret_cast<int*>(&data[4]),
-            0, GL_RGBA, GL_UNSIGNED_BYTE, &data[8]
-        );
-
-    }
-}
-
-void Renderer::dropTexture(const Texture &in)
-{
-    auto i = textures.begin();
-    while (i != textures.end())
-    {
-        if (i->second.id == *in.id)
-        {
-            if (--i->second.users == 0) textures.erase(i);
-            break;
-        }
-        ++i;
-    }
-}
-
 Mesh* Renderer::loadMesh(const char *fileName)
 {
     std::string foo(fileName);
@@ -462,21 +295,21 @@ void Renderer::dumpState(std::ostream &&out)
     out << "    Dimensions: " << rp.mode2D.width << "x" << rp.mode2D.height << "\n";
     out << "    Clipping:   " << rp.mode2D.nearClip << ":" << rp.mode2D.farClip << "\n";
 
-    {
-        out << "Textures:\n";
-        int i=0;
-        for (auto p : textures)
-        {
-            out << "  Index: " << i++ << "\n";
-            out << "    Name:       \"" << p.first.fileName << "\"\n";
-            out << "    Dimensions: " << p.second.width << "x" << p.second.height << "\n";
-            out << "    Params:\n";
-            out << "      Smooth:   " << bool2text(p.first.params.smooth) << "\n";
-            out << "      Clamp:    " << bool2text(p.first.params.clamp) << "\n";
-            out << "    OpenGL ID:  " << p.second.id << "\n";
-            out << "    Users:      " << p.second.users << "\n";
-        }
-    }
+//    {
+//        out << "Textures:\n";
+//        int i=0;
+//        for (auto p : textures)
+//        {
+//            out << "  Index: " << i++ << "\n";
+//            out << "    Name:       \"" << p.first.fileName << "\"\n";
+//            out << "    Dimensions: " << p.second.width << "x" << p.second.height << "\n";
+//            out << "    Params:\n";
+//            out << "      Smooth:   " << bool2text(p.first.params.smooth) << "\n";
+//            out << "      Clamp:    " << bool2text(p.first.params.clamp) << "\n";
+//            out << "    OpenGL ID:  " << p.second.id << "\n";
+//            out << "    Users:      " << p.second.users << "\n";
+//        }
+//    }
 
     {
         out << "Meshes:\n";
