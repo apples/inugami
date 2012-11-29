@@ -2,6 +2,8 @@
 
 #include "utility.h"
 
+#include <stdexcept>
+
 namespace Inugami {
 
 bool Mesh::Vertex::operator==(const Vertex &in)
@@ -54,7 +56,7 @@ Mesh &Mesh::init()
 
 void Mesh::draw()
 {
-    if (!initted) throw;
+    if (!initted) throw std::logic_error("Mesh not initialized.");
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glVertexPointer(3, GL_FLOAT, sizeof(Vertex), 0);

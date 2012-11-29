@@ -13,8 +13,8 @@ namespace Inugami
 class Spritesheet
 {
 public:
-    Spritesheet(const char *fileName, unsigned int w, unsigned int h);
-    Spritesheet(const std::string &fileName, unsigned int w, unsigned int h);
+    Spritesheet(const char *filename, unsigned int w, unsigned int h);
+    Spritesheet(const std::string &filename, unsigned int w, unsigned int h);
     virtual ~Spritesheet();
 
     void draw(unsigned int r, unsigned int c);
@@ -29,7 +29,7 @@ private:
         unsigned int w, h;
     };
 
-    void init(const std::string &fileName, unsigned int w, unsigned int h);
+    void init(const std::string &filename, unsigned int w, unsigned int h);
 
     Texture tex;
     std::vector<Mesh> *sprites;

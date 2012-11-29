@@ -9,14 +9,13 @@
 
 namespace Inugami {
 
-class Texture
+class Texture final
 {
 public:
     Texture(const std::string &filename, bool smooth, bool clamp);
-    Texture(const char *filename, bool smooth, bool clamp);
     Texture(int);
     Texture(const Texture &in);
-    virtual ~Texture();
+    ~Texture();
 
     Texture &operator=(const Texture &in);
 
@@ -35,8 +34,9 @@ private:
         bool smooth, clamp;
     };
 
-    struct Value
+    class Value
     {
+    public:
         Value();
         GLuint id;
         unsigned int width, height;

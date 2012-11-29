@@ -216,29 +216,29 @@ bool Renderer::setMode(RenderMode m, RenderFace s)
     return true;
 }
 
-Mesh* Renderer::loadMesh(const char *fileName)
+Mesh* Renderer::loadMesh(const char *filename)
 {
-    std::string foo(fileName);
+    std::string foo(filename);
     return loadMesh(foo);
 }
 
-Mesh* Renderer::loadMesh(const std::string &fileName)
+Mesh* Renderer::loadMesh(const std::string &filename)
 {
-    auto i = meshes.find(fileName);
+    auto i = meshes.find(filename);
     if (i != meshes.end())
     {
         ++i->second.users;
         return &i->second.mesh;
     }
 
-    meshes[fileName].users = 1;
-    if (!loadObjFromFile(fileName, meshes[fileName].mesh))
+    meshes[filename].users = 1;
+    if (!loadObjFromFile(filename, meshes[filename].mesh))
     {
-        meshes.erase(meshes.find(fileName));
+        meshes.erase(meshes.find(filename));
         return nullptr;
     }
 
-    return &meshes[fileName].mesh.init();
+    return &meshes[filename].mesh.init();
 }
 
 void Renderer::reloadMeshes()
@@ -301,7 +301,7 @@ void Renderer::dumpState(std::ostream &&out)
 //        for (auto p : textures)
 //        {
 //            out << "  Index: " << i++ << "\n";
-//            out << "    Name:       \"" << p.first.fileName << "\"\n";
+//            out << "    Name:       \"" << p.first.filename << "\"\n";
 //            out << "    Dimensions: " << p.second.width << "x" << p.second.height << "\n";
 //            out << "    Params:\n";
 //            out << "      Smooth:   " << bool2text(p.first.params.smooth) << "\n";

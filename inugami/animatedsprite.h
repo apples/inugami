@@ -3,7 +3,6 @@
 
 #include "spritesheet.h"
 
-#include <initializer_list>
 #include <utility>
 #include <vector>
 
@@ -19,13 +18,18 @@ public:
         BOUNCE
     };
 
+    typedef std::pair<unsigned int, unsigned int> Sprite;
+    typedef std::pair<int, unsigned int> Frame;
+    typedef std::vector<Sprite> SpriteList;
+    typedef std::vector<Frame> FrameList;
+
     AnimatedSprite();
     virtual ~AnimatedSprite();
 
     void setSpritesheet(Spritesheet *in);
     void setMode(Mode in);
-    void setSprites(const std::initializer_list<std::pair<unsigned int, unsigned int>> &in);
-    void setSequence(const std::initializer_list<std::pair<int, unsigned int>> &in);
+    void setSprites(const SpriteList &in);
+    void setSequence(const FrameList &in);
 
     void draw();
     bool done();

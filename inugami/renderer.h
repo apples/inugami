@@ -179,7 +179,7 @@ public:
      * @sa loadMesh(const std::string &)
      * @sa dropMesh()
      */
-    Mesh* loadMesh(const char *fileName);
+    Mesh* loadMesh(const char *filename);
 
     /** @brief Loads a texture.
      * Loads a mesh from disk. Meshes are unloaded using @a dropMesh().
@@ -188,7 +188,7 @@ public:
      * @sa loadMesh(const char *)
      * @sa dropMesh()
      */
-    Mesh* loadMesh(const std::string &fileName);
+    Mesh* loadMesh(const std::string &filename);
 
     /** @brief Reloads all meshes.
      * Reloads all meshes from disk.

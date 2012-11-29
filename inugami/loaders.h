@@ -8,8 +8,9 @@
 
 namespace Inugami {
 
-bool loadImageFromFile(const std::string &fileName, std::vector<char> &target);
-bool loadObjFromFile(const std::string &fileName, Mesh &target);
+bool loadImageFromFile(const std::string &filename, std::vector<char> &target);
+bool loadTextFromFile(const std::string &filename, std::string &target);
+bool loadObjFromFile(const std::string &filename, Mesh &target);
 
 } // namespace Inugami
 

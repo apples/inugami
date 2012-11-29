@@ -89,10 +89,6 @@ Texture::Texture(const std::string &filename, bool smooth, bool clamp) :
     }
 }
 
-Texture::Texture(const char *filename, bool smooth, bool clamp) :
-    Texture(std::string(filename), smooth, clamp)
-{}
-
 Texture::Texture(int) :
     pos()
 {

@@ -522,6 +522,12 @@ public:
     Quaternion<T> rot;
 };
 
+typedef Vector<float, 2> Vec2;
+typedef Vector<float, 3> Vec3;
+typedef Vector<float, 4> Vec4;
+typedef Matrix<float, 3, 3> Mat3;
+typedef Matrix<float, 4, 4> Mat4;
+
 } // namespace Inugami
 
 #endif // MATHTYPES_H_INCLUDED

@@ -13,7 +13,7 @@
 
 namespace Inugami {
 
-bool loadImageFromFile(const std::string &fileName, std::vector<char> &target)
+bool loadImageFromFile(const std::string &filename, std::vector<char> &target)
 {
     static bool initialized = false;
     if (!initialized)
@@ -26,7 +26,7 @@ bool loadImageFromFile(const std::string &fileName, std::vector<char> &target)
     ilGenImages(1, &imageID);
     ilBindImage(imageID);
 
-    if (ilLoadImage(fileName.c_str()))
+    if (ilLoadImage(filename.c_str()))
     {
         if (ilConvertImage(IL_RGBA, IL_UNSIGNED_BYTE))
         {
@@ -58,9 +58,20 @@ bool loadImageFromFile(const std::string &fileName, std::vector<char> &target)
     return false;
 }
 
-bool loadObjFromFile(const std::string& fileName, Mesh& target)
+bool loadTextFromFile(const std::string &filename, std::string &target)
 {
-    std::ifstream inFile(fileName.c_str());
+    std::ifstream inFile(filename.c_str(), std::ios::ate);
+    if (!inFile) return false;
+    unsigned int length = inFile.tellg();
+    target.resize(length);
+    inFile.seekg(0);
+    std::getline(inFile, target, '\0');
+    return true;
+}
+
+bool loadObjFromFile(const std::string& filename, Mesh& target)
+{
+    std::ifstream inFile(filename.c_str());
     std::string inString, command, pointstr[8], elem[3];
     std::stringstream ss, ss2;
 

@@ -54,8 +54,15 @@ int main()
     scheduler->addCallback(tick, 60.0);
     scheduler->addCallback(idle, -1.0);
 
-    init();
-    scheduler->go();
+    try
+    {
+        init();
+        scheduler->go();
+    }
+    catch (std::exception &e)
+    {
+
+    }
 
     delete interface;
     delete renderer;
@@ -70,18 +77,18 @@ void init()
     gameData.shieldTex = new Texture("data/shield.png", true, false);
     gameData.shield = renderer->loadMesh("data/shield.obj");
 
-    try{
-        gameData.opopo = new Spritesheet("data/font.png", 8, 8);
-        gameData.derf = new AnimatedSprite();
-        gameData.derf->setSpritesheet(gameData.opopo);
-        gameData.derf->setSprites({{4,1}, {4,2}, {4,3}, {4,4}});
-        gameData.derf->setSequence({{0,60}, {1,60}, {2,60}, {3,60}});
-        gameData.derf->setMode(AnimatedSprite::Mode::NORMAL);
-    }
-    catch (...)
-    {
+    gameData.opopo = new Spritesheet("data/font.png", 8, 8);
 
-    }
+    gameData.derf = new AnimatedSprite();
+    gameData.derf->setSpritesheet(gameData.opopo);
+    AnimatedSprite::SpriteList sprites;
+    for (int i=1; i<=26; ++i) sprites.push_back({4+i/16, i%16});
+    gameData.derf->setSprites(sprites);
+    AnimatedSprite::FrameList frames;
+    for (int i=0; i<26; ++i) frames.push_back({i, 5});
+    gameData.derf->setSequence(frames);
+    gameData.derf->setMode(AnimatedSprite::Mode::NORMAL);
+
     gameState.rot = 0.0f;
 
     renderer->setWindowTitle("Inugami Test", true);
@@ -120,13 +127,12 @@ void tick()
     if (interface->keyState('Q'))
         gameState.rot = wrap(gameState.rot-=3.0, 0.0f, 360.0f)
     ;
+
     if (interface->keyState('E'))
         gameState.rot = wrap(gameState.rot+=1.0, 0.0f, 360.0f)
     ;
 
-    if (gameData.derf->done()) gameData.derf->reset();
-
-    if (interface->keyPressed(GLFW_KEY_F1)) renderer->dumpState(std::ofstream("dump.txt"));
+    if (interface->keyPressed(' ')) gameData.derf->reset();
 }
 
 void idle()

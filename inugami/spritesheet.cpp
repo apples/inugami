@@ -13,12 +13,12 @@ bool Spritesheet::Dimensions::operator<(const Dimensions &in) const
     return false;
 }
 
-Spritesheet::Spritesheet(const char* fileName, unsigned int w, unsigned int h) :
-    Spritesheet(std::string(fileName), w, h)
+Spritesheet::Spritesheet(const char* filename, unsigned int w, unsigned int h) :
+    Spritesheet(std::string(filename), w, h)
 {}
 
-Spritesheet::Spritesheet(const std::string& fileName, unsigned int w, unsigned int h) :
-    tex(fileName, false, false)
+Spritesheet::Spritesheet(const std::string& filename, unsigned int w, unsigned int h) :
+    tex(filename, false, false)
 {
     auto pow2 = [](unsigned int i) {return (i!=0 && (i&(i-1))==0);};
 

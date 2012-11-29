@@ -28,7 +28,7 @@ void AnimatedSprite::setMode(Mode in)
     mode = in;
 }
 
-void AnimatedSprite::setSprites(const std::initializer_list<std::pair<unsigned int, unsigned int>> &in)
+void AnimatedSprite::setSprites(const std::vector<std::pair<unsigned int, unsigned int>> &in)
 {
     if (sheet == nullptr) throw std::logic_error("Spritesheet not set!");
 
@@ -42,7 +42,7 @@ void AnimatedSprite::setSprites(const std::initializer_list<std::pair<unsigned i
     sequence.clear();
 }
 
-void AnimatedSprite::setSequence(const std::initializer_list<std::pair<int, unsigned int>> &in)
+void AnimatedSprite::setSequence(const std::vector<std::pair<int, unsigned int>> &in)
 {
     sequence.clear();
     sequence.reserve(in.size());
@@ -73,7 +73,7 @@ void AnimatedSprite::draw()
         if (--timer == 0)
         {
             pos += dir;
-            if (pos < 0 || pos >= int(meshes.size()))
+            if (pos < 0 || pos >= int(sequence.size()))
             {
                 switch (mode)
                 {
@@ -86,7 +86,7 @@ void AnimatedSprite::draw()
                 case Mode::BOUNCE:
                     dir = -dir;
                     if (dir == 1) pos = 1;
-                    else pos = meshes.size()-2;
+                    else pos = sequence.size()-2;
                     break;
                 default:
                     throw std::logic_error("Unknown mode!");
