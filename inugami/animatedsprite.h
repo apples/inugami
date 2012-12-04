@@ -19,7 +19,7 @@ public:
     };
 
     typedef std::pair<unsigned int, unsigned int> Sprite;
-    typedef std::pair<int, unsigned int> Frame;
+    typedef std::pair<unsigned int, unsigned int> Frame;
     typedef std::vector<Sprite> SpriteList;
     typedef std::vector<Frame> FrameList;
 
@@ -31,6 +31,11 @@ public:
     void setSprites(const SpriteList &in);
     void setSequence(const FrameList &in);
 
+    void flipX();
+    void flipX(bool in);
+    void flipY();
+    void flipY(bool in);
+
     void draw();
     bool done();
     void reset();
@@ -38,11 +43,12 @@ public:
 private:
     Spritesheet *sheet;
     std::vector<Mesh*> meshes;
-    std::vector<std::pair<int, unsigned int>> sequence;
+    FrameList sequence;
     Mode mode;
     bool ended;
     unsigned int timer;
     int pos, dir;
+    bool flip[2];
 };
 
 } // namespace Inugami

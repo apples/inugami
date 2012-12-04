@@ -1,6 +1,8 @@
-#include "renderer.h"
+#include "core.h"
 
 #include "loaders.h"
+#include "math.h"
+#include "opengl.h"
 
 #include <iomanip>
 #include <ostream>
@@ -8,9 +10,7 @@
 
 namespace Inugami {
 
-const unsigned int Renderer::PrintBuffer::itemDataSizeIncrement = 4;
-
-Renderer::RenderParams::RenderParams() :
+Core::RenderParams::RenderParams() :
     width(800), height(600),
     fullscreen(false),
     vsync(false),
@@ -22,17 +22,17 @@ Renderer::RenderParams::RenderParams() :
     //Not much else to do here...
 }
 
-Renderer::RenderParams::Mode2D_t::Mode2D_t() :
+Core::RenderParams::Mode2D_t::Mode2D_t() :
     width(2.0), height(2.0),
     nearClip(-1.0), farClip(1.0)
 {
     //Not much else to do here...
 }
 
-Renderer::Renderer(const RenderParams &params) :
-    printer(this),
+Core::Core(const RenderParams &params) :
     windowTitle("Inugami"),
-    windowTitleShowFPS(false)
+    windowTitleShowFPS(false),
+    running(false), callbackCount(0)
 {
     rparams = params;
     aspectRatio = static_cast<double>(rparams.width)/static_cast<double>(rparams.height);
@@ -90,15 +90,23 @@ Renderer::Renderer(const RenderParams &params) :
         glEnd();
         glEndList();
     }
+
+    for (int i=0; i<MAXCALLBACKS; ++i)
+    {
+        callbacks[i].func = nullptr;
+        callbacks[i].freq = 0.0;
+        callbacks[i].wait = 0.0;
+        callbacks[i].last = 0.0;
+    }
 }
 
-Renderer::~Renderer()
+Core::~Core()
 {
     glfwTerminate();
 }
 
 
-void Renderer::beginFrame()
+void Core::beginFrame()
 {
     *frStackIterator = getInstantFrameRate();
     ++frStackIterator;
@@ -120,12 +128,12 @@ void Renderer::beginFrame()
     }
 }
 
-void Renderer::endFrame()
+void Core::endFrame()
 {
     glfwSwapBuffers();
 }
 
-void Renderer::drawString(const char *text, bool pushpop)
+void Core::drawString(const char *text, bool pushpop)
 {
     if (pushpop) glPushMatrix();
     float x = 0.0f;
@@ -147,12 +155,12 @@ void Renderer::drawString(const char *text, bool pushpop)
     if (pushpop) glPopMatrix();
 }
 
-double Renderer::getInstantFrameRate()
+double Core::getInstantFrameRate()
 {
     return 1.0/(glfwGetTime() - frameStartTime);
 }
 
-double Renderer::getAverageFrameRate()
+double Core::getAverageFrameRate()
 {
     double sum = 0;
     std::list<double>::iterator i;
@@ -163,7 +171,7 @@ double Renderer::getAverageFrameRate()
     return sum/10.0;
 }
 
-bool Renderer::setMode(RenderMode m, RenderFace s)
+bool Core::setMode(RenderMode m, RenderFace s)
 {
     //Cull faces
     if (s == RF_BOTH)
@@ -179,7 +187,7 @@ bool Renderer::setMode(RenderMode m, RenderFace s)
 
     switch (m)
     {
-    case RM_3D:
+    case RenderMode::PERSPECTIVE:
         glMatrixMode(GL_PROJECTION);
         glLoadIdentity();
         gluPerspective(rparams.fov, aspectRatio, rparams.nearClip, rparams.farClip);
@@ -191,7 +199,7 @@ bool Renderer::setMode(RenderMode m, RenderFace s)
         //glLoadMatrixf(cam.getMatrix().transpose().data[0].data);
         break;
 
-    case RM_2D:
+    case RenderMode::ORTHOGONAL:
         glMatrixMode(GL_PROJECTION);
         glLoadIdentity();
         glOrtho(-rparams.mode2D.width*0.5, rparams.mode2D.width*0.5,
@@ -203,7 +211,7 @@ bool Renderer::setMode(RenderMode m, RenderFace s)
         glEnable(GL_DEPTH_TEST);
         break;
 
-    case RM_INTERFACE:
+    case RenderMode::INTERFACE:
         glMatrixMode(GL_PROJECTION);
         glLoadIdentity();
         glOrtho(0.0, rparams.width, rparams.height, 0.0, -1.0, 1.0);
@@ -216,13 +224,13 @@ bool Renderer::setMode(RenderMode m, RenderFace s)
     return true;
 }
 
-Mesh* Renderer::loadMesh(const char *filename)
+Mesh* Core::loadMesh(const char *filename)
 {
     std::string foo(filename);
     return loadMesh(foo);
 }
 
-Mesh* Renderer::loadMesh(const std::string &filename)
+Mesh* Core::loadMesh(const std::string &filename)
 {
     auto i = meshes.find(filename);
     if (i != meshes.end())
@@ -241,7 +249,7 @@ Mesh* Renderer::loadMesh(const std::string &filename)
     return &meshes[filename].mesh.init();
 }
 
-void Renderer::reloadMeshes()
+void Core::reloadMeshes()
 {
     for (auto i : meshes)
     {
@@ -250,7 +258,7 @@ void Renderer::reloadMeshes()
     }
 }
 
-void Renderer::dropMesh(Mesh* target)
+void Core::dropMesh(Mesh* target)
 {
     auto i = meshes.begin();
     while (i != meshes.end())
@@ -264,19 +272,19 @@ void Renderer::dropMesh(Mesh* target)
     }
 }
 
-void Renderer::setWindowTitle(const char *text, bool showFPS)
+void Core::setWindowTitle(const char *text, bool showFPS)
 {
     windowTitle = text;
     windowTitleShowFPS = showFPS;
     glfwSetWindowTitle(text);
 }
 
-const Renderer::RenderParams& Renderer::getParams()
+const Core::RenderParams& Core::getParams()
 {
     return rparams;
 }
 
-void Renderer::dumpState(std::ostream &&out)
+void Core::dumpState(std::ostream &&out)
 {
     auto bool2text = [](bool in){return in?"True":"False";};
 
@@ -311,148 +319,106 @@ void Renderer::dumpState(std::ostream &&out)
 //        }
 //    }
 
-    {
-        out << "Meshes:\n";
-        int i=0;
-        for (auto p : meshes)
-        {
-            out << "  Index: " << i++ << "\n";
-            out << "    Name:           \"" << p.first << "\"\n";
-            out << "    Vertices:       " << p.second.mesh.vertices.size() << "\n";
-            out << "    Triangles:      " << p.second.mesh.triangles.size() << "\n";
-            out << "    Initialized :   " << bool2text(p.second.mesh.initted) << "\n";
-            if (p.second.mesh.initted)
-            {
-                out << "    Vertex Buffer:  " << p.second.mesh.vbo << "\n";
-                out << "    Element Buffer: " << p.second.mesh.ele << "\n";
-            }
-        }
-    }
+//    {
+//        out << "Meshes:\n";
+//        int i=0;
+//        for (auto p : meshes)
+//        {
+//            out << "  Index: " << i++ << "\n";
+//            out << "    Name:           \"" << p.first << "\"\n";
+//            out << "    Vertices:       " << p.second.mesh.vertices.size() << "\n";
+//            out << "    Triangles:      " << p.second.mesh.triangles.size() << "\n";
+//            out << "    Initialized :   " << bool2text(p.second.mesh.initted) << "\n";
+//            if (p.second.mesh.initted)
+//            {
+//                out << "    Vertex Buffer:  " << p.second.mesh.vbo << "\n";
+//                out << "    Element Buffer: " << p.second.mesh.ele << "\n";
+//            }
+//        }
+//    }
 
     out.flush();
 }
 
-Renderer::PrintBuffer::PrintBuffer(Renderer* p) :
-    buffer(0), parent(p)
-{}
-
-void Renderer::PrintBuffer::print()
+bool Core::addCallback(void (*func)(), double freq)
 {
-    glPushMatrix();
-    for (auto i : buffer)
+    for (int i=0; i<MAXCALLBACKS; ++i)
     {
-        switch (i.t)
+        if (i == callbackCount)
         {
-        case PrintItem::STRING:
-            parent->drawString(&i.data[0], false);
-            break;
-        case PrintItem::COLOR:
-            glColor4ubv(reinterpret_cast<GLubyte*>(&i.data[0]));
-            break;
+            callbacks[i].func = func;
+            callbacks[i].freq = freq;
+            callbacks[i].wait = 0.0;
+            callbacks[i].last = glfwGetTime();
+            ++callbackCount;
+            return true;
+        }
+        if (callbacks[i].func == func)
+        {
+            callbacks[i].freq = freq;
+            callbacks[i].wait = 0.0;
+            callbacks[i].last = glfwGetTime();
+            return true;
         }
     }
-    glPopMatrix();
-    buffer.clear();
+    return false;
 }
 
-Renderer::PrintBuffer &Renderer::PrintBuffer::operator<<(PrintItem in)
+void Core::dropCallback(void (*func)())
 {
-    buffer.push_back(Item());
-    Item &back = buffer.back();
-    back.t = in;
-    back.dataSize = 0;
-
-    switch (in)
+    for (int i=0; i<MAXCALLBACKS; ++i)
     {
-    case COLOR:
-        back.data.resize(4, 0xff);
-        back.dataMax = 4;
-        break;
-    case STRING:
-        back.data.resize(itemDataSizeIncrement);
-        back.data[0] = 0;
-        back.dataMax = itemDataSizeIncrement;
-        break;
+        if (i == callbackCount)
+        {
+            return;
+        }
+        if (callbacks[i].func == func)
+        {
+            for (int j=i; j<callbackCount-1; ++j)
+            {
+                callbacks[j].func = callbacks[j+1].func;
+                callbacks[j].freq = callbacks[j+1].freq;
+                callbacks[j].wait = callbacks[j+1].wait;
+                callbacks[j].last = callbacks[j+1].last;
+            }
+            callbacks[callbackCount-1].func = nullptr;
+            return;
+        }
     }
-
-    return *this;
 }
 
-Renderer::PrintBuffer &Renderer::PrintBuffer::operator<<(char in)
+int Core::go()
 {
-    Item &back = buffer.back();
-    if (back.t == PrintItem::COLOR)
-    {
-        if (back.dataSize > 3) return *this;
-        back.data[back.dataSize] = in;
-        ++back.dataSize;
-        return *this;
-    }
-    std::string s;
-    s = in;
-    return (*this) << s;
-}
+    running = true;
 
-Renderer::PrintBuffer &Renderer::PrintBuffer::operator<<(int in)
-{
-    Item &back = buffer.back();
-    if (back.t == PrintItem::COLOR)
-    {
-        if (back.dataSize > 3) return *this;
-        back.data[back.dataSize] = static_cast<char>(in);
-        ++back.dataSize;
-        return *this;
-    }
-    std::stringstream ss;
-    ss << in;
-    return (*this) << ss;
-}
+    double currentTime = 0.0;
+    double deltaTime = 0.0;
 
-Renderer::PrintBuffer &Renderer::PrintBuffer::operator<<(float in)
-{
-    Item &back = buffer.back();
-    if (back.t == PrintItem::COLOR)
-    {
-        if (back.dataSize > 3) return *this;
-        back.data[back.dataSize] = static_cast<char>(in*255.0);
-        ++back.dataSize;
-        return *this;
-    }
-    std::stringstream ss;
-    ss << in;
-    return (*this) << ss;
-}
+    while (running) {
+        for (int i=0; i<callbackCount; ++i)
+        {
+            currentTime = glfwGetTime();
+            deltaTime = currentTime - callbacks[i].last;
+            callbacks[i].last = currentTime;
 
-Renderer::PrintBuffer &Renderer::PrintBuffer::operator<<(std::stringstream &in)
-{
-    std::string s = in.str();
-    return (*this) << s;
-}
+            if (callbacks[i].freq < 0.0)
+            {
+                callbacks[i].func();
+                continue;
+            }
 
-Renderer::PrintBuffer &Renderer::PrintBuffer::operator<<(std::string &in)
-{
-    Item *back = &buffer.back();
-    if (back->t != PrintItem::STRING || buffer.size() < 1)
-    {
-        (*this) << PrintItem::STRING;
-        back = &buffer.back();
+            callbacks[i].wait += deltaTime * callbacks[i].freq;
+            if (callbacks[i].wait >= 1.0)
+            {
+                callbacks[i].func();
+                callbacks[i].wait = 0.0;
+            }
+
+            if (!running) break;
+        }
     }
 
-    unsigned int dataNeeded = back->dataSize + in.size();
-
-    //Expand if necessary
-    if (dataNeeded+1 > back->dataMax)
-    {
-        while (dataNeeded+1 > back->dataMax) back->dataMax += itemDataSizeIncrement;
-        back->data.resize(back->dataMax);
-    }
-
-    //Add new data
-    for (unsigned int i=0; i<in.size(); ++i) back->data[i+back->dataSize] = in[i];
-    back->dataSize = dataNeeded;
-    back->data[dataNeeded] = 0;
-
-    return *this;
+    return 0;
 }
 
 } // namespace Inugami

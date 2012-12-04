@@ -5,18 +5,45 @@
 
 #include <bitset>
 #include <list>
+#include <vector>
 
 namespace Inugami {
 
 class Interface
 {
+    friend class Key;
 public:
+    class Key
+    {
+        friend class Interface;
+    public:
+        Key(Interface *const inIface, int k);
+        ~Key();
+        bool down();
+        bool pressed();
+        void setKey(int k);
+    private:
+        class Index
+        {
+        public:
+            Index(int k);
+            bool operator==(int k);
+            bool operator<(int k);
+            int key;
+            bool down, pressed;
+            int users;
+        };
+        typedef std::vector<Index> List;
+        Interface *iface;
+        List::iterator i;
+    };
+
     Interface();
     virtual ~Interface();
 
     static void poll();
 
-    static bool keyState(int key);
+    static bool keyDown(int key);
     static bool keyPressed(int key);
     static bool getBuffer(std::string *target);
 
@@ -52,6 +79,11 @@ private:
     static void mouseButtonCallback(int button, int action);
     static void mousePositionCallback(int x, int y);
     static void mouseWheelCallback(int pos);
+
+    Key::List::iterator getWatch(int k);
+    void dropWatch(Key::List::iterator &i);
+
+    Key::List watches;
 };
 
 } // namespace Inugami

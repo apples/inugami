@@ -52,6 +52,8 @@
 		<Unit filename="inugami/animatedsprite.h" />
 		<Unit filename="inugami/camera.cpp" />
 		<Unit filename="inugami/camera.h" />
+		<Unit filename="inugami/core.cpp" />
+		<Unit filename="inugami/core.h" />
 		<Unit filename="inugami/interface.cpp" />
 		<Unit filename="inugami/interface.h" />
 		<Unit filename="inugami/inugami.h" />
@@ -62,10 +64,8 @@
 		<Unit filename="inugami/mesh.cpp" />
 		<Unit filename="inugami/mesh.h" />
 		<Unit filename="inugami/opengl.h" />
-		<Unit filename="inugami/renderer.cpp" />
-		<Unit filename="inugami/renderer.h" />
-		<Unit filename="inugami/scheduler.cpp" />
-		<Unit filename="inugami/scheduler.h" />
+		<Unit filename="inugami/shader.cpp" />
+		<Unit filename="inugami/shader.h" />
 		<Unit filename="inugami/spritesheet.cpp" />
 		<Unit filename="inugami/spritesheet.h" />
 		<Unit filename="inugami/texture.cpp" />

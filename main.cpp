@@ -12,9 +12,8 @@ void draw();
 void tick();
 void idle();
 
-Scheduler *scheduler;
 Interface *interface;
-Renderer *renderer;
+Core *core;
 
 //Most global variables should be added to this struct
 struct
@@ -28,13 +27,12 @@ struct
     Spritesheet *opopo;
     AnimatedSprite *derf;
     Mesh *shield;
+    Shader *test;
 } gameData;
 
 int main()
 {
-    scheduler = new Scheduler();
-
-    Renderer::RenderParams renparams;
+    Core::RenderParams renparams;
     renparams.width = 1366;
     renparams.height = 768;
     renparams.fullscreen = false;
@@ -45,28 +43,27 @@ int main()
     renparams.mode2D.height = 90.0;
     renparams.mode2D.nearClip = -1.0;
     renparams.mode2D.farClip = 1.0;
-    try {renderer = new Renderer(renparams);}
+    try {core = new Core(renparams);}
     catch (...) {return -1;}
 
     interface = new Interface();
 
-    scheduler->addCallback(draw, 60.0);
-    scheduler->addCallback(tick, 60.0);
-    scheduler->addCallback(idle, -1.0);
+    core->addCallback(draw, 60.0);
+    core->addCallback(tick, 60.0);
+    core->addCallback(idle, -1.0);
 
     try
     {
         init();
-        scheduler->go();
+        core->go();
     }
     catch (std::exception &e)
     {
-
+        std::ofstream("error.txt") << e.what();
     }
 
     delete interface;
-    delete renderer;
-    delete scheduler;
+    delete core;
 
     return 0;
 }
@@ -75,7 +72,7 @@ void init()
 {
     gameData.font = new Texture("data/font.png", false, false);
     gameData.shieldTex = new Texture("data/shield.png", true, false);
-    gameData.shield = renderer->loadMesh("data/shield.obj");
+    gameData.shield = core->loadMesh("data/shield.obj");
 
     gameData.opopo = new Spritesheet("data/font.png", 8, 8);
 
@@ -91,44 +88,74 @@ void init()
 
     gameState.rot = 0.0f;
 
-    renderer->setWindowTitle("Inugami Test", true);
+    core->setWindowTitle("Inugami Test", true);
+
+    Shader::Program pro;
+    pro[Shader::Type::VERT] =
+        "#version 400\n"
+        "layout (location = 0) in vec3 VertexPosition;\n"
+        "layout (location = 1) in vec3 VertexNormal;\n"
+        "layout (location = 2) in vec2 VertexTexCoord;\n"
+        "out vec3 Position;\n"
+        "out vec3 Normal;\n"
+        "out vec2 TexCoord;\n"
+        "void main()\n"
+        "{\n"
+        "    TexCoord = VertexTexCoord;\n"
+        "    Normal = normalize(VertexNormal);\n"
+        "    Position = VertexPosition/5;\n"
+        "    gl_Position = vec4(VertexPosition/5,1.0);\n"
+        "}\n"
+    ;
+    pro[Shader::Type::FRAG] =
+        "#version 400\n"
+        "in vec3 Position;\n"
+        "in vec3 Normal;\n"
+        "in vec2 TexCoord;\n"
+        "uniform sampler2D Tex1;\n"
+        "out vec4 FragColor;\n"
+        "void main() {\n"
+        "    vec4 texColor = texture( Tex1, TexCoord );\n"
+        "    FragColor = texColor;\n"
+        "}\n"
+    ;
+    gameData.test = new Shader(pro);
+    //gameData.test->bind();
 }
 
 void draw()
 {
-    renderer->beginFrame();
+    core->beginFrame();
 
-    renderer->setMode(Renderer::RenderMode::RM_3D, Renderer::RenderFace::RF_FRONT);
+    core->setMode(Core::RenderMode::PERSPECTIVE, Core::RenderFace::RF_FRONT);
 
     glTranslatef(0.0f, -1.5f, -3.0f);
     glRotatef(gameState.rot, 0.0f, 1.0f, 0.0f);
     gameData.shieldTex->bind();
     gameData.shield->draw();
 
-    renderer->setMode(Renderer::RenderMode::RM_2D, Renderer::RenderFace::RF_BOTH);
+    core->setMode(Core::RenderMode::ORTHOGONAL, Core::RenderFace::RF_BOTH);
 
     glRotatef(gameState.rot, 0.0, 0.0, 1.0);
     gameData.derf->draw();
 
-    renderer->setMode(Renderer::RenderMode::RM_INTERFACE, Renderer::RenderFace::RF_BOTH);
+    core->setMode(Core::RenderMode::INTERFACE, Core::RenderFace::RF_BOTH);
 
     gameData.font->bind();
     glScalef(8.0, 8.0, 1.0);
-    renderer->printer << "Rot: " << gameState.rot << '\n';
-    renderer->printer.print();
 
-    renderer->endFrame();
+    core->endFrame();
 }
 
 void tick()
 {
     interface->poll();
     gameState.rot = wrap(gameState.rot+=1.0, 0.0f, 360.0f);
-    if (interface->keyState('Q'))
+    if (interface->keyDown('Q'))
         gameState.rot = wrap(gameState.rot-=3.0, 0.0f, 360.0f)
     ;
 
-    if (interface->keyState('E'))
+    if (interface->keyDown('E'))
         gameState.rot = wrap(gameState.rot+=1.0, 0.0f, 360.0f)
     ;
 
@@ -137,8 +164,8 @@ void tick()
 
 void idle()
 {
-    if (interface->keyState(GLFW_KEY_ESC) || !glfwGetWindowParam(GLFW_OPENED))
+    if (interface->keyDown(GLFW_KEY_ESC) || !glfwGetWindowParam(GLFW_OPENED))
     {
-        scheduler->running = false;
+        core->running = false;
     }
 }

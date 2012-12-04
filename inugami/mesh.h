@@ -10,15 +10,15 @@ namespace Inugami {
 
 class Mesh
 {
-friend class Renderer;
+    friend class Core;
 public:
     class __attribute__((__packed__)) Vertex
     {
     public:
         bool operator==(const Vertex &in);
-        Vector<float, 3> pos;
-        Vector<float, 3> norm;
-        Vector<float, 2> uv;
+        Vec3 pos;
+        Vec3 norm;
+        Vec2 uv;
     };
 
     class __attribute__((__packed__)) Triangle
@@ -44,7 +44,7 @@ private:
     std::vector<Triangle> triangles;
 
     bool initted;
-    GLuint vbo, ele;
+    GLuint vbo, vao, ele;
 };
 
 } // namespace Inugami

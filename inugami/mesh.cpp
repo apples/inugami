@@ -46,6 +46,15 @@ Mesh &Mesh::init()
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex)*vertices.size(), &vertices[0], GL_STATIC_DRAW);
 
+//    glGenVertexArrays(1, &vao);
+//    glBindVertexArray(vao);
+//    glEnableVertexAttribArray(0);
+//    glEnableVertexAttribArray(1);
+//    glEnableVertexAttribArray(2);
+//    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)0);
+//    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)(sizeof(Vec3))); //TODO find pointer offset type
+//    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)(sizeof(Vec3)*2)); //TODO find pointer offset type
+
     glGenBuffers(1, &ele);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ele);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Triangle)*triangles.size(), &triangles[0], GL_STATIC_DRAW);
@@ -58,10 +67,11 @@ void Mesh::draw()
 {
     if (!initted) throw std::logic_error("Mesh not initialized.");
 
+    //glBindVertexArray(vao);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glVertexPointer(3, GL_FLOAT, sizeof(Vertex), 0);
-    glNormalPointer(GL_FLOAT, sizeof(Vertex), (GLvoid*)(sizeof(Vector<float, 3>)));
-    glTexCoordPointer(2, GL_FLOAT, sizeof(Vertex), (GLvoid*)(sizeof(Vector<float, 3>)*2));
+    glVertexPointer(3, GL_FLOAT, sizeof(Vertex), (GLvoid*)0);
+    glNormalPointer(GL_FLOAT, sizeof(Vertex), (GLvoid*)(sizeof(Vec3)));
+    glTexCoordPointer(2, GL_FLOAT, sizeof(Vertex), (GLvoid*)(sizeof(Vec3)*2));
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ele);
     glDrawElements(GL_TRIANGLES, triangles.size()*3, GL_UNSIGNED_INT, 0);

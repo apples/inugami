@@ -60,7 +60,7 @@ Spritesheet::Spritesheet(const std::string& filename, unsigned int w, unsigned i
                 vert.uv.y() = v;
                 tri.v[0] = mesh.addVertex(vert);
                 vert.pos.y() = -float(h/2);
-                vert.uv.y() = v-uvStep.y()+1.953125e-3f; //Constant prevents rounding errors
+                vert.uv.y() = v-uvStep.y();//+1.953125e-3f; //Constant prevents rounding errors
                 tri.v[1] = mesh.addVertex(vert);
                 vert.pos.x() = float(w/2);
                 vert.uv.x() = u+uvStep.x();

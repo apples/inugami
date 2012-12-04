@@ -1,5 +1,5 @@
-#ifndef INUGAMI_RENDERER_H
-#define INUGAMI_RENDERER_H
+#ifndef INUGAMI_CORE_H
+#define INUGAMI_CORE_H
 
 #include "mesh.h"
 #include "camera.h"
@@ -14,81 +14,9 @@
 
 namespace Inugami {
 
-/** @brief Controls OpenGL and manages graphical resources.
- *
- * This class will open a window, initialize OpenGL, loads resources, and
- * implement shaders.
- *
- * @todo Implement shader functionality.
- * @todo Implement common render techniques (shadows, bump maps, etc.).
- *
- */
-
-class Renderer
+class Core
 {
 public:
-    /** @brief Item types for use with a @a PrintBuffer.
-     */
-    enum PrintItem
-    {
-        /** @brief Character string for direct display.
-         * Prints the following character data directly to the screen, with the
-         * exception of @c '\n', which forces a new line.
-         */
-        STRING,
-        /** @brief Color to be applied to following items.
-         * The specified color will be applied to all folowing items until
-         * the printer displays.
-         * The next three floating point numbers sent to the printer specify
-         * the red, green, and blue components of the color, respectively.
-         */
-        COLOR
-    };
-
-    /** @brief Buffers data for display on screen.
-     * Designed to be treated as if it were a @a std::istream, currently takes
-     * only string and color data.  Use @a print() to flush the buffer to the
-     * screen.
-     */
-    class PrintBuffer
-    {
-    public:
-        PrintBuffer(Renderer *p);
-
-        PrintBuffer(const PrintBuffer &) = delete;
-        PrintBuffer &operator=(const PrintBuffer &) = delete;
-
-        void print();
-
-        static const unsigned int itemDataSizeIncrement;
-
-        template <class T> PrintBuffer &operator<<(T &in)
-        {
-            //Assume it's a string
-            std::stringstream ss;
-            ss << in;
-            return (*this) << ss;
-        }
-
-        PrintBuffer &operator<<(PrintItem in);
-        PrintBuffer &operator<<(char in);
-        PrintBuffer &operator<<(int in);
-        PrintBuffer &operator<<(float in);
-        PrintBuffer &operator<<(std::stringstream &in);
-        PrintBuffer &operator<<(std::string &in);
-
-    private:
-        struct Item
-        {
-            PrintItem t;
-            std::vector<char> data;
-            unsigned int dataSize;
-            unsigned int dataMax;
-        };
-        std::list<Item> buffer;
-        Renderer *parent;
-    };
-
     /** @brief Parameters for screen initialization.
      */
     struct RenderParams
@@ -115,11 +43,12 @@ public:
     /** @brief Rendering modes.
      * Specifies the base viewing matrices for drawing.
      */
-    enum RenderMode
+
+    enum class RenderMode
     {
-        RM_3D,          ///< Typical 3D drawing mode.
-        RM_2D,          ///< Orthogonal drawing mode.
-        RM_INTERFACE    ///< Screen-space drawing mode.
+        PERSPECTIVE,          ///< Typical 3D drawing mode.
+        ORTHOGONAL,          ///< Orthogonal drawing mode.
+        INTERFACE    ///< Screen-space drawing mode.
     };
 
     /** @brief Specified a face of a polygon.
@@ -133,8 +62,8 @@ public:
         RF_BOTH         ///< Both front and back face.
     };
 
-    Renderer(const RenderParams &params);
-    ~Renderer();
+    Core(const RenderParams &params);
+    ~Core();
 
     /** @brief Prepares the renderer to draw a frame.
      * Typically called at the start of a global drawing routine.
@@ -223,15 +152,42 @@ public:
      */
     void dumpState(std::ostream &&out);
 
-    /** @brief Custom PrintBuffer.
-     * Instead of creating your own print buffer, it is possible to use this one
-     * for trivial use, such as debug information.
+    /** @brief Adds or updates a callback.
+     * @param func Function to add or update.
+     * @param freq Call frequency, in Hertz.
+     * @return @a True if success, @a false if fail.
      */
-    PrintBuffer printer;
+    bool addCallback(void (*func)(), double freq);
+
+    /** @brief Removes a callback.
+     * @param func Function to remove.
+     */
+    void dropCallback(void (*func)());
+
+    /** @brief Starts the scheduler.
+     * This functions runs a loop that calls registered functions at the
+     * specified intervals.  The loop continues while @a running is true.
+     */
+    int go();
+
+    /**
+     * Set this to @a false at any time to exit the @a go() cycle.
+     */
+    bool running;
 
     Camera cam;
 
 private:
+    struct Callback
+    {
+        void (*func)();
+        double freq, wait, last;
+    };
+
+    static const int MAXCALLBACKS = 32;
+    Callback callbacks[MAXCALLBACKS];
+    int callbackCount;
+
     struct MeshRecord
     {
         int users;
@@ -259,4 +215,4 @@ private:
 
 } // namespace Inugami
 
-#endif // INUGAMI_RENDERER_H
+#endif // INUGAMI_CORE_H
