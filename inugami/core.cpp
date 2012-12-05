@@ -7,6 +7,7 @@
 #include <iomanip>
 #include <ostream>
 #include <sstream>
+#include <stdexcept>
 
 namespace Inugami {
 
@@ -18,16 +19,12 @@ Core::RenderParams::RenderParams() :
     nearClip(0.1), farClip(100.0),
     fsaaSamples(4),
     mode2D()
-{
-    //Not much else to do here...
-}
+{}
 
 Core::RenderParams::Mode2D_t::Mode2D_t() :
     width(2.0), height(2.0),
     nearClip(-1.0), farClip(1.0)
-{
-    //Not much else to do here...
-}
+{}
 
 Core::Core(const RenderParams &params) :
     windowTitle("Inugami"),
@@ -44,8 +41,18 @@ Core::Core(const RenderParams &params) :
 
     glfwOpenWindowHint(GLFW_FSAA_SAMPLES, rparams.fsaaSamples);
 
-    if (glfwOpenWindow(rparams.width, rparams.height, 8, 8, 8, 8, 8, 0, (rparams.fullscreen)? GLFW_FULLSCREEN : GLFW_WINDOW) != GL_TRUE) throw;
-    if (glewInit() != GLEW_OK) throw;
+    if (glfwOpenWindow( rparams.width, rparams.height,
+                        8, 8, 8, 8, 8, 0,
+                        (rparams.fullscreen)? GLFW_FULLSCREEN : GLFW_WINDOW)
+            != GL_TRUE)
+    {
+        throw std::runtime_error("Failed to open window.");
+    }
+
+    if (glewInit() != GLEW_OK)
+    {
+        throw std::runtime_error("Failed to initialize GLEW.");
+    }
 
     glfwSetWindowTitle(windowTitle.c_str());
 
