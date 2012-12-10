@@ -13,17 +13,14 @@ bool Spritesheet::Dimensions::operator<(const Dimensions &in) const
     return false;
 }
 
-Spritesheet::Spritesheet(const char* filename, unsigned int w, unsigned int h) :
-    Spritesheet(std::string(filename), w, h)
+Spritesheet::Spritesheet(const char* filename, unsigned int w, unsigned int h, float cx, float cy) :
+    Spritesheet(std::string(filename), w, h, cx, cy)
 {}
 
-Spritesheet::Spritesheet(const std::string& filename, unsigned int w, unsigned int h) :
+Spritesheet::Spritesheet(const std::string& filename, unsigned int w, unsigned int h, float cx, float cy) :
     tex(filename, false, false)
 {
     auto pow2 = [](unsigned int i) {return (i!=0 && (i&(i-1))==0);};
-
-    //Throw if dimensions aren't powers of two
-    if (!pow2(w) || !pow2(h)) throw;
 
     dim.w = tex.getWidth()/w;
     dim.h = tex.getHeight()/h;
@@ -54,20 +51,20 @@ Spritesheet::Spritesheet(const std::string& filename, unsigned int w, unsigned i
                 Mesh &mesh = (*sprites)[r*dim.w +c];
                 Mesh::Triangle tri;
 
-                vert.pos.x() = -float(w/2);
-                vert.pos.y() = float(h/2);
+                vert.pos.x() = -float(w)*cx;
+                vert.pos.y() = float(h)*cy;
                 vert.uv.x() = u;
                 vert.uv.y() = v;
                 tri.v[0] = mesh.addVertex(vert);
-                vert.pos.y() = -float(h/2);
+                vert.pos.y() = -float(h)*(1.0f-cy);
                 vert.uv.y() = v-uvStep.y();//+1.953125e-3f; //Constant prevents rounding errors
                 tri.v[1] = mesh.addVertex(vert);
-                vert.pos.x() = float(w/2);
+                vert.pos.x() = float(w)*(1.0f-cx);
                 vert.uv.x() = u+uvStep.x();
                 tri.v[2] = mesh.addVertex(vert);
                 mesh.addTriangle(tri);
                 tri.v[1] = tri.v[2];
-                vert.pos.y() = float(h/2);
+                vert.pos.y() = float(h)*cy;
                 vert.uv.y() = v;
                 tri.v[2] = mesh.addVertex(vert);
                 mesh.addTriangle(tri);

@@ -13,8 +13,8 @@ namespace Inugami
 class Spritesheet
 {
 public:
-    Spritesheet(const char *filename, unsigned int w, unsigned int h);
-    Spritesheet(const std::string &filename, unsigned int w, unsigned int h);
+    Spritesheet(const char *filename, unsigned int w, unsigned int h, float cx = 0.5f, float cy = 0.5f);
+    Spritesheet(const std::string &filename, unsigned int w, unsigned int h, float cx = 0.5f, float cy = 0.5f);
     virtual ~Spritesheet();
 
     void draw(unsigned int r, unsigned int c);
