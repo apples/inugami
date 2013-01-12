@@ -17,6 +17,7 @@ Permission is granted to anyone to use this software for any purpose, including 
 #ifndef INUGAMI_CORE_H
 #define INUGAMI_CORE_H
 
+#include "interface.h"
 #include "mesh.h"
 #include "camera.h"
 #include "opengl.h"
@@ -186,6 +187,13 @@ public:
      */
     int go();
 
+    /** @brief Gets the interface of this window.
+     * @return Interface pointer for this window.
+     */
+    Interface* getInterface();
+
+    int getWindowParam(int param);
+
     /**
      * Set this to @a false at any time to exit the @a go() cycle.
      */
@@ -200,7 +208,7 @@ private:
         double freq, wait, last;
     };
 
-    static const int MAXCALLBACKS = 32;
+    static constexpr int MAXCALLBACKS = 32;
     Callback callbacks[MAXCALLBACKS];
     int callbackCount;
 
@@ -209,6 +217,9 @@ private:
         int users;
         Mesh mesh;
     };
+
+    static void init();
+    static void die();
 
     double frameStartTime;
     double currentFrameRate;
@@ -227,6 +238,9 @@ private:
     bool windowTitleShowFPS;
 
     GLuint fontLists;
+
+    GLFWwindow window;
+    Interface *iface;
 };
 
 } // namespace Inugami

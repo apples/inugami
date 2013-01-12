@@ -16,7 +16,6 @@ Permission is granted to anyone to use this software for any purpose, including 
 
 #include "inugami/inugami.h"
 
-#include <GL/glfw.h>
 #include <fstream>
 #include <sstream>
 #include <iomanip>
@@ -62,7 +61,7 @@ int main()
     try {core = new Core(renparams);}
     catch (...) {return -1;}
 
-    interface = new Interface();
+    interface = core->getInterface();
 
     core->addCallback(draw, 60.0);
     core->addCallback(tick, 60.0);
@@ -78,7 +77,6 @@ int main()
         std::ofstream("error.txt") << e.what();
     }
 
-    delete interface;
     delete core;
 
     return 0;
@@ -167,20 +165,20 @@ void tick()
 {
     interface->poll();
     gameState.rot = wrap(gameState.rot+=1.0, 0.0f, 360.0f);
-    if (interface->keyDown('Q'))
-        gameState.rot = wrap(gameState.rot-=3.0, 0.0f, 360.0f)
-    ;
 
-    if (interface->keyDown('E'))
-        gameState.rot = wrap(gameState.rot+=1.0, 0.0f, 360.0f)
-    ;
+    static auto keyQ     = interface->getProxy('Q');
+    static auto keyE     = interface->getProxy('E');
+    static auto keySpace = interface->getProxy(' ');
 
-    if (interface->keyPressed(' ')) gameData.derf->reset();
+    if (keyQ) gameState.rot = wrap(gameState.rot-=3.0, 0.0f, 360.0f);
+    if (keyE) gameState.rot = wrap(gameState.rot+=1.0, 0.0f, 360.0f);
+
+    if (keySpace) gameData.derf->reset();
 }
 
 void idle()
 {
-    if (interface->keyDown(GLFW_KEY_ESC) || !glfwGetWindowParam(GLFW_OPENED))
+    if (interface->keyDown(GLFW_KEY_ESC) || core->getWindowParam(GLFW_CLOSE_REQUESTED))
     {
         core->running = false;
     }

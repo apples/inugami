@@ -18,6 +18,6 @@ Permission is granted to anyone to use this software for any purpose, including 
 #define OPENGL_H_INCLUDED
 
 #include <GL/glew.h>
-#include <GL/glfw.h>
+#include <GL/glfw3.h>
 
 #endif // OPENGL_H_INCLUDED

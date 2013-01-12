@@ -55,22 +55,26 @@ Core::Core(const RenderParams &params) :
 
     glfwInit();
 
-    glfwOpenWindowHint(GLFW_FSAA_SAMPLES, rparams.fsaaSamples);
+    glfwWindowHint(GLFW_FSAA_SAMPLES, rparams.fsaaSamples);
 
-    if (glfwOpenWindow( rparams.width, rparams.height,
-                        8, 8, 8, 8, 8, 0,
-                        (rparams.fullscreen)? GLFW_FULLSCREEN : GLFW_WINDOW)
-            != GL_TRUE)
+    window = glfwCreateWindow
+    (
+        rparams.width, rparams.height,
+        (rparams.fullscreen)? GLFW_FULLSCREEN : GLFW_WINDOWED,
+        windowTitle.c_str(), 0
+    );
+
+    if (!window)
     {
         throw std::runtime_error("Failed to open window.");
     }
+
+    glfwMakeContextCurrent(window);
 
     if (glewInit() != GLEW_OK)
     {
         throw std::runtime_error("Failed to initialize GLEW.");
     }
-
-    glfwSetWindowTitle(windowTitle.c_str());
 
     if (rparams.vsync) glfwSwapInterval(1);
     else glfwSwapInterval(0);
@@ -121,16 +125,22 @@ Core::Core(const RenderParams &params) :
         callbacks[i].wait = 0.0;
         callbacks[i].last = 0.0;
     }
+
+    iface = new Interface(window);
 }
 
 Core::~Core()
 {
+    delete iface;
+    glfwDestroyWindow(window);
     glfwTerminate();
 }
 
 
 void Core::beginFrame()
 {
+    glfwMakeContextCurrent(window);
+
     *frStackIterator = getInstantFrameRate();
     ++frStackIterator;
     if (frStackIterator == frameRateStack.end())
@@ -147,13 +157,13 @@ void Core::beginFrame()
     {
         std::stringstream ss;
         ss << windowTitle << " (" << std::fixed << std::setprecision(2) << getAverageFrameRate() << " FPS)";
-        glfwSetWindowTitle(ss.str().c_str());
+        glfwSetWindowTitle(window, ss.str().c_str());
     }
 }
 
 void Core::endFrame()
 {
-    glfwSwapBuffers();
+    glfwSwapBuffers(window);
 }
 
 void Core::drawString(const char *text, bool pushpop)
@@ -299,7 +309,7 @@ void Core::setWindowTitle(const char *text, bool showFPS)
 {
     windowTitle = text;
     windowTitleShowFPS = showFPS;
-    glfwSetWindowTitle(text);
+    glfwSetWindowTitle(window, text);
 }
 
 const Core::RenderParams& Core::getParams()
@@ -442,6 +452,16 @@ int Core::go()
     }
 
     return 0;
+}
+
+Interface* Core::getInterface()
+{
+    return iface;
+}
+
+int Core::getWindowParam(int param)
+{
+    return glfwGetWindowParam(window, param);
 }
 
 } // namespace Inugami

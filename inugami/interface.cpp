@@ -20,72 +20,53 @@ Permission is granted to anyone to use this software for any purpose, including 
 
 namespace Inugami {
 
-std::list<char> Interface::keyBuffer;
-Interface::State<GLFW_KEY_LAST+1> Interface::keyStates;
-Interface::State<GLFW_MOUSE_BUTTON_LAST+1> Interface::mouseStates;
-decltype(Interface::mousePos) Interface::mousePos; //NOTE LOL I DIDN'T THINK THIS WOULD ACTUALLY WORK
-
 bool Interface::callbacksRegistered;
+std::map<GLFWwindow, Interface*> Interface::windowMap;
 
-Interface::Key::Key(Interface *const inIface, int k) :
-    iface(inIface)
-{
-    i = iface->getWatch(k);
-}
-
-Interface::Key::~Key()
-{
-    iface->dropWatch(i);
-}
-
-bool Interface::Key::down()
-{
-    return i->down;
-}
-
-bool Interface::Key::pressed()
-{
-    return i->pressed;
-}
-
-void Interface::Key::setKey(int k)
-{
-    iface->dropWatch(i);
-    i = iface->getWatch(k);
-}
-
-Interface::Key::Index::Index(int k) :
-    key(k),
-    down(false), pressed(false),
-    users(1)
+Interface::Proxy::Proxy() :
+    iface(nullptr),
+    key(0)
 {}
 
-bool Interface::Key::Index::operator==(int k)
+Interface::Proxy::Proxy(Interface *const inIface, int k) :
+    iface(inIface),
+    key(k)
+{}
+
+Interface::Proxy::operator bool() const
 {
-    return (key==k);
+    return down();
 }
 
-bool Interface::Key::Index::operator<(int k)
+bool Interface::Proxy::down() const
 {
-    return (key<k);
+    if (!iface) return false;
+    return iface->keyDown(key);
 }
 
-void Interface::verifyStates()
+bool Interface::Proxy::pressed() const
 {
-
+    if (!iface) return false;
+    return iface->keyPressed(key);
 }
 
-Interface::Interface()
+void Interface::Proxy::reassign(int k)
 {
+    key = k;
+}
+
+Interface::Interface(GLFWwindow windowIN) :
+    window(windowIN)
+{
+    windowMap[window] = this;
+
     if (!callbacksRegistered)
     {
-        glfwSetKeyCallback(keyboardCallback);
-        glfwSetMouseButtonCallback(mouseButtonCallback);
-        glfwSetMousePosCallback(mousePositionCallback);
-        glfwSetMouseWheelCallback(mouseWheelCallback);
+        glfwSetKeyCallback(window, keyboardCallback);
+        glfwSetMouseButtonCallback(window, mouseButtonCallback);
+        glfwSetCursorPosCallback(window, mousePositionCallback);
+        glfwSetScrollCallback(window, mouseWheelCallback);
         callbacksRegistered = true;
-
-        glfwDisable(GLFW_AUTO_POLL_EVENTS); // VERY IMPORTANT
     }
 }
 
@@ -94,153 +75,139 @@ Interface::~Interface()
 
 void Interface::poll() //static
 {
-    clearPresses();
+    for (auto& p : windowMap) if (p.second) p.second->clearPresses();
     glfwPollEvents();
 }
 
-bool Interface::keyDown(int key) //static
+bool Interface::keyDown(int key) const
 {
     if (key<0 || key>GLFW_KEY_LAST) return false;
     return keyStates.states[key];
 }
 
-bool Interface::keyPressed(int key) //static
+bool Interface::keyPressed(int key, bool clr)
 {
     if (key<0 || key>GLFW_KEY_LAST) return false;
     if (keyStates.presses.test(key))
     {
-        keyStates.presses.reset(key);
+        if (clr) keyStates.presses.reset(key);
         return true;
     }
     return false;
 }
 
-bool Interface::getBuffer(std::string *target) //static
+std::string Interface::getBuffer()
 {
-    if (keyBuffer.size() < 1) return false;
-    target->clear();
-    for (auto i : keyBuffer) *target += i;
-    keyBuffer.clear();
-    return true;
+    std::string tmp = keyBuffer;
+    keyBuffer = "";
+    return tmp;
 }
 
-bool Interface::mouseState(int button) //static
+bool Interface::mouseState(int button) const
 {
     if (button<0 || button>GLFW_MOUSE_BUTTON_LAST) return false;
     return mouseStates.states[button];
 }
 
-bool Interface::mousePressed(int button) //static
+bool Interface::mousePressed(int button, bool clr)
 {
     if (button<0 || button>GLFW_MOUSE_BUTTON_LAST) return false;
     if (mouseStates.presses[button])
     {
-        //mouseStates.presses[button] = false;
+        if (clr) mouseStates.presses[button] = false;
         return true;
     }
     return false;
 }
 
-int Interface::mouseX() //static
+auto Interface::getMousePos() const -> Coord<int>
 {
-    return mousePos.x;
+    return mousePos;
 }
 
-int Interface::mouseY() //static
+auto Interface::getMouseWheel() const -> Coord<double>
 {
-    return mousePos.y;
+    return mouseWheel;
 }
 
-int Interface::mouseWheel() //static
-{
-    return mousePos.w;
-}
-
-void Interface::setMousePos(int x, int y) //static
+void Interface::setMousePos(int x, int y)
 {
     mousePos.x = x;
     mousePos.y = y;
-    glfwSetMousePos(x, y);
+    glfwSetCursorPos(window, x, y);
 }
 
-void Interface::setMouseWheel(int pos) //static
+void Interface::setMouseWheel(double x, double y)
 {
-    mousePos.w = pos;
+    mouseWheel.x = x;
+    mouseWheel.y = y;
 }
 
-void Interface::showMouse(bool show)
+void Interface::showMouse(bool show) const
 {
-    if (show) glfwEnable(GLFW_MOUSE_CURSOR);
-    else glfwDisable(GLFW_MOUSE_CURSOR);
+    if (show) glfwSetInputMode(window, GLFW_CURSOR_MODE, GLFW_CURSOR_NORMAL);
+    else glfwSetInputMode(window, GLFW_CURSOR_MODE, GLFW_CURSOR_HIDDEN);
 }
 
-void Interface::clearPresses() //static
+auto Interface::getProxy(int k) -> Proxy
+{
+    return Proxy(this, k);
+}
+
+void Interface::clearPresses()
 {
     keyStates.presses.reset();
     mouseStates.presses.reset();
 }
 
-void GLFWCALL Interface::keyboardCallback(int key, int action) //static
+void Interface::keyboardCallback(GLFWwindow win, int key, int action) //static
 {
+    Interface* iface = windowMap[win];
+    if (!iface) return;
     if (key<0 || key>GLFW_KEY_LAST) return;
     if (action == GLFW_PRESS)
     {
-        keyStates.states.set(key);
-        keyStates.presses.set(key);
-        if (key<256) keyBuffer.push_back(static_cast<char>(key));
-        if (key>=GLFW_KEY_KP_0 && key<=GLFW_KEY_KP_9) keyBuffer.push_back(static_cast<char>(key-GLFW_KEY_KP_0+'0'));
+        iface->keyStates.states.set(key);
+        iface->keyStates.presses.set(key);
+        if (key<256) iface->keyBuffer += static_cast<char>(key);
+        if (key>=GLFW_KEY_KP_0 && key<=GLFW_KEY_KP_9) iface->keyBuffer += static_cast<char>(key-GLFW_KEY_KP_0+'0');
     }
     else if (action == GLFW_RELEASE)
     {
-        keyStates.states.reset(key);
+        iface->keyStates.states.reset(key);
     }
 }
 
-void GLFWCALL Interface::mouseButtonCallback(int button, int action) //static
+void Interface::mouseButtonCallback(GLFWwindow win, int button, int action) //static
 {
-    //if (button<0 || button>GLFW_MOUSE_BUTTON_LAST) return; //NOTE Not necessary?
+    Interface* iface = windowMap[win];
+    if (!iface) return;
+    if (button<0 || button>GLFW_MOUSE_BUTTON_LAST) return;
     if (action == GLFW_PRESS)
     {
-        mouseStates.states[button] = true;
-        mouseStates.presses[button] = true;
+        iface->mouseStates.states[button] = true;
+        iface->mouseStates.presses[button] = true;
     }
     else if (action == GLFW_RELEASE)
     {
-        mouseStates.states[button] = false;
+        iface->mouseStates.states[button] = false;
     }
 }
 
-void GLFWCALL Interface::mousePositionCallback(int x, int y) //static
+void Interface::mousePositionCallback(GLFWwindow win, int x, int y) //static
 {
-    mousePos.x = x;
-    mousePos.y = y;
+    Interface* iface = windowMap[win];
+    if (!iface) return;
+    iface->mousePos.x = x;
+    iface->mousePos.y = y;
 }
 
-void GLFWCALL Interface::mouseWheelCallback(int pos) //static
+void Interface::mouseWheelCallback(GLFWwindow win, double x, double y) //static
 {
-    mousePos.w = pos;
-}
-
-auto Interface::getWatch(int k) -> Key::List::iterator
-{
-    auto i = std::lower_bound(watches.begin(), watches.end(), k);
-    if (i != watches.end() && *i == k)
-    {
-        ++i->users;
-    }
-    else
-    {
-        i = watches.insert(i, Key::Index(k));
-    }
-    return i;
-}
-
-void Interface::dropWatch(Key::List::iterator &i)
-{
-    if (--i->users == 0)
-    {
-        watches.erase(i);
-    }
+    Interface* iface = windowMap[win];
+    if (!iface) return;
+    iface->mouseWheel.x = x;
+    iface->mouseWheel.y = y;
 }
 
 } // namespace Inugami
