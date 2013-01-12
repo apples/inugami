@@ -30,7 +30,7 @@ COMPILING:
 Inugami depends on the following software libraries:
     DevIL   1.7.8
     GLEW    1.9.0
-    GLFW    2.6.7
+    GLFW    3.0
     
 I've been tweaking the framework so much that I just compile the sources with my project, but it should work just fine as a static library or DLL or whatever. I recommend using the sandbox project as a template.
 
