@@ -211,3 +211,77 @@ void Interface::mouseWheelCallback(GLFWwindow win, double x, double y) //static
 }
 
 } // namespace Inugami
+
+int operator "" _ivk(char in)
+{
+    if (in >= 'a' && in <= 'z') in = in-'a'+'A';
+    if (in == '\n') return GLFW_KEY_ENTER;
+    if (in == '\b') return GLFW_KEY_BACKSPACE;
+    if (in == '\t') return GLFW_KEY_TAB;
+    return int(in);
+}
+
+int operator "" _ivkFunc(unsigned long long in)
+{
+    if (in >= 1 && in <= 25) return GLFW_KEY_F1-1+in;
+    return 0;
+}
+
+int operator "" _ivkNumpad(char in)
+{
+    if (in >= '0' && in <= '9') return GLFW_KEY_KP_0+(in-'0');
+    if (in == '+') return GLFW_KEY_KP_ADD;
+    if (in == '-') return GLFW_KEY_KP_SUBTRACT;
+    if (in == '*') return GLFW_KEY_KP_MULTIPLY;
+    if (in == '/') return GLFW_KEY_KP_DIVIDE;
+    if (in == '.') return GLFW_KEY_KP_DECIMAL;
+    if (in == '=') return GLFW_KEY_KP_EQUAL;
+    if (in == '\n') return GLFW_KEY_KP_ENTER;
+    return 0;
+}
+
+int operator "" _ivkNumpad(unsigned long long in)
+{
+    if (in >= 0 && in <= 9) return GLFW_KEY_KP_0+in;
+    return 0;
+}
+
+int operator "" _ivkShift(char in)
+{
+    if (in == 'L' || in == 'l') return GLFW_KEY_LEFT_SHIFT;
+    if (in == 'R' || in == 'r') return GLFW_KEY_RIGHT_SHIFT;
+    return 0;
+}
+
+int operator "" _ivkControl(char in)
+{
+    if (in == 'L' || in == 'l') return GLFW_KEY_LEFT_CONTROL;
+    if (in == 'R' || in == 'r') return GLFW_KEY_RIGHT_CONTROL;
+    return 0;
+}
+
+int operator "" _ivkAlt(char in)
+{
+    if (in == 'L' || in == 'l') return GLFW_KEY_LEFT_ALT;
+    if (in == 'R' || in == 'r') return GLFW_KEY_RIGHT_ALT;
+    return 0;
+}
+
+int operator "" _ivkArrow(char in)
+{
+    if (in >= 'a' && in <= 'z') in = in-'a'+'A';
+    if (in == 'U' || in == 'N') return GLFW_KEY_UP;
+    if (in == 'D' || in == 'S') return GLFW_KEY_DOWN;
+    if (in == 'L' || in == 'W') return GLFW_KEY_LEFT;
+    if (in == 'R' || in == 'E') return GLFW_KEY_RIGHT;
+    return 0;
+}
+
+int operator "" _ivm(char in)
+{
+    if (in >= 'a' && in <= 'z') in = in-'a'+'A';
+    if (in == 'L') return GLFW_MOUSE_BUTTON_LEFT;
+    if (in == 'R') return GLFW_MOUSE_BUTTON_RIGHT;
+    if (in == 'M') return GLFW_MOUSE_BUTTON_MIDDLE;
+    return 0;
+}

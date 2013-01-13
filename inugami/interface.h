@@ -103,4 +103,15 @@ private:
 
 } // namespace Inugami
 
+int operator "" _ivk(char in);
+int operator "" _ivkFunc(unsigned long long in);
+int operator "" _ivkNumpad(char in);
+int operator "" _ivkNumpad(unsigned long long in);
+int operator "" _ivkShift(char in);
+int operator "" _ivkControl(char in);
+int operator "" _ivkAlt(char in);
+int operator "" _ivkArrow(char in);
+
+int operator "" _ivm(char in);
+
 #endif // INUGAMI_INTERFACE_H
