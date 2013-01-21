@@ -28,16 +28,16 @@ class Mesh
 {
     friend class Core;
 public:
-    class __attribute__((__packed__)) Vertex
+    class Vertex
     {
     public:
         bool operator==(const Vertex &in);
-        Vec3 pos;
-        Vec3 norm;
-        Vec2 uv;
+        ::glm::vec3 pos;
+        ::glm::vec3 norm;
+        ::glm::vec2 uv;
     };
 
-    class __attribute__((__packed__)) Triangle
+    class Triangle
     {
     public:
         bool operator==(const Triangle &in);

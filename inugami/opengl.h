@@ -20,4 +20,8 @@ Permission is granted to anyone to use this software for any purpose, including 
 #include <GL/glew.h>
 #include <GL/glfw3.h>
 
+#include "../glm/glm.hpp"
+//#include "../glm/gtc/matrix_projection.hpp"
+#include "../glm/gtc/matrix_transform.hpp"
+
 #endif // OPENGL_H_INCLUDED

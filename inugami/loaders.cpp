@@ -87,13 +87,16 @@ bool loadTextFromFile(const std::string &filename, std::string &target)
 
 bool loadObjFromFile(const std::string& filename, Mesh& target)
 {
+    typedef ::glm::vec3 vec3;
+    typedef ::glm::vec2 vec2;
+
     std::ifstream inFile(filename.c_str());
     std::string inString, command, pointstr[8], elem[3];
     std::stringstream ss, ss2;
 
-    std::vector<Vector<float, 3>> positions;
-    std::vector<Vector<float, 3>> normals;
-    std::vector<Vector<float, 2>> texcoords;
+    std::vector<vec3> positions;
+    std::vector<vec3> normals;
+    std::vector<vec2> texcoords;
 
     struct VDATA {VDATA():p(-1),n(-1),t(-1){} int p, n, t;};
     std::vector<std::array<VDATA, 3>> tris;
@@ -111,27 +114,27 @@ bool loadObjFromFile(const std::string& filename, Mesh& target)
 
         if (command == "v")
         {
-            positions.push_back(Vector<float, 3>());
-            ss >> positions.back().x();
-            ss >> positions.back().y();
-            ss >> positions.back().z();
+            positions.push_back(vec3());
+            ss >> positions.back().x;
+            ss >> positions.back().y;
+            ss >> positions.back().z;
             continue;
         }
 
         if (command == "vn")
         {
-            normals.push_back(Vector<float, 3>());
-            ss >> normals.back().x();
-            ss >> normals.back().y();
-            ss >> normals.back().z();
+            normals.push_back(vec3());
+            ss >> normals.back().x;
+            ss >> normals.back().y;
+            ss >> normals.back().z;
             continue;
         }
 
         if (command == "vt")
         {
-            texcoords.push_back(Vector<float, 2>());
-            ss >> texcoords.back().x();
-            ss >> texcoords.back().y();
+            texcoords.push_back(vec2());
+            ss >> texcoords.back().x;
+            ss >> texcoords.back().y;
             continue;
         }
 

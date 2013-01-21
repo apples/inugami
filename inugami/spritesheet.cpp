@@ -10,34 +10,18 @@ std::map<Spritesheet::Dimensions, std::vector<Mesh>> Spritesheet::pool;
 
 bool Spritesheet::Dimensions::operator<(const Dimensions &in) const
 {
-    if (w < in.w) return true;
-    if (w == in.w)
-    {
-        if (h < in.h) return true;
-        if (h == in.h)
-        {
-            if (tw < in.tw) return true;
-            if (tw == in.tw)
-            {
-                if (th < in.th) return true;
-                if (th == in.th)
-                {
-                    if (cx < in.cx) return true;
-                    if (cx == in.cx)
-                    {
-                        if (cy < in.cy) return true;
-                    }
-                }
-            }
-        }
-    }
-    return false;
+    return chainComp(w, in.w,
+                     h, in.h,
+                     tw, in.tw,
+                     th, in.th,
+                     cx, in.cx,
+                     cy, in.cy);
 }
 
 Spritesheet::Spritesheet(const std::string& filename, unsigned int w, unsigned int h, float cx, float cy) :
     tex(filename, false, false)
 {
-    constexpr float E = std::numeric_limits<float>::epsilon() * 512.0f * 6.0f;
+    constexpr float E = std::numeric_limits<float>::epsilon() * 1.0e3;
 
     auto pow2 = [](unsigned int i) {return (i!=0 && (i&(i-1))==0);};
 
@@ -48,47 +32,47 @@ Spritesheet::Spritesheet(const std::string& filename, unsigned int w, unsigned i
     dim.cx = cx;
     dim.cy = cy;
 
-    sprites = &pool[dim]; //FIXME spritesheet pool
+    auto& sprites = pool[dim]; //FIXME spritesheet pool
 
-    if (sprites->size() == 0)
+    if (sprites.size() == 0)
     {
-        sprites->resize(dim.w * dim.h);
+        sprites.resize(dim.w * dim.h);
 
         Mesh::Vertex vert;
-        vert.pos.z() = 0.0f;
-        vert.norm.x() = 0.0f;
-        vert.norm.y() = 0.0f;
-        vert.norm.z() = 1.0f;
+        vert.pos.z = 0.0f;
+        vert.norm.x = 0.0f;
+        vert.norm.y = 0.0f;
+        vert.norm.z = 1.0f;
 
-        Vector<float, 2> uvStep;
-        uvStep.x() = float(w)/float(tex.getWidth());
-        uvStep.y() = float(h)/float(tex.getHeight());
+        ::glm::vec2 uvStep;
+        uvStep.x = float(w)/float(tex.getWidth());
+        uvStep.y = float(h)/float(tex.getHeight());
 
         for (unsigned int r = 0; r<dim.h; ++r)
         {
             for (unsigned int c = 0; c<dim.w; ++c)
             {
-                float u = float(c)*uvStep.x();
-                float v = 1.0f-float(r)*uvStep.y();
+                float u = float(c)*uvStep.x;
+                float v = 1.0f-float(r)*uvStep.y;
 
-                Mesh &mesh = (*sprites)[r*dim.w +c];
+                Mesh &mesh = sprites[r*dim.w +c];
                 Mesh::Triangle tri;
 
-                vert.pos.x() = -float(w)*cx;
-                vert.pos.y() = float(h)*cy;
-                vert.uv.x() = u+E;
-                vert.uv.y() = v-E;
+                vert.pos.x = -float(w)*cx;
+                vert.pos.y = float(h)*cy;
+                vert.uv.x = u+E;
+                vert.uv.y = v-E;
                 tri.v[0] = mesh.addVertex(vert);
-                vert.pos.y() = -float(h)*(1.0f-cy);
-                vert.uv.y() = v-uvStep.y()+E;
+                vert.pos.y = -float(h)*(1.0f-cy);
+                vert.uv.y = v-uvStep.y+E;
                 tri.v[1] = mesh.addVertex(vert);
-                vert.pos.x() = float(w)*(1.0f-cx);
-                vert.uv.x() = u+uvStep.x()-E;
+                vert.pos.x = float(w)*(1.0f-cx);
+                vert.uv.x = u+uvStep.x-E;
                 tri.v[2] = mesh.addVertex(vert);
                 mesh.addTriangle(tri);
                 tri.v[1] = tri.v[2];
-                vert.pos.y() = float(h)*cy;
-                vert.uv.y() = v-E;
+                vert.pos.y = float(h)*cy;
+                vert.uv.y = v-E;
                 tri.v[2] = mesh.addVertex(vert);
                 mesh.addTriangle(tri);
 
@@ -97,6 +81,11 @@ Spritesheet::Spritesheet(const std::string& filename, unsigned int w, unsigned i
         }
     }
 }
+
+Spritesheet::Spritesheet(const Spritesheet& in) :
+    tex(in.tex),
+    dim(in.dim)
+{}
 
 Spritesheet::~Spritesheet()
 {}
@@ -110,7 +99,7 @@ void Spritesheet::draw(unsigned int r, unsigned int c)
 Mesh &Spritesheet::getMesh(unsigned int r, unsigned int c)
 {
     if (c>dim.w || r>dim.h) throw;
-    return (*sprites)[r*dim.w+c];
+    return pool[dim][r*dim.w+c];
 }
 
 Texture &Spritesheet::getTex()

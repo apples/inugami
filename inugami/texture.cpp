@@ -23,7 +23,7 @@ Permission is granted to anyone to use this software for any purpose, including 
 
 namespace Inugami {
 
-std::list<std::pair<Texture::Index, Texture::Value>> Texture::pool(0);
+Texture::Bank Texture::pool;
 
 Texture::Index::Index(const std::string &inName, bool inSmooth, bool inClamp) :
     name(inName),
@@ -49,6 +49,14 @@ bool Texture::Index::operator<(const Index &in) const
     return false;
 }
 
+bool Texture::Index::operator==(const Index &in) const
+{
+    if (name == in.name) return true;
+    if (smooth == in.smooth) return true;
+    if (clamp == in.clamp) return true;
+    return false;
+}
+
 Texture::Value::Value() :
     id(0),
     width(0), height(0),
@@ -56,33 +64,22 @@ Texture::Value::Value() :
 {}
 
 Texture::Texture(const std::string &filename, bool smooth, bool clamp) :
-    pos()
+    id(filename, smooth, clamp)
 {
-    Index i(filename, smooth, clamp);
-
-    auto comp = [](const std::pair<Index, Value> &p, const Index &i)
-    {
-        return (p.first < i);
-    };
-    pos = std::lower_bound(pool.begin(), pool.end(), i, comp);
-
-    if (pos == pool.end()
-     || pos->first.name != i.name
-     || pos->first.smooth != i.smooth
-     || pos->first.clamp != i.clamp)
+    if (pool.find(id) == pool.end())
     {
         std::vector<char> data;
-        if (!loadImageFromFile(i.name, data)) throw std::runtime_error("Couldn't load image!");
+        if (!loadImageFromFile(id.name, data)) throw std::runtime_error("Couldn't load image!");
 
         GLuint newID;
         glGenTextures(1, &newID);
         glBindTexture(GL_TEXTURE_2D, newID);
 
-        GLuint filter = (i.smooth)? GL_LINEAR : GL_NEAREST;
+        GLuint filter = (id.smooth)? GL_LINEAR : GL_NEAREST;
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter);
 
-        GLuint wrap = (i.clamp)? GL_CLAMP : GL_REPEAT;
+        GLuint wrap = (id.clamp)? GL_CLAMP : GL_REPEAT;
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrap);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrap);
 
@@ -91,35 +88,21 @@ Texture::Texture(const std::string &filename, bool smooth, bool clamp) :
             0, GL_RGBA, GL_UNSIGNED_BYTE, &data[8]
         );
 
-        Value val;
-        val.id = newID;
-        val.width = *reinterpret_cast<int*>(&data[0]);
-        val.height = *reinterpret_cast<int*>(&data[sizeof(int)]);
-        val.users = 1;
-
-        pos = pool.insert(pos, std::pair<Index, Value>(i, val));
+        pool[id].id = newID;
+        pool[id].width = *reinterpret_cast<int*>(&data[0]);
+        pool[id].height = *reinterpret_cast<int*>(&data[sizeof(int)]);
+        pool[id].users = 1;
     }
     else
     {
-        ++pos->second.users;
+        ++pool[id].users;
     }
 }
 
 Texture::Texture(int) :
-    pos()
+    id("", false, false)
 {
-    Index i("", false, false);
-
-    auto comp = [](const std::pair<Index, Value> &p, const Index &i)
-    {
-        return (p.first < i);
-    };
-    pos = std::lower_bound(pool.begin(), pool.end(), i, comp);
-
-    if (pos == pool.end()
-     || pos->first.name != i.name
-     || pos->first.smooth != i.smooth
-     || pos->first.clamp != i.clamp)
+    if (pool.find(id) == pool.end())
     {
         unsigned int data = 0xffffffff;
 
@@ -138,64 +121,67 @@ Texture::Texture(int) :
             0, GL_RGBA, GL_UNSIGNED_BYTE, reinterpret_cast<GLvoid*>(&data)
         );
 
-        Value val;
-        val.id = newID;
-        val.width = 1;
-        val.height = 1;
-        val.users = 1;
+        pool[id].id = newID;
+        pool[id].width = 1;
+        pool[id].height = 1;
+        pool[id].users = 1;
 
-        pos = pool.insert(pos, std::pair<Index, Value>(i, val));
     }
     else
     {
-        ++pos->second.users;
+        ++pool[id].users;
     }
 }
 
 Texture::Texture(const Texture &in) :
-    pos(in.pos)
+    id(in.id)
 {
-    ++pos->second.users;
+    ++pool[id].users;
 }
 
 Texture::~Texture()
 {
-    if (--pos->second.users == 0)
+    if (--pool[id].users == 0)
     {
-        glDeleteTextures(1, &pos->second.id);
-        pool.erase(pos);
+        glDeleteTextures(1, &pool[id].id);
+        pool.erase(pool.find(id));
     }
 }
 
 Texture &Texture::operator=(const Texture &in)
 {
-    if (pos == in.pos) return *this;
+    if (id == in.id) return *this;
 
-    if (--pos->second.users == 0)
+    if (--pool[id].users == 0)
     {
-        glDeleteTextures(1, &pos->second.id);
-        pool.erase(pos);
+        glDeleteTextures(1, &pool[id].id);
+        pool.erase(pool.find(id));
     }
 
-    pos = in.pos;
-    ++pos->second.users;
+    id = in.id;
+    ++pool[id].users;
 
     return *this;
 }
 
 void Texture::bind() const
 {
-    glBindTexture(GL_TEXTURE_2D, pos->second.id);
+    glBindTexture(GL_TEXTURE_2D, pool[id].id);
 }
 
 unsigned int Texture::getWidth() const
 {
-    return pos->second.width;
+    return pool[id].width;
 }
 
 unsigned int Texture::getHeight() const
 {
-    return pos->second.height;
+    return pool[id].height;
+}
+
+const std::string& Texture::getName() const
+{
+    return id.name;
 }
 
 } // namespace Inugami

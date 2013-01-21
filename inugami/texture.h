@@ -19,7 +19,7 @@ Permission is granted to anyone to use this software for any purpose, including 
 
 #include "opengl.h"
 
-#include <list>
+#include <map>
 #include <string>
 #include <utility>
 
@@ -39,6 +39,8 @@ public:
     unsigned int getWidth() const;
     unsigned int getHeight() const;
 
+    const std::string& getName() const;
+
 private:
     class Index
     {
@@ -46,6 +48,7 @@ private:
         Index();
         Index(const std::string &inName, bool inSmooth, bool inClamp);
         bool operator<(const Index &in) const;
+        bool operator==(const Index &in) const;
         std::string name;
         bool smooth, clamp;
     };
@@ -59,8 +62,11 @@ private:
         int users;
     };
 
-    std::list<std::pair<Index, Value>>::iterator pos;
-    static std::list<std::pair<Index, Value>> pool;
+    typedef std::map<Index, Value> Bank;
+
+    Index id;
+
+    static Bank pool;
 };
 
 } // namespace Inugami

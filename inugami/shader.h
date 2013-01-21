@@ -33,27 +33,22 @@ public:
         VERT, TCS, TES, GEO, FRAG
     };
 
-    struct OPOPP
-    {
-        int a, b;
-        float c;
-    };
-
     typedef std::map<Type, std::string> Program;
 
     Shader(const Program &in);
+    Shader(const Shader&) = delete;
     ~Shader();
 
-    void bind();
+    void bind() const;
 
-//    void setUniform(const char *name, const bool val);
-//    void setUniform(const char *name, const float val);
-//    void setUniform(const char *name, const int val);
-//    void setUniform(const char *name, const Vec2 &val);
-//    void setUniform(const char *name, const Vec3 &val);
-//    void setUniform(const char *name, const Vec4 &val);
-//    void setUniform(const char *name, const Mat3 &val);
-//    void setUniform(const char *name, const Mat4 &val);
+    void setUniform(const std::string& name, const bool val) const;
+    void setUniform(const std::string& name, const float val) const;
+    void setUniform(const std::string& name, const int val) const;
+    void setUniform(const std::string& name, const ::glm::vec2 &val) const;
+    void setUniform(const std::string& name, const ::glm::vec3 &val) const;
+    void setUniform(const std::string& name, const ::glm::vec4 &val) const;
+    void setUniform(const std::string& name, const ::glm::mat3 &val) const;
+    void setUniform(const std::string& name, const ::glm::mat4 &val) const;
 
 private:
     GLuint program;

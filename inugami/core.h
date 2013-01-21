@@ -17,10 +17,11 @@ Permission is granted to anyone to use this software for any purpose, including 
 #ifndef INUGAMI_CORE_H
 #define INUGAMI_CORE_H
 
+#include "camera.h"
 #include "interface.h"
 #include "mesh.h"
-#include "camera.h"
 #include "opengl.h"
+#include "shader.h"
 #include "spritesheet.h"
 
 #include <list>
@@ -33,6 +34,7 @@ namespace Inugami {
 
 class Core
 {
+    typedef ::glm::mat4 Mat4;
 public:
     /** @brief Parameters for screen initialization.
      */
@@ -43,18 +45,7 @@ public:
         int height;         ///< Height of the screen in pixels.
         bool fullscreen;    ///< Takes fullscreen contol of device.
         bool vsync;         ///< Waits for vertical sync.
-        double fov;         ///< Field of view in degrees.
-        float nearClip;     ///< Near clipping plane distance.
-        float farClip;      ///< Far clipping plane distance.
         int fsaaSamples;    ///< Number of samples to use for FSAA.
-        struct Mode2D_t
-        {
-            Mode2D_t();
-            float width;        ///< Width of 2D space.
-            float height;       ///< Height of 2D space.
-            float nearClip;     ///< Near clipping plane distance.
-            float farClip;      ///< Far clipping plane distance.
-        } mode2D;           ///< Parameters for 2D mode.
     };
 
     /** @brief Rendering modes.
@@ -94,17 +85,10 @@ public:
      */
     void endFrame();
 
-    /** @brief Draws text on the screen.
-     * Draws text to OpenGL, even in 3D mode, using the current transformation
-     * and viewing matrices.
-     * @param text String to draw.
-     * @param pushpop Restore matrices when done.
-     */
-    void drawString(const char *text, bool pushpop=true);
-
     /** @brief Returns the current display framerate.
      */
     double getInstantFrameRate();
+
     /** @brief Returns the current average display framerate.
      */
     double getAverageFrameRate();
@@ -116,7 +100,9 @@ public:
      * @param s Face to be shown.
      * @return @a True if success, @false if fail.
      */
-    bool setMode(RenderMode m, RenderFace s);
+    void applyCam(const Camera& in);
+
+    void modelMatrix(const Mat4& in);
 
     /** @brief Loads a texture.
      * Loads a mesh from disk. Meshes are unloaded using @a dropMesh().
@@ -163,12 +149,6 @@ public:
      */
     const RenderParams& getParams();
 
-    /** @brief Dumps state to a stream.
-     * Dumps readable information about everything to the specified stream.
-     * @param out Output stream.
-     */
-    void dumpState(std::ostream &&out);
-
     /** @brief Adds or updates a callback.
      * @param func Function to add or update.
      * @param freq Call frequency, in Hertz.
@@ -192,14 +172,23 @@ public:
      */
     Interface* getInterface();
 
+    /** @brief Gets a pointer to the current shader.
+     * @return Pointer to the current shader.
+     */
+    const Shader* getShader();
+
+    /** @brief Sets the current shader.
+     *  Sets the target shader for use in rendering. If nullptr, default shader is used.
+     *  @param in Pointer to the target shader.
+     */
+    void setShader(Shader* in);
+
     int getWindowParam(int param);
 
     /**
      * Set this to @a false at any time to exit the @a go() cycle.
      */
     bool running;
-
-    Camera cam;
 
 private:
     struct Callback
@@ -221,6 +210,8 @@ private:
     static void init();
     static void die();
 
+    void createDefaultShader();
+
     double frameStartTime;
     double currentFrameRate;
     double averageFrameRate;
@@ -237,10 +228,10 @@ private:
     std::string windowTitle;
     bool windowTitleShowFPS;
 
-    GLuint fontLists;
-
     GLFWwindow window;
     Interface *iface;
+
+    Shader *defaultShader, *customShader;
 };
 
 } // namespace Inugami

@@ -58,22 +58,25 @@ Mesh &Mesh::init()
     vertices.shrink_to_fit();
     triangles.shrink_to_fit();
 
+    glGenVertexArrays(1, &vao);
+    glBindVertexArray(vao);
+    glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(1);
+    glEnableVertexAttribArray(2);
+
     glGenBuffers(1, &vbo);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex)*vertices.size(), &vertices[0], GL_STATIC_DRAW);
 
-//    glGenVertexArrays(1, &vao);
-//    glBindVertexArray(vao);
-//    glEnableVertexAttribArray(0);
-//    glEnableVertexAttribArray(1);
-//    glEnableVertexAttribArray(2);
-//    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)0);
-//    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)(sizeof(Vec3))); //TODO find pointer offset type
-//    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)(sizeof(Vec3)*2)); //TODO find pointer offset type
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)0);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)(sizeof(::glm::vec3))); //TODO find pointer offset type
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)(sizeof(::glm::vec3)*2)); //TODO find pointer offset type
 
     glGenBuffers(1, &ele);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ele);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Triangle)*triangles.size(), &triangles[0], GL_STATIC_DRAW);
+
+    glBindVertexArray(0);
 
     initted = true;
     return *this;
@@ -83,13 +86,13 @@ void Mesh::draw()
 {
     if (!initted) throw std::logic_error("Mesh not initialized.");
 
-    //glBindVertexArray(vao);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glVertexPointer(3, GL_FLOAT, sizeof(Vertex), (GLvoid*)0);
-    glNormalPointer(GL_FLOAT, sizeof(Vertex), (GLvoid*)(sizeof(Vec3)));
-    glTexCoordPointer(2, GL_FLOAT, sizeof(Vertex), (GLvoid*)(sizeof(Vec3)*2));
+    glBindVertexArray(vao);
+//    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+//    glVertexPointer(3, GL_FLOAT, sizeof(Vertex), (GLvoid*)0);
+//    glNormalPointer(GL_FLOAT, sizeof(Vertex), (GLvoid*)(sizeof(::glm::vec3)));
+//    glTexCoordPointer(2, GL_FLOAT, sizeof(Vertex), (GLvoid*)(sizeof(::glm::vec3)*2));
 
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ele);
+    //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ele);
     glDrawElements(GL_TRIANGLES, triangles.size()*3, GL_UNSIGNED_INT, 0);
 }
 
@@ -101,18 +104,18 @@ void Mesh::drawImmediate()
         for (int j=0; j<3; ++j)
         {
             glTexCoord2f(
-                vertices[i.v[j]].uv.x(),
-                vertices[i.v[j]].uv.y()
+                vertices[i.v[j]].uv.x,
+                vertices[i.v[j]].uv.y
             );
             glNormal3f(
-                vertices[i.v[j]].norm.x(),
-                vertices[i.v[j]].norm.y(),
-                vertices[i.v[j]].norm.z()
+                vertices[i.v[j]].norm.x,
+                vertices[i.v[j]].norm.y,
+                vertices[i.v[j]].norm.z
             );
             glVertex3f(
-                vertices[i.v[j]].pos.x(),
-                vertices[i.v[j]].pos.y(),
-                vertices[i.v[j]].pos.z()
+                vertices[i.v[j]].pos.x,
+                vertices[i.v[j]].pos.y,
+                vertices[i.v[j]].pos.z
             );
         }
     }

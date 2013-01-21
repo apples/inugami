@@ -35,47 +35,22 @@ Shader::Shader(const Program &source)
         return (status == GL_TRUE);
     };
 
+    static std::map<Type, GLint> shaderTypes = {
+        {Type::VERT, GL_VERTEX_SHADER},
+        {Type::TCS, GL_TESS_CONTROL_SHADER},
+        {Type::TES, GL_TESS_EVALUATION_SHADER},
+        {Type::GEO, GL_GEOMETRY_SHADER},
+        {Type::FRAG, GL_FRAGMENT_SHADER}
+    };
+
     std::map<Type, GLuint> ids;
 
-    Program::const_iterator i;
-    if ((i=source.find(Type::VERT)) != source.end())
+    for (auto& p : source)
     {
-        ids[Type::VERT] = glCreateShader(GL_VERTEX_SHADER);
-        if (!compile(ids[Type::VERT], i->second))
+        ids[p.first] = glCreateShader(shaderTypes[p.first]);
+        if (!compile(ids[p.first], p.second))
         {
-            throw std::runtime_error("Failed to compile vertex shader!");
-        }
-    }
-    if ((i=source.find(Type::TCS)) != source.end())
-    {
-        ids[Type::TCS] = glCreateShader(GL_TESS_CONTROL_SHADER);
-        if (!compile(ids[Type::TCS], i->second))
-        {
-            throw std::runtime_error("Failed to compile TCS shader!");
-        }
-    }
-    if ((i=source.find(Type::TES)) != source.end())
-    {
-        ids[Type::TES] = glCreateShader(GL_TESS_EVALUATION_SHADER);
-        if (!compile(ids[Type::TES], i->second))
-        {
-            throw std::runtime_error("Failed to compile TES shader!");
-        }
-    }
-    if ((i=source.find(Type::GEO)) != source.end())
-    {
-        ids[Type::GEO] = glCreateShader(GL_GEOMETRY_SHADER);
-        if (!compile(ids[Type::GEO], i->second))
-        {
-            throw std::runtime_error("Failed to compile geometry shader!");
-        }
-    }
-    if ((i=source.find(Type::FRAG)) != source.end())
-    {
-        ids[Type::FRAG] = glCreateShader(GL_FRAGMENT_SHADER);
-        if (!compile(ids[Type::FRAG], i->second))
-        {
-            throw std::runtime_error("Failed to compile fragment shader!");
+            throw std::runtime_error("Failed to compile shader!");
         }
     }
 
@@ -87,7 +62,7 @@ Shader::Shader(const Program &source)
     GLint status;
     glGetShaderiv(program, GL_LINK_STATUS, &status);
 
-    if (status == GL_FALSE) throw std::runtime_error("Failed to link program!");
+    if (status == GL_FALSE) throw std::runtime_error("Failed to link shader!");
 }
 
 Shader::~Shader()
@@ -95,9 +70,51 @@ Shader::~Shader()
     glDeleteProgram(program);
 }
 
-void Shader::bind()
+void Shader::bind() const
 {
     glUseProgram(program);
+}
+
+void Shader::setUniform(const std::string& name, const float val) const
+{
+    GLint loc = glGetUniformLocation(program, name.c_str());
+    glUniform1f(loc, val);
+}
+
+void Shader::setUniform(const std::string& name, const int val) const
+{
+    GLint loc = glGetUniformLocation(program, name.c_str());
+    glUniform1i(loc, val);
+}
+
+void Shader::setUniform(const std::string& name, const ::glm::vec2 &val) const
+{
+    GLint loc = glGetUniformLocation(program, name.c_str());
+    glUniform2fv(loc, 1, &val[0]);
+}
+
+void Shader::setUniform(const std::string& name, const ::glm::vec3 &val) const
+{
+    GLint loc = glGetUniformLocation(program, name.c_str());
+    glUniform3fv(loc, 1, &val[0]);
+}
+
+void Shader::setUniform(const std::string& name, const ::glm::vec4 &val) const
+{
+    GLint loc = glGetUniformLocation(program, name.c_str());
+    glUniform4fv(loc, 1, &val[0]);
+}
+
+void Shader::setUniform(const std::string& name, const ::glm::mat3 &val) const
+{
+    GLint loc = glGetUniformLocation(program, name.c_str());
+    glUniformMatrix3fv(loc, 1, GL_FALSE, &val[0][0]);
+}
+
+void Shader::setUniform(const std::string& name, const ::glm::mat4 &val) const
+{
+    GLint loc = glGetUniformLocation(program, name.c_str());
+    glUniformMatrix4fv(loc, 1, GL_FALSE, &val[0][0]);
 }
 
 } // namespace Inugami

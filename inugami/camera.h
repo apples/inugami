@@ -17,32 +17,44 @@ Permission is granted to anyone to use this software for any purpose, including 
 #ifndef INUGAMI_CAMERA_H
 #define INUGAMI_CAMERA_H
 
-#include "mathtypes.h"
+#include "opengl.h"
 
 namespace Inugami {
 
 class Camera
 {
 public:
+    typedef ::glm::vec3 Vec3;
+    typedef ::glm::mat4 Mat4;
+
     Camera();
+    Camera(const Camera&) = default;
     virtual ~Camera();
 
-    void translate(float x, float y, float z);
-    void relocate(float x, float y, float z);
+    Camera& perspective(float fov, float ratio, float near, float far);
+    Camera& ortho(float left, float right, float bottom, float top, float near, float far);
 
-    void rotate(float angle, float x, float y, float z);
-    void pitch(float angle);
-    void roll(float angle);
-    void yaw(float angle);
-    void pitchd(float angle);
-    void rolld(float angle);
-    void yawd(float angle);
+    Camera& translate(const Vec3& pos);
+    Camera& rotate(float deg, const Vec3& axis);
 
-    Matrix<float, 4, 4> getMatrix();
+    Camera& pitch(float deg);
+    Camera& yaw(float deg);
+    Camera& roll(float deg);
 
-protected:
+    Camera& pushProjection();
+    Camera& pushView();
+    Camera& popProjection();
+    Camera& popView();
+
+    const Mat4& getProjection() const;
+    const Mat4& getView() const;
+
+    bool cullFaces;
+    bool depthTest;
+
 private:
-    Transformation<float> pos;
+    Mat4 projection;
+    Mat4 view;
 };
 
 } // namespace Inugami

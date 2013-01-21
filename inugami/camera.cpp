@@ -16,68 +16,67 @@ Permission is granted to anyone to use this software for any purpose, including 
 
 #include "camera.h"
 
-#include "math.h"
-
 namespace Inugami {
 
-Camera::Camera()
-{
-    //ctor
-}
+Camera::Camera() :
+    cullFaces(false), depthTest(false),
+    projection(1.0f),
+    view(1.0f)
+{}
 
 Camera::~Camera()
+{}
+
+Camera& Camera::perspective(float fov, float aspect, float near, float far)
 {
-    //dtor
+    projection = ::glm::perspective(fov, aspect, near, far);
+    return *this;
 }
 
-void Camera::translate(float x, float y, float z)
+Camera& Camera::ortho(float left, float right, float bottom, float top, float near, float far)
 {
-    pos.loc -= Vector<float, 3>(x, y, z);
+    projection = ::glm::ortho(left, right, bottom, top, near, far);
+    return *this;
 }
 
-void Camera::relocate(float x, float y, float z)
+Camera& Camera::translate(const Vec3& pos)
 {
-    pos.loc = Vector<float, 4>(x, y, z, 1.0);
+    view = ::glm::translate(view, pos);
+    return *this;
 }
 
-void Camera::rotate(float angle, float x, float y, float z)
+Camera& Camera::rotate(float deg, const Vec3& axis)
 {
-    pos.rot = quatFromAxisAngle(angle, Vector<float, 3>(x, y, z)) * pos.rot;
+    view = ::glm::rotate(view, deg, axis);
+    return *this;
 }
 
-void Camera::pitch(float angle)
+Camera& Camera::pitch(float deg)
 {
-    pos.rot = quatFromAxisAngle(angle, Vector<float, 3>(1.0, 0.0, 0.0)) * pos.rot;
+    view = ::glm::rotate(view, deg, Vec3(0.f, 1.f, 0.f));
+    return *this;
 }
 
-void Camera::roll(float angle)
+Camera& Camera::yaw(float deg)
 {
-    pos.rot = quatFromAxisAngle(angle, Vector<float, 3>(0.0, 0.0, 1.0)) * pos.rot;
+    view = ::glm::rotate(view, deg, Vec3(1.f, 0.f, 0.f));
+    return *this;
 }
 
-void Camera::yaw(float angle)
+Camera& Camera::roll(float deg)
 {
-    pos.rot = quatFromAxisAngle(angle, Vector<float, 3>(0.0, 1.0, 0.0)) * pos.rot;
+    view = ::glm::rotate(view, deg, Vec3(0.f, 0.f, 1.f));
+    return *this;
 }
 
-void Camera::pitchd(float angle)
+auto Camera::getProjection() const -> const Mat4&
 {
-    pos.rot = quatFromAxisAngle(toRadians(angle), Vector<float, 3>(1.0, 0.0, 0.0)) * pos.rot;
+    return projection;
 }
 
-void Camera::rolld(float angle)
+auto Camera::getView() const -> const Mat4&
 {
-    pos.rot = quatFromAxisAngle(toRadians(angle), Vector<float, 3>(0.0, 0.0, 1.0)) * pos.rot;
-}
-
-void Camera::yawd(float angle)
-{
-    pos.rot = quatFromAxisAngle(toRadians(angle), Vector<float, 3>(0.0, 1.0, 0.0)) * pos.rot;
-}
-
-Matrix<float, 4, 4> Camera::getMatrix()
-{
-    return pos.getMatrix();
+    return view;
 }
 
 } // namespace Inugami

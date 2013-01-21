@@ -14,6 +14,7 @@ class Spritesheet
 {
 public:
     Spritesheet(const std::string &filename, unsigned int w, unsigned int h, float cx = 0.5f, float cy = 0.5f);
+    Spritesheet(const Spritesheet& in);
     virtual ~Spritesheet();
 
     void draw(unsigned int r, unsigned int c);
@@ -30,14 +31,13 @@ private:
         float cx, cy;
     };
 
-    void init(const std::string &filename, unsigned int w, unsigned int h);
+    typedef std::map<Dimensions, std::vector<Mesh>> MeshBank;
 
     Texture tex;
-    std::vector<Mesh> *sprites;
 
     Dimensions dim;
 
-    static std::map<Dimensions, std::vector<Mesh>> pool;
+    static MeshBank pool;
 };
 
 } // namespace Inugami

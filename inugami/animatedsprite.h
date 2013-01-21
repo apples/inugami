@@ -19,6 +19,7 @@ Permission is granted to anyone to use this software for any purpose, including 
 
 #include "spritesheet.h"
 
+#include <array>
 #include <utility>
 #include <vector>
 
@@ -40,6 +41,7 @@ public:
     typedef std::vector<Frame> FrameList;
 
     AnimatedSprite();
+    AnimatedSprite(const AnimatedSprite& in);
     virtual ~AnimatedSprite();
 
     void setSpritesheet(Spritesheet *in);
@@ -47,24 +49,18 @@ public:
     void setSprites(const SpriteList &in);
     void setSequence(const FrameList &in);
 
-    void flipX();
-    void flipX(bool in);
-    void flipY();
-    void flipY(bool in);
-
     void draw();
     bool done();
     void reset();
 
 private:
     Spritesheet *sheet;
-    std::vector<Mesh*> meshes;
+    SpriteList sprites;
     FrameList sequence;
     Mode mode;
     bool ended;
     unsigned int timer;
     int pos, dir;
-    bool flip[2];
 };
 
 } // namespace Inugami

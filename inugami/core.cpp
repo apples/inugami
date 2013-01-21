@@ -31,15 +31,7 @@ Core::RenderParams::RenderParams() :
     width(800), height(600),
     fullscreen(false),
     vsync(false),
-    fov(90.0),
-    nearClip(0.1), farClip(100.0),
-    fsaaSamples(4),
-    mode2D()
-{}
-
-Core::RenderParams::Mode2D_t::Mode2D_t() :
-    width(2.0), height(2.0),
-    nearClip(-1.0), farClip(1.0)
+    fsaaSamples(4)
 {}
 
 Core::Core(const RenderParams &params) :
@@ -85,8 +77,10 @@ Core::Core(const RenderParams &params) :
     glClearColor(0.0, 0.0, 0.0, 0.0);
 
     glClearDepth(1);
-    glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
+
+    glFrontFace(GL_CCW);
+    glCullFace(GL_BACK);
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -97,27 +91,6 @@ Core::Core(const RenderParams &params) :
     glEnableClientState(GL_NORMAL_ARRAY);
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
-    //Generate lists for fonts
-    fontLists = glGenLists(256);
-    for (unsigned int i=0; i<256; ++i)
-    {
-        glNewList(fontLists+i, GL_COMPILE);
-        float u=0.0, v=0.0;
-        for (unsigned int j=0; j<i%16; ++j) u+=0.0625;
-        for (unsigned int j=0; j<i/16; ++j) v+=0.0625;
-        glBegin(GL_QUADS);
-            glTexCoord2f(u, v);
-            glVertex2f(0.0, 0.0);
-            glTexCoord2f(u, v+0.0625);
-            glVertex2f(0.0, 1.0);
-            glTexCoord2f(u+0.0625, v+0.0625);
-            glVertex2f(1.0, 1.0);
-            glTexCoord2f(u+0.0625, v);
-            glVertex2f(1.0, 0.0);
-        glEnd();
-        glEndList();
-    }
-
     for (int i=0; i<MAXCALLBACKS; ++i)
     {
         callbacks[i].func = nullptr;
@@ -126,16 +99,19 @@ Core::Core(const RenderParams &params) :
         callbacks[i].last = 0.0;
     }
 
+    createDefaultShader();
+
     iface = new Interface(window);
 }
 
 Core::~Core()
 {
+    delete defaultShader;
     delete iface;
+
     glfwDestroyWindow(window);
     glfwTerminate();
 }
-
 
 void Core::beginFrame()
 {
@@ -150,7 +126,8 @@ void Core::beginFrame()
     frameStartTime = glfwGetTime();
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glLoadIdentity();
+
+    getShader()->bind();
 
     //Title
     if (windowTitleShowFPS)
@@ -165,29 +142,6 @@ void Core::endFrame()
 {
     glfwSwapBuffers(window);
 }
-
-void Core::drawString(const char *text, bool pushpop)
-{
-    if (pushpop) glPushMatrix();
-    float x = 0.0f;
-    unsigned int i=0;
-    while (text[i]!=0 && i<256)
-    {
-        if (text[i] == '\n')
-        {
-            glTranslatef(-x, 1.0f, 0.0f);
-            x = 0.0f;
-            ++i;
-            continue;
-        }
-        glCallList(fontLists+text[i]);
-        glTranslatef(1.0f, 0.0f, 0.0f);
-        x += 1.0f;
-        ++i;
-    }
-    if (pushpop) glPopMatrix();
-}
-
 double Core::getInstantFrameRate()
 {
     return 1.0/(glfwGetTime() - frameStartTime);
@@ -204,57 +158,35 @@ double Core::getAverageFrameRate()
     return sum/10.0;
 }
 
-bool Core::setMode(RenderMode m, RenderFace s)
+void Core::applyCam(const Camera& in)
 {
     //Cull faces
-    if (s == RF_BOTH)
+    if (in.cullFaces)
     {
-        glDisable(GL_CULL_FACE);
+        glEnable(GL_CULL_FACE);
     }
     else
     {
-        glEnable(GL_CULL_FACE);
-        if (s == RF_BACK) glCullFace(GL_FRONT);
-        else glCullFace(GL_BACK);
+        glDisable(GL_CULL_FACE);
     }
 
-    switch (m)
+    if (in.depthTest)
     {
-    case RenderMode::PERSPECTIVE:
-        glMatrixMode(GL_PROJECTION);
-        glLoadIdentity();
-        gluPerspective(rparams.fov, aspectRatio, rparams.nearClip, rparams.farClip);
-        glMatrixMode(GL_MODELVIEW);
-        glLoadIdentity();
         glEnable(GL_DEPTH_TEST);
-        glCullFace(GL_CW);
-        glEnable(GL_CULL_FACE);
-        //glLoadMatrixf(cam.getMatrix().transpose().data[0].data);
-        break;
-
-    case RenderMode::ORTHOGONAL:
-        glMatrixMode(GL_PROJECTION);
-        glLoadIdentity();
-        glOrtho(-rparams.mode2D.width*0.5, rparams.mode2D.width*0.5,
-            -rparams.mode2D.height*0.5, rparams.mode2D.height*0.5,
-            rparams.mode2D.nearClip, rparams.mode2D.farClip
-        );
-        glMatrixMode(GL_MODELVIEW);
-        glLoadIdentity();
-        glEnable(GL_DEPTH_TEST);
-        break;
-
-    case RenderMode::INTERFACE:
-        glMatrixMode(GL_PROJECTION);
-        glLoadIdentity();
-        glOrtho(0.0, rparams.width, rparams.height, 0.0, -1.0, 1.0);
-        glMatrixMode(GL_MODELVIEW);
-        glLoadIdentity();
+    }
+    else
+    {
         glDisable(GL_DEPTH_TEST);
-        break;
     }
 
-    return true;
+    getShader()->setUniform("projectionMatrix", in.getProjection());
+    getShader()->setUniform("viewMatrix", in.getView());
+    getShader()->setUniform("modelMatrix", ::glm::mat4(1.f));
+}
+
+void Core::modelMatrix(const Mat4& in)
+{
+    getShader()->setUniform("modelMatrix", in);
 }
 
 Mesh* Core::loadMesh(const char *filename)
@@ -315,62 +247,6 @@ void Core::setWindowTitle(const char *text, bool showFPS)
 const Core::RenderParams& Core::getParams()
 {
     return rparams;
-}
-
-void Core::dumpState(std::ostream &&out)
-{
-    auto bool2text = [](bool in){return in?"True":"False";};
-
-    out << "Address: " << this << "\n";
-    out << "Current average framerate: " << getAverageFrameRate() << "\n";
-
-    const RenderParams &rp = getParams();
-    out << "Render params:\n";
-    out << "  Dimensions: " << rp.width << "x" << rp.height << "\n";
-    out << "  Fullscreen: " << bool2text(rp.fullscreen) << "\n";
-    out << "  VSync:      " << bool2text(rp.vsync) << "\n";
-    out << "  FOV:        " << rp.fov << "\n";
-    out << "  Clipping:   " << rp.nearClip << ":" << rp.farClip << "\n";
-    out << "  FSAA:       " << rp.fsaaSamples << "\n";
-    out << "  Mode 2D:\n";
-    out << "    Dimensions: " << rp.mode2D.width << "x" << rp.mode2D.height << "\n";
-    out << "    Clipping:   " << rp.mode2D.nearClip << ":" << rp.mode2D.farClip << "\n";
-
-//    {
-//        out << "Textures:\n";
-//        int i=0;
-//        for (auto p : textures)
-//        {
-//            out << "  Index: " << i++ << "\n";
-//            out << "    Name:       \"" << p.first.filename << "\"\n";
-//            out << "    Dimensions: " << p.second.width << "x" << p.second.height << "\n";
-//            out << "    Params:\n";
-//            out << "      Smooth:   " << bool2text(p.first.params.smooth) << "\n";
-//            out << "      Clamp:    " << bool2text(p.first.params.clamp) << "\n";
-//            out << "    OpenGL ID:  " << p.second.id << "\n";
-//            out << "    Users:      " << p.second.users << "\n";
-//        }
-//    }
-
-//    {
-//        out << "Meshes:\n";
-//        int i=0;
-//        for (auto p : meshes)
-//        {
-//            out << "  Index: " << i++ << "\n";
-//            out << "    Name:           \"" << p.first << "\"\n";
-//            out << "    Vertices:       " << p.second.mesh.vertices.size() << "\n";
-//            out << "    Triangles:      " << p.second.mesh.triangles.size() << "\n";
-//            out << "    Initialized :   " << bool2text(p.second.mesh.initted) << "\n";
-//            if (p.second.mesh.initted)
-//            {
-//                out << "    Vertex Buffer:  " << p.second.mesh.vbo << "\n";
-//                out << "    Element Buffer: " << p.second.mesh.ele << "\n";
-//            }
-//        }
-//    }
-
-    out.flush();
 }
 
 bool Core::addCallback(void (*func)(), double freq)
@@ -459,9 +335,58 @@ Interface* Core::getInterface()
     return iface;
 }
 
+const Shader* Core::getShader()
+{
+    if (!customShader) return defaultShader;
+    return customShader;
+}
+
+void Core::setShader(Shader* in)
+{
+    customShader = in;
+}
+
 int Core::getWindowParam(int param)
 {
     return glfwGetWindowParam(window, param);
+}
+
+void Core::createDefaultShader()
+{
+    Shader::Program program;
+    program[Shader::Type::VERT] =
+        "#version 400\n"
+        "layout (location = 0) in vec3 VertexPosition;\n"
+        "layout (location = 1) in vec3 VertexNormal;\n"
+        "layout (location = 2) in vec2 VertexTexCoord;\n"
+        "uniform mat4 projectionMatrix;\n"
+        "uniform mat4 viewMatrix;\n"
+        "uniform mat4 modelMatrix;\n"
+        "out vec3 Position;\n"
+        "out vec3 Normal;\n"
+        "out vec2 TexCoord;\n"
+        "void main()\n"
+        "{\n"
+        "    TexCoord = VertexTexCoord;\n"
+        "    Normal = normalize(VertexNormal);\n"
+        "    Position = VertexPosition/5;\n"
+        "    mat4 modelViewProjectionMatrix = projectionMatrix * viewMatrix * modelMatrix;\n"
+        "    gl_Position = modelViewProjectionMatrix * vec4(VertexPosition,1.0);\n"
+        "}\n"
+    ;
+    program[Shader::Type::FRAG] =
+        "#version 400\n"
+        "in vec3 Position;\n"
+        "in vec3 Normal;\n"
+        "in vec2 TexCoord;\n"
+        "uniform sampler2D Tex1;\n"
+        "out vec4 FragColor;\n"
+        "void main() {\n"
+        "    vec4 texColor = texture( Tex1, TexCoord );\n"
+        "    FragColor = texColor;\n"
+        "}\n"
+    ;
+    defaultShader = new Shader(program);
 }
 
 } // namespace Inugami

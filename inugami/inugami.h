@@ -20,9 +20,11 @@ Permission is granted to anyone to use this software for any purpose, including 
 #include "animatedsprite.h"
 #include "camera.h"
 #include "core.h"
+#include "font.h"
 #include "interface.h"
 #include "inugami.h"
 #include "loaders.h"
+#include "logger.h"
 #include "math.h"
 #include "mathtypes.h"
 #include "mesh.h"
@@ -30,6 +32,7 @@ Permission is granted to anyone to use this software for any purpose, including 
 #include "shader.h"
 #include "spritesheet.h"
 #include "texture.h"
+#include "transform.h"
 #include "utility.h"
 
 #endif // INUGAMI_H_INCLUDED

@@ -19,31 +19,10 @@ Permission is granted to anyone to use this software for any purpose, including 
 
 #include <vector>
 #include <stdexcept>
+#include <sstream>
+#include <string>
 
 namespace Inugami {
-
-template <class C, typename T>
-typename C::iterator addOnce(C &container, const T &target)
-{
-    typename C::iterator i;
-    for (i=container.begin(); i!=container.end(); ++i)
-    {
-        if (*i == target) return i;
-    }
-    return container.insert(i, target);
-}
-
-template <typename T>
-typename std::vector<T>::size_type addOnce(std::vector<T> &container, const T &target)
-{
-    typename std::vector<T>::size_type i, e=container.size();
-    for (i=0; i<e; ++i)
-    {
-        if (container[i] == target) return i;
-    }
-    container.push_back(target);
-    return e;
-}
 
 template <typename T>
 class TNode final
@@ -113,6 +92,68 @@ public:
 
 private:
     Node *target;
+};
+
+template <class C, typename T>
+typename C::iterator addOnce(C &container, const T &target)
+{
+    typename C::iterator i;
+    for (i=container.begin(); i!=container.end(); ++i)
+    {
+        if (*i == target) return i;
+    }
+    return container.insert(i, target);
+}
+
+template <typename T>
+typename std::vector<T>::size_type addOnce(std::vector<T> &container, const T &target)
+{
+    typename std::vector<T>::size_type i, e=container.size();
+    for (i=0; i<e; ++i)
+    {
+        if (container[i] == target) return i;
+    }
+    container.push_back(target);
+    return e;
+}
+
+template <typename T>
+std::string stringify(const T &in)
+{
+    std::stringstream ss;
+    ss << in;
+    return ss.str();
+}
+
+template <typename T1, typename T2>
+bool chainComp(const T1& first, const T2& second)
+{
+    return (first<second);
+}
+
+template <typename T1, typename T2, typename... A>
+bool chainComp(const T1& first, const T2& second, const A&... args)
+{
+    if (first<second) return true;
+    if (first == second) return chainComp(args...);
+    return false;
+}
+
+template <typename T>
+class ConstMap
+{
+public:
+    ConstMap(const T& in) : data(in) {}
+    ConstMap(const ConstMap& in) : data(in.data) {}
+
+    const typename T::mapped_type& operator[](const typename T::key_type& in) const
+    {
+        auto i = data.find(in);
+        if (i == data.end()) throw std::logic_error("Key not found!");
+        return i->second;
+    }
+
+    const T& data;
 };
 
 } // namespace Inugami

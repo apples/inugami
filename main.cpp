@@ -34,6 +34,7 @@ Core *core;
 struct
 {
     float rot;
+    Camera cam;
 } gameState;
 
 struct
@@ -48,16 +49,11 @@ struct
 int main()
 {
     Core::RenderParams renparams;
-    renparams.width = 1366;
+    renparams.width = 1024;
     renparams.height = 768;
     renparams.fullscreen = false;
-    renparams.fov = 90.0;
     renparams.vsync = false;
     renparams.fsaaSamples = 4;
-    renparams.mode2D.width = 160.0;
-    renparams.mode2D.height = 90.0;
-    renparams.mode2D.nearClip = -1.0;
-    renparams.mode2D.farClip = 1.0;
     try {core = new Core(renparams);}
     catch (...) {return -1;}
 
@@ -134,29 +130,38 @@ void init()
         "}\n"
     ;
     gameData.test = new Shader(pro);
-    //gameData.test->bind();
+    gameData.test->bind();
+
+    gameState.cam.depthTest = true;
 }
 
 void draw()
 {
     core->beginFrame();
 
-    core->setMode(Core::RenderMode::PERSPECTIVE, Core::RenderFace::RF_FRONT);
+    {
+        gameState.cam.perspective(90.f, 4.f/3.f, 0.1f, 100.f);
+        core->applyCam(gameState.cam);
 
-    glTranslatef(0.0f, -1.5f, -3.0f);
-    glRotatef(gameState.rot, 0.0f, 1.0f, 0.0f);
-    gameData.shieldTex->bind();
-    gameData.shield->draw();
+        auto mat = glm::translate(glm::mat4(1.f), glm::vec3(0.f, -1.5f, -3.f));
+        mat = glm::rotate(mat, gameState.rot, glm::vec3(0.f, 1.f, 0.f));
 
-    core->setMode(Core::RenderMode::ORTHOGONAL, Core::RenderFace::RF_BOTH);
+        core->modelMatrix(mat);
 
-    glRotatef(gameState.rot, 0.0, 0.0, 1.0);
-    gameData.derf->draw();
+        gameData.shieldTex->bind();
+        gameData.shield->draw();
+    }
 
-    core->setMode(Core::RenderMode::INTERFACE, Core::RenderFace::RF_BOTH);
+    {
+        gameState.cam.ortho(-8.f, 8.f, -6.f, 6.f, -1.f, 1.f);
+        core->applyCam(gameState.cam);
 
-    gameData.font->bind();
-    glScalef(8.0, 8.0, 1.0);
+        auto mat = glm::rotate(glm::mat4(1.f), gameState.rot, glm::vec3(0.0, 0.0, 1.0));
+
+        core->modelMatrix(mat);
+
+        gameData.derf->draw();
+    }
 
     core->endFrame();
 }
@@ -164,6 +169,7 @@ void draw()
 void tick()
 {
     interface->poll();
+
     gameState.rot = wrap(gameState.rot+=1.0, 0.0f, 360.0f);
 
     static auto keyQ     = interface->getProxy('Q');
