@@ -1,14 +1,31 @@
-#include "spritesheet.h"
+/*******************************************************************************
 
-#include "utility.h"
+Copyright (c) 2012 Jeramy Harrison
+
+This software is provided 'as-is', without any express or implied warranty. In no event will the authors be held liable for any damages arising from the use of this software.
+
+Permission is granted to anyone to use this software for any purpose, including commercial applications, and to alter it and redistribute it freely, subject to the following restrictions:
+
+    1. The origin of this software must not be misrepresented; you must not claim that you wrote the original software. If you use this software in a product, an acknowledgment in the product documentation would be appreciated but is not required.
+
+    2. Altered source versions must be plainly marked as such, and must not be misrepresented as being the original software.
+
+    3. This notice may not be removed or altered from any source distribution.
+
+*******************************************************************************/
+
+#include "spritesheet.hpp"
+
+#include "core.hpp"
+#include "sharedbank.hpp"
+#include "utility.hpp"
 
 #include <limits>
+#include <string>
 
 namespace Inugami {
 
-std::map<Spritesheet::Dimensions, std::vector<Mesh>> Spritesheet::pool;
-
-bool Spritesheet::Dimensions::operator<(const Dimensions &in) const
+bool Spritesheet::Index::operator<(const Index &in) const
 {
     return chainComp(w, in.w,
                      h, in.h,
@@ -18,12 +35,15 @@ bool Spritesheet::Dimensions::operator<(const Dimensions &in) const
                      cy, in.cy);
 }
 
-Spritesheet::Spritesheet(const std::string& filename, unsigned int w, unsigned int h, float cx, float cy) :
-    tex(filename, false, false)
+Spritesheet::Value::Value() :
+    meshes(), users(0)
+{}
+
+Spritesheet::Spritesheet(Core& coreIn, const std::string& filename, unsigned int w, unsigned int h, float cx, float cy) :
+    tex(coreIn, filename, false, false),
+    bank(coreIn.banks->spritesheetBank)
 {
     constexpr float E = std::numeric_limits<float>::epsilon() * 1.0e3;
-
-    auto pow2 = [](unsigned int i) {return (i!=0 && (i&(i-1))==0);};
 
     dim.w = tex.getWidth()/w;
     dim.h = tex.getHeight()/h;
@@ -32,10 +52,11 @@ Spritesheet::Spritesheet(const std::string& filename, unsigned int w, unsigned i
     dim.cx = cx;
     dim.cy = cy;
 
-    auto& sprites = pool[dim]; //FIXME spritesheet pool
+    auto& val = bank[dim];
 
-    if (sprites.size() == 0)
+    if (val.users == 0)
     {
+        auto& sprites = val.meshes;
         sprites.resize(dim.w * dim.h);
 
         Mesh::Vertex vert;
@@ -55,7 +76,9 @@ Spritesheet::Spritesheet(const std::string& filename, unsigned int w, unsigned i
                 float u = float(c)*uvStep.x;
                 float v = 1.0f-float(r)*uvStep.y;
 
-                Mesh &mesh = sprites[r*dim.w +c];
+                Mesh &mesh = *new Mesh(coreIn);
+                sprites[r*dim.w +c] = &mesh;
+
                 Mesh::Triangle tri;
 
                 vert.pos.x = -float(w)*cx;
@@ -80,26 +103,37 @@ Spritesheet::Spritesheet(const std::string& filename, unsigned int w, unsigned i
             }
         }
     }
+
+    ++val.users;
 }
 
 Spritesheet::Spritesheet(const Spritesheet& in) :
     tex(in.tex),
-    dim(in.dim)
-{}
+    dim(in.dim),
+    bank(in.bank)
+{
+    ++ bank[dim].users;
+}
 
 Spritesheet::~Spritesheet()
-{}
+{
+    auto iter = bank.find(dim);
+    if (-- iter->second.users == 0)
+    {
+        bank.erase(iter);
+    }
+}
 
 void Spritesheet::draw(unsigned int r, unsigned int c)
 {
-    getTex().bind();
+    getTex().bind(0);
     getMesh(r, c).draw();
 }
 
 Mesh &Spritesheet::getMesh(unsigned int r, unsigned int c)
 {
     if (c>dim.w || r>dim.h) throw;
-    return pool[dim][r*dim.w+c];
+    return *bank[dim].meshes[r*dim.w+c];
 }
 
 Texture &Spritesheet::getTex()

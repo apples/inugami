@@ -14,28 +14,45 @@ Permission is granted to anyone to use this software for any purpose, including 
 
 *******************************************************************************/
 
+namespace Inugami{ class Texture; }
+
 #ifndef INUGAMI_TEXTURE_H
 #define INUGAMI_TEXTURE_H
 
-#include "opengl.h"
+#include "inugami.hpp"
+
+#include "opengl.hpp"
 
 #include <map>
 #include <string>
 #include <utility>
+#include <vector>
 
 namespace Inugami {
 
 class Texture final
 {
+    friend class SharedBank;
+    friend class TextureException;
 public:
-    Texture(const std::string &filename, bool smooth, bool clamp);
-    Texture(int);
+    using Data = std::vector<char>;
+    static int& initData(Data& in, int width, int height);
+    static int& dataWidth(Data& in);
+    static int& dataHeight(Data& in);
+    static char* dataPixel(Data& in, int x, int y);
+    static const int& dataWidth(const Data& in);
+    static const int& dataHeight(const Data& in);
+    static const char* dataPixel(const Data& in, int x, int y);
+
+    Texture(Core& coreIn, const std::string &filename, bool smooth=false, bool clamp=false);
+    Texture(Core& coreIn, const Data& data, bool smooth=false, bool clamp=false);
+    Texture(Core& coreIn, unsigned int color, bool smooth=false, bool clamp=false);
     Texture(const Texture &in);
     ~Texture();
 
     Texture &operator=(const Texture &in);
 
-    void bind() const;
+    void bind(unsigned int slot) const;
     unsigned int getWidth() const;
     unsigned int getHeight() const;
 
@@ -62,11 +79,13 @@ private:
         int users;
     };
 
-    typedef std::map<Index, Value> Bank;
+    using Bank = std::map<Index, Value>;
+
+    void setParams(const Data& data);
 
     Index id;
 
-    static Bank pool;
+    Bank& bank;
 };
 
 } // namespace Inugami

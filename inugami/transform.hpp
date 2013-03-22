@@ -14,55 +14,43 @@ Permission is granted to anyone to use this software for any purpose, including 
 
 *******************************************************************************/
 
-#ifndef INUGAMI_ANIMATEDSPRITE_H
-#define INUGAMI_ANIMATEDSPRITE_H
+#ifndef INUGAMI_TRANSFORM_H
+#define INUGAMI_TRANSFORM_H
 
-#include "spritesheet.h"
+#include "opengl.hpp"
 
-#include <array>
-#include <utility>
 #include <vector>
 
 namespace Inugami {
 
-class AnimatedSprite
+using Vec3 = ::glm::vec3;
+using Mat4 = ::glm::mat4;
+
+class Transform
 {
+    typedef std::vector<Mat4> Stack;
+
 public:
-    enum class Mode
-    {
-        NORMAL,
-        LOOP,
-        BOUNCE
-    };
+    Transform();
+    Transform(const Transform& in);
+    virtual ~Transform();
 
-    typedef std::pair<unsigned int, unsigned int> Sprite;
-    typedef std::pair<unsigned int, unsigned int> Frame;
-    typedef std::vector<Sprite> SpriteList;
-    typedef std::vector<Frame> FrameList;
+    operator Mat4() const;
 
-    AnimatedSprite();
-    AnimatedSprite(const AnimatedSprite& in);
-    virtual ~AnimatedSprite();
+    Transform& translate(const Vec3& pos);
+    Transform& scale(const Vec3& vec);
+    Transform& rotate(float deg, const Vec3& axis);
 
-    void setSpritesheet(Spritesheet *in);
-    void setMode(Mode in);
-    void setSprites(const SpriteList &in);
-    void setSequence(const FrameList &in);
+    Transform& push();
+    Transform& pop();
+    Transform& reset();
 
-    void draw();
-    bool done();
-    void reset();
+    Mat4 toMat4() const;
 
 private:
-    Spritesheet *sheet;
-    SpriteList sprites;
-    FrameList sequence;
-    Mode mode;
-    bool ended;
-    unsigned int timer;
-    int pos, dir;
+    Stack stack;
 };
 
 } // namespace Inugami
 
-#endif // INUGAMI_ANIMATEDSPRITE_H
+#endif // INUGAMI_TRANSFORM_H

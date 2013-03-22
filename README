@@ -1,60 +1,69 @@
 ﻿README
 
+Inugami Version: 0.1
+
 Inugami is a framework designed for rapid prototyping of games.
 
-Inugami is intended for small projects, however, it scales very well, and should make a good base for any project.
+It is intended for small projects, however, it scales very well, and should make a good base for any project.
 
 Please note that Inugami is built for my personal needs, and may not be suitable for every project.
 
 As of this writing, Inugami is INCOMPLETE and may contain several errors. If you plan on using Inugami in your own project, please consider contacting me for usability information.
 
+Full documentation is embedded with Doxygen comments.
+
 Current features are:
-    OBJ model loading
+    OBJ model loading (limited)
     Texture loading
     Shader loading
-    Scheduler
+    Scheduling
     Math and utilities
-    Keyboard and mouse input handler
-    2D sprite handler
+    Keyboard and mouse interface
+    2D animated sprites
+    Priority logging
+    Multiple windows
     
 Current limitations are:
     Models do not support animation
     No support for 3D textures
-    No abstraction of OpenGL
-    No default shader (fixed pipeline)
+    No support for multiple textures
     
 Note that Inugami is only meant for graphics, and other systems, such as audio, networking, and physics, must be found elsewhere.
 
 COMPILING:
 
 Inugami depends on the following software libraries:
-    DevIL   1.7.8
-    GLEW    1.9.0
-    GLFW    3.0
-    GLM     0.9.4.1
+    DevIL   	1.7.8
+    GLEW    	1.9.0
+    GLFW    	3.0
+    GLM     	0.9.4.1
+
+The demo program depends on these additional libraries:
+    libnoise	1.0.0
     
-I've been tweaking the framework so much that I just compile the sources with my project, but it should work just fine as a static library or DLL or whatever. I recommend using the sandbox project as a template.
+Inugami is designed to be compiled together with your project, for easy tweaking, but it should work just fine as a static library or DLL or whatever. I recommend using the demo project as a template.
 
 BASIC USAGE:
-
-Include "inugami/inugami.h" for the full package.
 
 You must create a Core to use the framework.
 It is recommended to use the scheduler via Core::addCallback(...).
 If a callback has a negative frequency, it is called as often as possible.
 
-The Interface will help you process input, but is not necessary.
-If used, make sure to call Interface::poll() regularly.
+If you want multiple windows, simply create multiple Cores.
+
+Use the Core's Interface "iface" to grab keyboard and mouse input.
+Make sure to call iface->poll() every frame.
 
 All GLFW and OpenGL functions should work as normal.
-It is recommended to start drawing with Core::beginFrame() and end with Core::endFrame().
-It is also recommended to use Core::setMode(...) to set up the camera.
+Your drawing routine must start with Core::beginFrame() and end with Core::endFrame().
 
-Currently, transformations must still be done using the old OpenGL functions (glTranslate, glRotate, etc.). If using a shader, data must be uploaded manually.
+Create a camera and use it with Core::applyCam().
+
+The Transformation class allows you to easy handle matrices.
 
 Texture images are loaded when a Texture object is created. If a texture file has already been loaded, the resource is shared.
 
-Please see the sandbox project for a decent example of usage.
+Please see the demo project for a decent example of usage.
 
 LISCENSE:
 
@@ -82,4 +91,3 @@ CONTACT INFO:
 
 Jeramy Harrison
 dbralir@gmail.com
-@dbralir

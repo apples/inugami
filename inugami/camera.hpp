@@ -14,65 +14,49 @@ Permission is granted to anyone to use this software for any purpose, including 
 
 *******************************************************************************/
 
-#include "transform.hpp"
+#ifndef INUGAMI_CAMERA_H
+#define INUGAMI_CAMERA_H
+
+#include "opengl.hpp"
 
 namespace Inugami {
 
-Transform::Transform() :
-    stack{Mat4(1.f)}
-{}
-
-Transform::Transform(const Transform& in) :
-    stack{in.toMat4()}
-{}
-
-Transform::~Transform()
-{}
-
-Transform::operator Mat4() const
+class Camera
 {
-    return toMat4();
-}
+public:
+    typedef ::glm::vec3 Vec3;
+    typedef ::glm::mat4 Mat4;
 
-Transform& Transform::translate(const Vec3& pos)
-{
-    stack.back() = ::glm::translate(toMat4(), pos);
-    return *this;
-}
+    Camera();
+    Camera(const Camera&) = default;
+    virtual ~Camera();
 
-Transform& Transform::scale(const Vec3& vec)
-{
-    stack.back() = ::glm::scale(toMat4(), vec);
-    return *this;
-}
+    Camera& perspective(float fov, float ratio, float near, float far);
+    Camera& ortho(float left, float right, float bottom, float top, float near, float far);
 
-Transform& Transform::rotate(float deg, const Vec3& axis)
-{
-    stack.back() = ::glm::rotate(toMat4(), deg, axis);
-    return *this;
-}
+    Camera& translate(const Vec3& pos);
+    Camera& rotate(float deg, const Vec3& axis);
 
-Transform& Transform::push()
-{
-    stack.push_back(toMat4());
-    return *this;
-}
+    Camera& pitch(float deg);
+    Camera& yaw(float deg);
+    Camera& roll(float deg);
 
-Transform& Transform::pop()
-{
-    stack.pop_back();
-    return *this;
-}
+    Camera& pushProjection();
+    Camera& pushView();
+    Camera& popProjection();
+    Camera& popView();
 
-Transform& Transform::reset()
-{
-    stack.clear();
-    return *this;
-}
+    const Mat4& getProjection() const;
+    const Mat4& getView() const;
 
-auto Transform::toMat4() const -> Mat4
-{
-    return stack.back();
-}
+    bool cullFaces;
+    bool depthTest;
+
+private:
+    Mat4 projection;
+    Mat4 view;
+};
 
 } // namespace Inugami
+
+#endif // INUGAMI_CAMERA_H

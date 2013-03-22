@@ -14,14 +14,13 @@ Permission is granted to anyone to use this software for any purpose, including 
 
 *******************************************************************************/
 
-#ifndef OPENGL_H_INCLUDED
-#define OPENGL_H_INCLUDED
+#ifndef OPENGL_HPP_INCLUDED
+#define OPENGL_HPP_INCLUDED
 
 #include <GL/glew.h>
 #include <GL/glfw3.h>
 
-#include "../glm/glm.hpp"
-//#include "../glm/gtc/matrix_projection.hpp"
-#include "../glm/gtc/matrix_transform.hpp"
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
-#endif // OPENGL_H_INCLUDED
+#endif // OPENGL_HPP_INCLUDED

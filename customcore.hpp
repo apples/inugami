@@ -14,49 +14,43 @@ Permission is granted to anyone to use this software for any purpose, including 
 
 *******************************************************************************/
 
-#ifndef INUGAMI_CAMERA_H
-#define INUGAMI_CAMERA_H
+#ifndef CUSTOMCORE_H
+#define CUSTOMCORE_H
 
-#include "opengl.h"
+#include "inugami/core.hpp"
 
-namespace Inugami {
+#include "inugami/animatedsprite.hpp"
+#include "inugami/mesh.hpp"
+#include "inugami/shader.hpp"
+#include "inugami/spritesheet.hpp"
+#include "inugami/texture.hpp"
 
-class Camera
+class CustomCore : public Inugami::Core
 {
 public:
-    typedef ::glm::vec3 Vec3;
-    typedef ::glm::mat4 Mat4;
+    CustomCore(const RenderParams &params);
+    virtual ~CustomCore();
 
-    Camera();
-    Camera(const Camera&) = default;
-    virtual ~Camera();
-
-    Camera& perspective(float fov, float ratio, float near, float far);
-    Camera& ortho(float left, float right, float bottom, float top, float near, float far);
-
-    Camera& translate(const Vec3& pos);
-    Camera& rotate(float deg, const Vec3& axis);
-
-    Camera& pitch(float deg);
-    Camera& yaw(float deg);
-    Camera& roll(float deg);
-
-    Camera& pushProjection();
-    Camera& pushView();
-    Camera& popProjection();
-    Camera& popView();
-
-    const Mat4& getProjection() const;
-    const Mat4& getView() const;
-
-    bool cullFaces;
-    bool depthTest;
+    void tick();
+    void draw();
+    void idle();
 
 private:
-    Mat4 projection;
-    Mat4 view;
+    Inugami::Texture* generateNoise(int width, int height, double freq);
+
+    float rotation;
+    float dissolveMin, dissolveMax;
+    unsigned int ticks;
+    bool highDef;
+    bool shaderOn;
+
+    Inugami::Texture        *shieldTex;
+    Inugami::Texture        *noiseTex;
+    Inugami::Spritesheet    *font;
+    Inugami::AnimatedSprite *fontRoll;
+
+    Inugami::Mesh *shield, *shieldHD;
+    Inugami::Shader *crazy;
 };
 
-} // namespace Inugami
-
-#endif // INUGAMI_CAMERA_H
+#endif // CUSTOMCORE_H

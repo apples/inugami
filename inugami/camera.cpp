@@ -14,7 +14,7 @@ Permission is granted to anyone to use this software for any purpose, including 
 
 *******************************************************************************/
 
-#include "camera.h"
+#include "camera.hpp"
 
 namespace Inugami {
 

@@ -7,26 +7,24 @@
 		<Option compiler="gcc" />
 		<Build>
 			<Target title="Debug">
-				<Option output="Game_d" prefix_auto="1" extension_auto="1" />
-				<Option object_output="obj/Debug/" />
+				<Option output="game_d" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/debug/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Compiler>
 					<Add option="-Weffc++" />
-					<Add option="-pg" />
 					<Add option="-g" />
+					<Add option="-fno-inline" />
+					<Add option="-fno-omit-frame-pointer" />
 				</Compiler>
-				<Linker>
-					<Add option="-pg -lgmon" />
-				</Linker>
 			</Target>
 			<Target title="Release">
-				<Option output="Game" prefix_auto="1" extension_auto="1" />
-				<Option object_output="obj/Release/" />
+				<Option output="game" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/release/" />
 				<Option type="0" />
 				<Option compiler="gcc" />
 				<Compiler>
-					<Add option="-O2" />
+					<Add option="-O3" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
@@ -36,49 +34,72 @@
 		<Compiler>
 			<Add option="-std=c++11" />
 			<Add option="-Wall" />
-			<Add option="-m32" />
 		</Compiler>
 		<Linker>
-			<Add option="-m32" />
-			<Add library="DevIL" />
+			<Add library="IL" />
 			<Add library="ILU" />
-			<Add library="glew32" />
+			<Add library="noise" />
+			<Add library="GLEW" />
 			<Add library="glfw3" />
-			<Add library="opengl32" />
-			<Add library="glu32" />
-			<Add library="gdi32" />
+			<Add library="rt" />
+			<Add library="Xrandr" />
+			<Add library="Xxf86vm" />
+			<Add library="GL" />
+			<Add library="m" />
+			<Add library="Xrender" />
+			<Add library="Xext" />
+			<Add library="X11" />
+			<Add library="pthread" />
+			<Add library="xcb" />
+			<Add library="Xau" />
+			<Add library="Xdmcp" />
 		</Linker>
+		<Unit filename="customcore.cpp" />
+		<Unit filename="customcore.hpp" />
 		<Unit filename="inugami/animatedsprite.cpp" />
-		<Unit filename="inugami/animatedsprite.h" />
+		<Unit filename="inugami/animatedsprite.hpp" />
 		<Unit filename="inugami/camera.cpp" />
-		<Unit filename="inugami/camera.h" />
+		<Unit filename="inugami/camera.hpp" />
 		<Unit filename="inugami/core.cpp" />
-		<Unit filename="inugami/core.h" />
+		<Unit filename="inugami/core.hpp" />
+		<Unit filename="inugami/exception.cpp" />
+		<Unit filename="inugami/exception.hpp" />
 		<Unit filename="inugami/interface.cpp" />
-		<Unit filename="inugami/interface.h" />
-		<Unit filename="inugami/inugami.h" />
+		<Unit filename="inugami/interface.hpp" />
+		<Unit filename="inugami/inugami.hpp" />
 		<Unit filename="inugami/loaders.cpp" />
-		<Unit filename="inugami/loaders.h" />
-		<Unit filename="inugami/math.h" />
-		<Unit filename="inugami/mathtypes.h" />
+		<Unit filename="inugami/loaders.hpp" />
+		<Unit filename="inugami/logger.hpp" />
+		<Unit filename="inugami/math.hpp" />
+		<Unit filename="inugami/mathtypes.hpp" />
 		<Unit filename="inugami/mesh.cpp" />
-		<Unit filename="inugami/mesh.h" />
-		<Unit filename="inugami/opengl.h" />
+		<Unit filename="inugami/mesh.hpp" />
+		<Unit filename="inugami/opengl.hpp" />
+		<Unit filename="inugami/profiler.cpp" />
+		<Unit filename="inugami/profiler.hpp" />
 		<Unit filename="inugami/shader.cpp" />
-		<Unit filename="inugami/shader.h" />
+		<Unit filename="inugami/shader.hpp" />
+		<Unit filename="inugami/sharedbank.cpp" />
+		<Unit filename="inugami/sharedbank.hpp" />
 		<Unit filename="inugami/spritesheet.cpp" />
-		<Unit filename="inugami/spritesheet.h" />
+		<Unit filename="inugami/spritesheet.hpp" />
 		<Unit filename="inugami/texture.cpp" />
-		<Unit filename="inugami/texture.h" />
-		<Unit filename="inugami/utility.h" />
+		<Unit filename="inugami/texture.hpp" />
+		<Unit filename="inugami/transform.cpp" />
+		<Unit filename="inugami/transform.hpp" />
+		<Unit filename="inugami/utility.hpp" />
 		<Unit filename="main.cpp" />
+		<Unit filename="meta.cpp" />
+		<Unit filename="meta.hpp" />
+		<Unit filename="shaders/crazy.frag" />
+		<Unit filename="shaders/crazy.vert" />
 		<Extensions>
 			<code_completion />
 			<envvars />
 			<debugger />
 			<lib_finder disable_auto="1" />
 			<DoxyBlocks>
-				<comment_style block="0" line="0" />
+				<comment_style block="0" line="1" />
 				<doxyfile_project />
 				<doxyfile_build />
 				<doxyfile_warnings />

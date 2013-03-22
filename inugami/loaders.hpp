@@ -14,65 +14,30 @@ Permission is granted to anyone to use this software for any purpose, including 
 
 *******************************************************************************/
 
-#include "transform.hpp"
+#ifndef INUGAMI_LOADERS_H
+#define INUGAMI_LOADERS_H
+
+#include "inugami.hpp"
+
+#include "mesh.hpp"
+
+#include <string>
+#include <vector>
 
 namespace Inugami {
 
-Transform::Transform() :
-    stack{Mat4(1.f)}
-{}
+bool loadImageFromFile(const std::string &filename, std::vector<char> &target);
 
-Transform::Transform(const Transform& in) :
-    stack{in.toMat4()}
-{}
+/** \brief Loads a file into a string.
+ *
+ * \param filename const std::string& File name.
+ * \return std::string Contents of file.
+ *
+ */
+std::string loadTextFromFile(const std::string &filename);
 
-Transform::~Transform()
-{}
-
-Transform::operator Mat4() const
-{
-    return toMat4();
-}
-
-Transform& Transform::translate(const Vec3& pos)
-{
-    stack.back() = ::glm::translate(toMat4(), pos);
-    return *this;
-}
-
-Transform& Transform::scale(const Vec3& vec)
-{
-    stack.back() = ::glm::scale(toMat4(), vec);
-    return *this;
-}
-
-Transform& Transform::rotate(float deg, const Vec3& axis)
-{
-    stack.back() = ::glm::rotate(toMat4(), deg, axis);
-    return *this;
-}
-
-Transform& Transform::push()
-{
-    stack.push_back(toMat4());
-    return *this;
-}
-
-Transform& Transform::pop()
-{
-    stack.pop_back();
-    return *this;
-}
-
-Transform& Transform::reset()
-{
-    stack.clear();
-    return *this;
-}
-
-auto Transform::toMat4() const -> Mat4
-{
-    return stack.back();
-}
+bool loadObjFromFile(const std::string &filename, Mesh::Value* target);
 
 } // namespace Inugami
+
+#endif // INUGAMI_LOADERS_H

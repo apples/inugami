@@ -17,9 +17,12 @@ Permission is granted to anyone to use this software for any purpose, including 
 #ifndef INUGAMI_MESH_H
 #define INUGAMI_MESH_H
 
-#include "mathtypes.h"
-#include "opengl.h"
+#include "inugami.hpp"
 
+#include "opengl.hpp"
+
+#include <string>
+#include <map>
 #include <vector>
 
 namespace Inugami {
@@ -27,6 +30,8 @@ namespace Inugami {
 class Mesh
 {
     friend class Core;
+    friend class SharedBank;
+    friend class MeshException;
 public:
     class Vertex
     {
@@ -44,23 +49,54 @@ public:
         unsigned int v[3];
     };
 
-    Mesh();
+    Mesh(Core& coreIn);
+    Mesh(Core& coreIn, const std::string& fileName, bool autoInit=true);
+    Mesh(const Mesh& in);
     virtual ~Mesh();
 
-    Mesh &init();
-    void draw();
-    void drawImmediate();
+    const Mesh &init() const;
+    void draw() const;
 
-    int addVertex(const Vertex &in);
-    int addTriangle(const Triangle &in);
-    void reserve(int v, int t);
+    int addVertex(const Vertex &in) const;
+    int addTriangle(const Triangle &in) const;
+    void reserve(int v, int t) const;
 
 private:
-    std::vector<Vertex> vertices;
-    std::vector<Triangle> triangles;
+    class Index
+    {
+    public:
+        bool operator<(const Index& in) const;
+        std::string name;
+    };
 
-    bool initted;
-    GLuint vbo, vao, ele;
+    class Value
+    {
+    public:
+        Value();
+        Value(const Value& in);
+        ~Value();
+
+        int addVertex(const Vertex &in);
+        int addTriangle(const Triangle &in);
+        void reserve(int v, int t);
+
+        std::vector<Vertex> vertices;
+        std::vector<Triangle> triangles;
+
+        bool initted;
+        GLuint vbo, vao, ele;
+
+        int users;
+    };
+
+    using Bank = std::map<Index, Value>;
+
+    Index id;
+    Value* val;
+
+    Bank& bank;
+
+    friend bool loadObjFromFile(const std::string&, Mesh::Value*);
 };
 
 } // namespace Inugami

@@ -14,13 +14,37 @@ Permission is granted to anyone to use this software for any purpose, including 
 
 *******************************************************************************/
 
-#include "mesh.h"
+#include "mesh.hpp"
 
-#include "utility.h"
-
-#include <stdexcept>
+#include "core.hpp"
+#include "exception.hpp"
+#include "sharedbank.hpp"
+#include "utility.hpp"
 
 namespace Inugami {
+
+class MeshException : public Exception
+{
+public:
+    MeshException(const Mesh* source, std::string error) :
+        mesh(source), err(error)
+    {}
+
+    virtual const char* what() const noexcept override
+    {
+        std::string rval;
+        rval += "Mesh Exception: ";
+        rval += hexify(mesh);
+        rval += "; ";
+        rval += mesh->id.name;
+        rval += "; ";
+        rval += err;
+        return rval.c_str();
+    }
+
+    const Mesh* mesh;
+    std::string err;
+};
 
 bool Mesh::Vertex::operator==(const Vertex &in)
 {
@@ -32,110 +56,138 @@ bool Mesh::Triangle::operator==(const Triangle &in)
     return (v[0]==in.v[0]&&v[1]==in.v[1]&&v[2]==in.v[2]);
 }
 
-Mesh::Mesh() :
-    vertices(0), triangles(0),
+bool Mesh::Index::operator<(const Index& in) const
+{
+    return chainComp(name, in.name);
+}
+
+Mesh::Value::Value() :
+    vertices(), triangles(),
     initted(false),
-    vbo(0), ele(0)
-{}
-
-Mesh::~Mesh()
+    vbo(0), vao(0), ele(0),
+    users(0)
 {
-    if (initted)
-    {
-        glDeleteBuffers(1, &vbo);
-        glDeleteBuffers(1, &ele);
-    }
-}
-
-Mesh &Mesh::init()
-{
-    if (initted)
-    {
-        glDeleteBuffers(1, &vbo);
-        glDeleteBuffers(1, &ele);
-    }
-
-    vertices.shrink_to_fit();
-    triangles.shrink_to_fit();
-
     glGenVertexArrays(1, &vao);
-    glBindVertexArray(vao);
-    glEnableVertexAttribArray(0);
-    glEnableVertexAttribArray(1);
-    glEnableVertexAttribArray(2);
-
     glGenBuffers(1, &vbo);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex)*vertices.size(), &vertices[0], GL_STATIC_DRAW);
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)0);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)(sizeof(::glm::vec3))); //TODO find pointer offset type
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)(sizeof(::glm::vec3)*2)); //TODO find pointer offset type
-
     glGenBuffers(1, &ele);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ele);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Triangle)*triangles.size(), &triangles[0], GL_STATIC_DRAW);
-
-    glBindVertexArray(0);
-
-    initted = true;
-    return *this;
 }
 
-void Mesh::draw()
+Mesh::Value::Value(const Value& in) :
+    vertices(in.vertices), triangles(in.triangles),
+    initted(false),
+    vbo(0), vao(0), ele(0),
+    users(0)
 {
-    if (!initted) throw std::logic_error("Mesh not initialized.");
-
-    glBindVertexArray(vao);
-//    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-//    glVertexPointer(3, GL_FLOAT, sizeof(Vertex), (GLvoid*)0);
-//    glNormalPointer(GL_FLOAT, sizeof(Vertex), (GLvoid*)(sizeof(::glm::vec3)));
-//    glTexCoordPointer(2, GL_FLOAT, sizeof(Vertex), (GLvoid*)(sizeof(::glm::vec3)*2));
-
-    //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ele);
-    glDrawElements(GL_TRIANGLES, triangles.size()*3, GL_UNSIGNED_INT, 0);
+    glGenVertexArrays(1, &vao);
+    glGenBuffers(1, &vbo);
+    glGenBuffers(1, &ele);
 }
 
-void Mesh::drawImmediate()
+Mesh::Value::~Value()
 {
-    glBegin(GL_TRIANGLES);
-    for (Triangle &i : triangles)
-    {
-        for (int j=0; j<3; ++j)
-        {
-            glTexCoord2f(
-                vertices[i.v[j]].uv.x,
-                vertices[i.v[j]].uv.y
-            );
-            glNormal3f(
-                vertices[i.v[j]].norm.x,
-                vertices[i.v[j]].norm.y,
-                vertices[i.v[j]].norm.z
-            );
-            glVertex3f(
-                vertices[i.v[j]].pos.x,
-                vertices[i.v[j]].pos.y,
-                vertices[i.v[j]].pos.z
-            );
-        }
-    }
-    glEnd();
+    glDeleteBuffers(1, &ele);
+    glDeleteBuffers(1, &vbo);
+    glDeleteVertexArrays(1, &vao);
 }
 
-int Mesh::addVertex(const Vertex &in)
+int Mesh::Value::addVertex(const Vertex &in)
 {
     return addOnce(vertices, in);
 }
 
-int Mesh::addTriangle(const Triangle &in)
+int Mesh::Value::addTriangle(const Triangle &in)
 {
     return addOnce(triangles, in);
 }
 
-void Mesh::reserve(int v, int t)
+void Mesh::Value::reserve(int v, int t)
 {
     if (v>=0) vertices.reserve(v);
     if (t>=0) triangles.reserve(t);
+}
+
+Mesh::Mesh(Core& coreIn) :
+    id{hexify(this)},
+    val(nullptr),
+    bank(coreIn.banks->meshBank)
+{
+    val = &bank[id];
+    ++val->users;
+}
+
+Mesh::Mesh(Core& coreIn, const std::string& fileName, bool autoInit) :
+    id{fileName},
+    val(nullptr),
+    bank(coreIn.banks->meshBank)
+{
+    val = &bank[id];
+    if (val->users == 0) loadObjFromFile(fileName, val);
+    ++val->users;
+
+    if (autoInit) init();
+}
+
+Mesh::Mesh(const Mesh& in) :
+    id(in.id),
+    val(in.val),
+    bank(in.bank)
+{
+    ++val->users;
+}
+
+Mesh::~Mesh()
+{
+    if (--val->users == 0)
+    {
+        bank.erase(bank.find(id));
+    }
+}
+
+const Mesh& Mesh::init() const
+{
+    val->vertices.shrink_to_fit();
+    val->triangles.shrink_to_fit();
+
+    glBindVertexArray(val->vao);
+    glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(1);
+    glEnableVertexAttribArray(2);
+
+    glBindBuffer(GL_ARRAY_BUFFER, val->vbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex)*val->vertices.size(), &val->vertices[0], GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)0);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)(sizeof(::glm::vec3)));
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)(sizeof(::glm::vec3)*2));
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, val->ele);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Triangle)*val->triangles.size(), &val->triangles[0], GL_STATIC_DRAW);
+
+    val->initted = true;
+    return *this;
+}
+
+void Mesh::draw() const
+{
+    if (!val->initted) throw MeshException(this, "Can't draw; Not initialized!");
+
+    glBindVertexArray(val->vao);
+    glDrawElements(GL_TRIANGLES, val->triangles.size()*3, GL_UNSIGNED_INT, 0);
+}
+
+int Mesh::addVertex(const Vertex &in) const
+{
+    return val->addVertex(in);
+}
+
+int Mesh::addTriangle(const Triangle &in) const
+{
+    return val->addTriangle(in);
+}
+
+void Mesh::reserve(int v, int t) const
+{
+    val->reserve(v,t);
 }
 
 } // namespace Inugami

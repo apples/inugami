@@ -14,65 +14,27 @@ Permission is granted to anyone to use this software for any purpose, including 
 
 *******************************************************************************/
 
-#include "transform.hpp"
-
-namespace Inugami {
-
-Transform::Transform() :
-    stack{Mat4(1.f)}
-{}
-
-Transform::Transform(const Transform& in) :
-    stack{in.toMat4()}
-{}
-
-Transform::~Transform()
-{}
-
-Transform::operator Mat4() const
+#version 400
+layout (location = 0) in vec3 VertexPosition;
+layout (location = 1) in vec3 VertexNormal;
+layout (location = 2) in vec2 VertexTexCoord;
+uniform mat4 projectionMatrix;
+uniform mat4 viewMatrix;
+uniform mat4 modelMatrix;
+uniform float wobbleX;
+uniform float wobbleY;
+out vec3 Position;
+out vec3 Normal;
+out vec2 TexCoord;
+void main()
 {
-    return toMat4();
+    mat4 MVP = projectionMatrix * viewMatrix * modelMatrix;
+    TexCoord = VertexTexCoord;
+    Normal = viewMatrix * modelMatrix*vec4(VertexNormal,0.0);
+    Normal = normalize(Normal);
+    Position = viewMatrix * modelMatrix*vec4(VertexPosition,1.0);
+    vec4 result = MVP * vec4(VertexPosition,1.0);
+    result.x = result.x * wobbleX;
+    result.y = result.y * wobbleY;
+    gl_Position = result;
 }
-
-Transform& Transform::translate(const Vec3& pos)
-{
-    stack.back() = ::glm::translate(toMat4(), pos);
-    return *this;
-}
-
-Transform& Transform::scale(const Vec3& vec)
-{
-    stack.back() = ::glm::scale(toMat4(), vec);
-    return *this;
-}
-
-Transform& Transform::rotate(float deg, const Vec3& axis)
-{
-    stack.back() = ::glm::rotate(toMat4(), deg, axis);
-    return *this;
-}
-
-Transform& Transform::push()
-{
-    stack.push_back(toMat4());
-    return *this;
-}
-
-Transform& Transform::pop()
-{
-    stack.pop_back();
-    return *this;
-}
-
-Transform& Transform::reset()
-{
-    stack.clear();
-    return *this;
-}
-
-auto Transform::toMat4() const -> Mat4
-{
-    return stack.back();
-}
-
-} // namespace Inugami

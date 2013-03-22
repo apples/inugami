@@ -14,15 +14,19 @@ Permission is granted to anyone to use this software for any purpose, including 
 
 *******************************************************************************/
 
-#include "animatedsprite.h"
-#include "math.h"
-#include "utility.h"
+#include "animatedsprite.hpp"
+
+#include "core.hpp"
+#include "math.hpp"
+#include "spritesheet.hpp"
+#include "utility.hpp"
 
 #include <stdexcept>
 
 namespace Inugami {
 
-AnimatedSprite::AnimatedSprite() :
+AnimatedSprite::AnimatedSprite(Core& in) :
+    flipX(false), flipY(false), rot(0.f),
     sheet(nullptr), sprites(), sequence(),
     mode(Mode::NORMAL), ended(false),
     timer(0),
@@ -30,6 +34,7 @@ AnimatedSprite::AnimatedSprite() :
 {}
 
 AnimatedSprite::AnimatedSprite(const AnimatedSprite& in) :
+    flipX(in.flipX), flipY(in.flipY), rot(0.f),
     sheet(new Spritesheet(*in.sheet)), sprites(in.sprites), sequence(in.sequence),
     mode(in.mode), ended(in.ended),
     timer(in.timer),
@@ -74,13 +79,16 @@ void AnimatedSprite::setSequence(const FrameList &in)
     timer = sequence[0].second;
 }
 
-void AnimatedSprite::draw()
+void AnimatedSprite::draw(Core& core, Transform in)
 {
     if (sequence.empty()) throw std::logic_error("Animation is empty!");
 
     if (!ended)
     {
         auto& sprite = sprites[sequence[pos].first];
+        in.scale(Vec3{(flipX)?-1.f:1.f, (flipY)?-1.f:1.f, 1.f});
+        in.rotate(rot, Vec3{0.f, 0.f, 1.f});
+        core.modelMatrix(in);
         sheet->draw(sprite.first, sprite.second);
 
         if (--timer == 0)

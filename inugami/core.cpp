@@ -14,58 +14,91 @@ Permission is granted to anyone to use this software for any purpose, including 
 
 *******************************************************************************/
 
-#include "core.h"
+#include "core.hpp"
 
-#include "loaders.h"
-#include "math.h"
-#include "opengl.h"
+#include "camera.hpp"
+#include "exception.hpp"
+#include "interface.hpp"
+#include "loaders.hpp"
+#include "shader.hpp"
+#include "sharedbank.hpp"
 
 #include <iomanip>
 #include <ostream>
 #include <sstream>
-#include <stdexcept>
 
 namespace Inugami {
+
+int Core::numCores = 0;
+
+class CoreException : public Exception
+{
+public:
+    CoreException(Core* c, std::string error) :
+        core(c), err(error)
+    {}
+
+    const char* what() const noexcept override
+    {
+        std::string rval;
+        rval += "Core Exception: ";
+        rval += hexify(core);
+        rval += "; ";
+        rval += err;
+        return rval.c_str();
+    }
+
+    Core* core;
+    std::string err;
+};
 
 Core::RenderParams::RenderParams() :
     width(800), height(600),
     fullscreen(false),
     vsync(false),
-    fsaaSamples(4)
+    fsaaSamples(0)
 {}
 
 Core::Core(const RenderParams &params) :
+    running(false),
+
+    frameStartTime(0.f),
+    frameRateStack(10, 0.0),
+    frStackIterator(frameRateStack.begin()),
+
+    rparams(params),
+    aspectRatio(double(rparams.width)/double(rparams.height)),
+
     windowTitle("Inugami"),
     windowTitleShowFPS(false),
-    running(false), callbackCount(0)
+    window(nullptr),
+
+    shader(nullptr),
+
+    banks(new SharedBank)
 {
-    rparams = params;
-    aspectRatio = static_cast<double>(rparams.width)/static_cast<double>(rparams.height);
+    if (numCores == 0) glfwInit();
 
-    frameRateStack.resize(10, double(0.0));
-    frStackIterator = frameRateStack.begin();
-
-    glfwInit();
-
-    glfwWindowHint(GLFW_FSAA_SAMPLES, rparams.fsaaSamples);
+    glfwWindowHint(GLFW_SAMPLES, rparams.fsaaSamples);
 
     window = glfwCreateWindow
     (
         rparams.width, rparams.height,
-        (rparams.fullscreen)? GLFW_FULLSCREEN : GLFW_WINDOWED,
-        windowTitle.c_str(), 0
+        windowTitle.c_str(),
+        (rparams.fullscreen)? nullptr : nullptr, //TODO detect monitors
+        nullptr
     );
 
     if (!window)
     {
-        throw std::runtime_error("Failed to open window.");
+        throw CoreException(this, "Failed to open window.");
     }
 
-    glfwMakeContextCurrent(window);
+    activate();
 
-    if (glewInit() != GLEW_OK)
+    if (numCores == 0) if (glewInit() != GLEW_OK)
     {
-        throw std::runtime_error("Failed to initialize GLEW.");
+        throw CoreException(this, "Failed to initialize GLEW.");
     }
 
     if (rparams.vsync) glfwSwapInterval(1);
@@ -74,7 +107,7 @@ Core::Core(const RenderParams &params) :
     glEnable(GL_TEXTURE_2D);
     glShadeModel(GL_FLAT);
 
-    glClearColor(0.0, 0.0, 0.0, 0.0);
+    glClearColor(1.0, 0.0, 1.0, 0.0);
 
     glClearDepth(1);
     glDepthFunc(GL_LEQUAL);
@@ -91,31 +124,42 @@ Core::Core(const RenderParams &params) :
     glEnableClientState(GL_NORMAL_ARRAY);
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
-    for (int i=0; i<MAXCALLBACKS; ++i)
-    {
-        callbacks[i].func = nullptr;
-        callbacks[i].freq = 0.0;
-        callbacks[i].wait = 0.0;
-        callbacks[i].last = 0.0;
-    }
-
     createDefaultShader();
 
     iface = new Interface(window);
+
+    ++numCores;
 }
 
 Core::~Core()
 {
-    delete defaultShader;
+    activate();
+
     delete iface;
 
     glfwDestroyWindow(window);
-    glfwTerminate();
+
+    if (--banks->users == 0) delete banks;
+
+    if (--numCores == 0)
+    {
+        glfwTerminate();
+    }
+}
+
+void Core::activate() const
+{
+    glfwMakeContextCurrent(window);
+}
+
+void Core::deactivate() const
+{
+    glfwMakeContextCurrent(0);
 }
 
 void Core::beginFrame()
 {
-    glfwMakeContextCurrent(window);
+    activate();
 
     *frStackIterator = getInstantFrameRate();
     ++frStackIterator;
@@ -142,24 +186,26 @@ void Core::endFrame()
 {
     glfwSwapBuffers(window);
 }
-double Core::getInstantFrameRate()
+
+double Core::getInstantFrameRate() const
 {
     return 1.0/(glfwGetTime() - frameStartTime);
 }
 
-double Core::getAverageFrameRate()
+double Core::getAverageFrameRate() const
 {
     double sum = 0;
-    std::list<double>::iterator i;
-    for (i=frameRateStack.begin(); i!=frameRateStack.end(); ++i)
+    for (auto& i : frameRateStack)
     {
-        sum += *i;
+        sum += i;
     }
     return sum/10.0;
 }
 
 void Core::applyCam(const Camera& in)
 {
+    activate();
+
     //Cull faces
     if (in.cullFaces)
     {
@@ -186,55 +232,8 @@ void Core::applyCam(const Camera& in)
 
 void Core::modelMatrix(const Mat4& in)
 {
+    activate();
     getShader()->setUniform("modelMatrix", in);
-}
-
-Mesh* Core::loadMesh(const char *filename)
-{
-    std::string foo(filename);
-    return loadMesh(foo);
-}
-
-Mesh* Core::loadMesh(const std::string &filename)
-{
-    auto i = meshes.find(filename);
-    if (i != meshes.end())
-    {
-        ++i->second.users;
-        return &i->second.mesh;
-    }
-
-    meshes[filename].users = 1;
-    if (!loadObjFromFile(filename, meshes[filename].mesh))
-    {
-        meshes.erase(meshes.find(filename));
-        return nullptr;
-    }
-
-    return &meshes[filename].mesh.init();
-}
-
-void Core::reloadMeshes()
-{
-    for (auto i : meshes)
-    {
-        loadObjFromFile(i.first, i.second.mesh);
-        i.second.mesh.init();
-    }
-}
-
-void Core::dropMesh(Mesh* target)
-{
-    auto i = meshes.begin();
-    while (i != meshes.end())
-    {
-        if (&i->second.mesh == target)
-        {
-            if (--i->second.users == 0) meshes.erase(i);
-            break;
-        }
-        ++i;
-    }
 }
 
 void Core::setWindowTitle(const char *text, bool showFPS)
@@ -244,56 +243,19 @@ void Core::setWindowTitle(const char *text, bool showFPS)
     glfwSetWindowTitle(window, text);
 }
 
-const Core::RenderParams& Core::getParams()
+const Core::RenderParams& Core::getParams() const
 {
     return rparams;
 }
 
-bool Core::addCallback(void (*func)(), double freq)
+void Core::addCallback(std::function<void()> func, double freq)
 {
-    for (int i=0; i<MAXCALLBACKS; ++i)
-    {
-        if (i == callbackCount)
-        {
-            callbacks[i].func = func;
-            callbacks[i].freq = freq;
-            callbacks[i].wait = 0.0;
-            callbacks[i].last = glfwGetTime();
-            ++callbackCount;
-            return true;
-        }
-        if (callbacks[i].func == func)
-        {
-            callbacks[i].freq = freq;
-            callbacks[i].wait = 0.0;
-            callbacks[i].last = glfwGetTime();
-            return true;
-        }
-    }
-    return false;
+    callbacks.push_back({func, freq, glfwGetTime()});
 }
 
-void Core::dropCallback(void (*func)())
+void Core::clearCallbacks()
 {
-    for (int i=0; i<MAXCALLBACKS; ++i)
-    {
-        if (i == callbackCount)
-        {
-            return;
-        }
-        if (callbacks[i].func == func)
-        {
-            for (int j=i; j<callbackCount-1; ++j)
-            {
-                callbacks[j].func = callbacks[j+1].func;
-                callbacks[j].freq = callbacks[j+1].freq;
-                callbacks[j].wait = callbacks[j+1].wait;
-                callbacks[j].last = callbacks[j+1].last;
-            }
-            callbacks[callbackCount-1].func = nullptr;
-            return;
-        }
-    }
+    callbacks.clear();
 }
 
 int Core::go()
@@ -303,24 +265,23 @@ int Core::go()
     double currentTime = 0.0;
     double deltaTime = 0.0;
 
-    while (running) {
-        for (int i=0; i<callbackCount; ++i)
+    while (running)
+    {
+        for (auto& cb : callbacks)
         {
-            currentTime = glfwGetTime();
-            deltaTime = currentTime - callbacks[i].last;
-            callbacks[i].last = currentTime;
-
-            if (callbacks[i].freq < 0.0)
+            if (cb.freq < 0.0)
             {
-                callbacks[i].func();
+                cb.func();
                 continue;
             }
 
-            callbacks[i].wait += deltaTime * callbacks[i].freq;
-            if (callbacks[i].wait >= 1.0)
+            currentTime = glfwGetTime();
+            deltaTime = (currentTime - cb.last)*cb.freq;
+
+            if (deltaTime >= 1.0)
             {
-                callbacks[i].func();
-                callbacks[i].wait = 0.0;
+                cb.last = currentTime;
+                cb.func();
             }
 
             if (!running) break;
@@ -330,63 +291,134 @@ int Core::go()
     return 0;
 }
 
-Interface* Core::getInterface()
+const Shader* Core::getShader() const
 {
-    return iface;
-}
-
-const Shader* Core::getShader()
-{
-    if (!customShader) return defaultShader;
-    return customShader;
+    if (!shader) return banks->shader;
+    return shader;
 }
 
 void Core::setShader(Shader* in)
 {
-    customShader = in;
+    shader = in;
 }
 
-int Core::getWindowParam(int param)
+int Core::getWindowParam(int param) const
 {
     return glfwGetWindowParam(window, param);
 }
 
 void Core::createDefaultShader()
 {
-    Shader::Program program;
-    program[Shader::Type::VERT] =
-        "#version 400\n"
-        "layout (location = 0) in vec3 VertexPosition;\n"
-        "layout (location = 1) in vec3 VertexNormal;\n"
-        "layout (location = 2) in vec2 VertexTexCoord;\n"
-        "uniform mat4 projectionMatrix;\n"
-        "uniform mat4 viewMatrix;\n"
-        "uniform mat4 modelMatrix;\n"
-        "out vec3 Position;\n"
-        "out vec3 Normal;\n"
-        "out vec2 TexCoord;\n"
-        "void main()\n"
-        "{\n"
-        "    TexCoord = VertexTexCoord;\n"
-        "    Normal = normalize(VertexNormal);\n"
-        "    Position = VertexPosition/5;\n"
-        "    mat4 modelViewProjectionMatrix = projectionMatrix * viewMatrix * modelMatrix;\n"
-        "    gl_Position = modelViewProjectionMatrix * vec4(VertexPosition,1.0);\n"
-        "}\n"
-    ;
-    program[Shader::Type::FRAG] =
-        "#version 400\n"
-        "in vec3 Position;\n"
-        "in vec3 Normal;\n"
-        "in vec2 TexCoord;\n"
-        "uniform sampler2D Tex1;\n"
-        "out vec4 FragColor;\n"
-        "void main() {\n"
-        "    vec4 texColor = texture( Tex1, TexCoord );\n"
-        "    FragColor = texColor;\n"
-        "}\n"
-    ;
-    defaultShader = new Shader(program);
+    if (!banks->shader)
+    {
+        Shader::Program program;
+        program[Shader::Type::VERT] =
+            "#version 400\n"
+            "layout (location = 0) in vec3 VertexPosition;\n"
+            "layout (location = 1) in vec3 VertexNormal;\n"
+            "layout (location = 2) in vec2 VertexTexCoord;\n"
+            "uniform mat4 projectionMatrix;\n"
+            "uniform mat4 viewMatrix;\n"
+            "uniform mat4 modelMatrix;\n"
+            "out vec3 Position;\n"
+            "out vec3 Normal;\n"
+            "out vec2 TexCoord;\n"
+            "void main()\n"
+            "{\n"
+            "    TexCoord = VertexTexCoord;\n"
+            "    Normal = normalize(VertexNormal);\n"
+            "    Position = VertexPosition/5;\n"
+            "    mat4 modelViewProjectionMatrix = projectionMatrix * viewMatrix * modelMatrix;\n"
+            "    gl_Position = modelViewProjectionMatrix * vec4(VertexPosition,1.0);\n"
+            "}\n"
+        ;
+        program[Shader::Type::FRAG] =
+            "#version 400\n"
+            "in vec3 Position;\n"
+            "in vec3 Normal;\n"
+            "in vec2 TexCoord;\n"
+            "uniform sampler2D Tex1;\n"
+            "out vec4 FragColor;\n"
+            "void main() {\n"
+            "    vec4 texColor = texture( Tex1, TexCoord );\n"
+            "    FragColor = texColor;\n"
+            "}\n"
+        ;
+        banks->shader = new Shader(program);
+    }
+}
+
+std::string Core::getDiagnostic() const
+{
+    std::stringstream rval;
+
+    rval << "-- BEGIN CORE DIAGNOSIS --\n";
+
+    rval << "\tCore location:  " << hexify(this) << "\n";
+    rval << "\tIface location: " << hexify((Interface*)iface) << "\n";
+
+    rval << "\tRunning:        " << running << "\n";
+    if (running) rval << "\t\tCurrent Framerate: " << getAverageFrameRate() << "\n";
+
+    rval << "\tRender Paramters:\n";
+    rval << "\t\tDimensions: " << rparams.width << "x" << rparams.height << "\n";
+    rval << "\t\tFullscreen: " << rparams.fullscreen << "\n";
+    rval << "\t\tVSync:      " << rparams.vsync << "\n";
+    rval << "\t\tFSAA:       " << rparams.fsaaSamples << "\n";
+
+    rval << "\tMeshes:\n";
+    for (auto& p : banks->meshBank)
+    {
+        rval << "\t\tName: \"" << p.first.name << "\"\n";
+        rval << "\t\t\tVertices:    " << p.second.vertices.size() << "\n";
+        rval << "\t\t\tTriangles:   " << p.second.triangles.size() << "\n";
+        rval << "\t\t\tInitialized: " << p.second.initted << "\n";
+        rval << "\t\t\tVAO ID:      " << hexify(p.second.vao) << "\n";
+        rval << "\t\t\tVBO ID:      " << hexify(p.second.vbo) << "\n";
+        rval << "\t\t\tELE ID:      " << hexify(p.second.ele) << "\n";
+        rval << "\t\t\tUsers:       " << p.second.users << "\n";
+    }
+
+    rval << "\tTextures:\n";
+    for (auto& p : banks->textureBank)
+    {
+        rval << "\t\tName: \"" << p.first.name << "\"";
+            if (p.first.clamp)  rval << " [CLAMP]";
+            if (p.first.smooth) rval << " [SMOOTH]";
+        rval << "\n";
+        rval << "\t\t\tGL ID:      " << hexify(p.second.id) << "\n";
+        rval << "\t\t\tDimensions: " << p.second.width << "x" << p.second.height << "\n";
+        rval << "\t\t\tUsers:      " << p.second.users << "\n";
+    }
+
+    rval << "\tSpritesheets:\n";
+    for (auto& p : banks->spritesheetBank)
+    {
+        rval << "\t\tDimensions:";
+            rval << " [" << p.first.w << "x" << p.first.h << "]";
+            rval << " [" << p.first.tw << "x" << p.first.th << "]";
+            rval << " [" << p.first.cx << "x" << p.first.cy << "]";
+        rval << "\n";
+        rval << "\t\t\tUsers:    " << p.second.users << "\n";
+        rval << "\t\t\tMeshes:\n";
+        for (auto& pm : p.second.meshes)
+        {
+            rval << "\t\t\t\t\"" << pm->id.name << "\"\n";
+        }
+    }
+
+    rval << "\tWindow Title:   \"" << windowTitle << "\"";
+        if (windowTitleShowFPS) rval << " [FPS]";
+    rval << "\n";
+
+    rval << "\tWindow ID:      " << hexify(window) << "\n";
+
+    rval << "\tDefault Shader: " << hexify(banks->shader) << "\n";
+    rval << "\tCustom Shader:  " << hexify(shader) << "\n";
+
+    rval << "-- END CORE DIAGNOSIS --\n";
+
+    return rval.str();
 }
 
 } // namespace Inugami

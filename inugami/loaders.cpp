@@ -14,10 +14,11 @@ Permission is granted to anyone to use this software for any purpose, including 
 
 *******************************************************************************/
 
-#include "loaders.h"
+#include "loaders.hpp"
 
-#include "math.h"
-#include "utility.h"
+#include "math.hpp"
+#include "mesh.hpp"
+#include "utility.hpp"
 
 #include <IL/il.h>
 #include <IL/ilu.h>
@@ -74,18 +75,21 @@ bool loadImageFromFile(const std::string &filename, std::vector<char> &target)
     return false;
 }
 
-bool loadTextFromFile(const std::string &filename, std::string &target)
+std::string loadTextFromFile(const std::string &filename)
 {
-    std::ifstream inFile(filename.c_str(), std::ios::ate);
-    if (!inFile) return false;
-    unsigned int length = inFile.tellg();
-    target.resize(length);
-    inFile.seekg(0);
-    std::getline(inFile, target, '\0');
-    return true;
+    std::ifstream inFile(filename.c_str(), std::ios::binary);
+    if (!inFile) throw std::runtime_error("Could not open file");
+
+    std::string rval;
+    inFile.seekg(0, std::ios::end);
+    rval.resize(inFile.tellg());
+    inFile.seekg(0, std::ios::beg);
+    inFile.read(&rval[0], rval.size());
+
+    return rval;
 }
 
-bool loadObjFromFile(const std::string& filename, Mesh& target)
+bool loadObjFromFile(const std::string& filename, Mesh::Value* target)
 {
     typedef ::glm::vec3 vec3;
     typedef ::glm::vec2 vec2;
@@ -188,7 +192,7 @@ bool loadObjFromFile(const std::string& filename, Mesh& target)
         }
     }
 
-    target.reserve(high(positions.size(), normals.size(), texcoords.size()), tris.size());
+    target->reserve(high(positions.size(), normals.size(), texcoords.size()), tris.size());
 
     //FORMAT DATA
 
@@ -201,9 +205,9 @@ bool loadObjFromFile(const std::string& filename, Mesh& target)
             if (positions.size()>0) v.pos = positions[vd[i].p];
             if (normals.size()>0) v.norm = normals[vd[i].n];
             if (texcoords.size()>0) v.uv = texcoords[vd[i].t];
-            tri.v[i] = target.addVertex(v);
+            tri.v[i] = target->addVertex(v);
         }
-        target.addTriangle(tri);
+        target->addTriangle(tri);
     }
 
     return true;

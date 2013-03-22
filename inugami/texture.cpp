@@ -14,16 +14,75 @@ Permission is granted to anyone to use this software for any purpose, including 
 
 *******************************************************************************/
 
-#include "texture.h"
+#include "texture.hpp"
 
-#include "loaders.h"
+#include "core.hpp"
+#include "loaders.hpp"
+#include "utility.hpp"
+#include "exception.hpp"
+#include "sharedbank.hpp"
 
 #include <algorithm>
-#include <stdexcept>
 
 namespace Inugami {
 
-Texture::Bank Texture::pool;
+class TextureException : public Exception
+{
+public:
+    TextureException(const Texture *source, std::string error) :
+        tex(source), err(error)
+    {}
+
+    virtual const char* what() const noexcept override
+    {
+        std::string rval;
+        rval += "Texture Exception: ";
+        rval += tex->id.name;
+        rval += "; ";
+        rval += err;
+        return rval.c_str();
+    }
+
+    const Texture *tex;
+    std::string err;
+};
+
+int& Texture::initData(Data& in, int width, int height) //static
+{
+    in.resize(sizeof(int)*2+width*height*4);
+    dataWidth(in) = width;
+    dataHeight(in) = height;
+}
+
+int& Texture::dataWidth(Data& in) //static
+{
+    return *reinterpret_cast<int*>(&in[0]);
+}
+
+int& Texture::dataHeight(Data& in) //static
+{
+    return *reinterpret_cast<int*>(&in[sizeof(int)]);
+}
+
+char* Texture::dataPixel(Data& in, int x, int y) //static
+{
+    return &in[sizeof(int)*2+(y*dataWidth(in)+x)*4];
+}
+
+const int& Texture::dataWidth(const Data& in) //static
+{
+    return *reinterpret_cast<const int*>(&in[0]);
+}
+
+const int& Texture::dataHeight(const Data& in) //static
+{
+    return *reinterpret_cast<const int*>(&in[sizeof(int)]);
+}
+
+const char* Texture::dataPixel(const Data& in, int x, int y) //static
+{
+    return &in[sizeof(int)*2+(y*dataWidth(in)+x)*4];
+}
 
 Texture::Index::Index(const std::string &inName, bool inSmooth, bool inClamp) :
     name(inName),
@@ -63,88 +122,66 @@ Texture::Value::Value() :
     users(0)
 {}
 
-Texture::Texture(const std::string &filename, bool smooth, bool clamp) :
-    id(filename, smooth, clamp)
+Texture::Texture(Core& coreIn, const std::string &filename, bool smooth, bool clamp) :
+    id(filename, smooth, clamp),
+    bank(coreIn.banks->textureBank)
 {
-    if (pool.find(id) == pool.end())
+    if (bank.find(id) == bank.end())
     {
         std::vector<char> data;
-        if (!loadImageFromFile(id.name, data)) throw std::runtime_error("Couldn't load image!");
 
-        GLuint newID;
-        glGenTextures(1, &newID);
-        glBindTexture(GL_TEXTURE_2D, newID);
+        coreIn.activate();
 
-        GLuint filter = (id.smooth)? GL_LINEAR : GL_NEAREST;
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter);
+        if (id.name.substr(0,2) == "0x" && id.name.size() == 10)
+        {
+            data.resize(sizeof(int)*3);
+            dataWidth(data) = 1;
+            dataHeight(data) = 1;
 
-        GLuint wrap = (id.clamp)? GL_CLAMP : GL_REPEAT;
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrap);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrap);
+            for (int i=0; i<4; ++i)
+            {
+                dataPixel(data,0,0)[i] = dehexify(id.name.substr(2+i*2,2));
+            }
+        }
+        else
+        {
+            if (!loadImageFromFile(id.name, data)) throw TextureException(this, "Failed to load image!");
+        }
 
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
-            *reinterpret_cast<int*>(&data[0]), *reinterpret_cast<int*>(&data[4]),
-            0, GL_RGBA, GL_UNSIGNED_BYTE, &data[8]
-        );
-
-        pool[id].id = newID;
-        pool[id].width = *reinterpret_cast<int*>(&data[0]);
-        pool[id].height = *reinterpret_cast<int*>(&data[sizeof(int)]);
-        pool[id].users = 1;
+        setParams(data);
     }
     else
     {
-        ++pool[id].users;
+        ++bank[id].users;
     }
 }
 
-Texture::Texture(int) :
-    id("", false, false)
+Texture::Texture(Core& coreIn, const Data &data, bool smooth, bool clamp) :
+    id(stringify(this), smooth, clamp),
+    bank(coreIn.banks->textureBank)
 {
-    if (pool.find(id) == pool.end())
-    {
-        unsigned int data = 0xffffffff;
-
-        GLuint newID;
-        glGenTextures(1, &newID);
-        glBindTexture(GL_TEXTURE_2D, newID);
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
-            1, 1,
-            0, GL_RGBA, GL_UNSIGNED_BYTE, reinterpret_cast<GLvoid*>(&data)
-        );
-
-        pool[id].id = newID;
-        pool[id].width = 1;
-        pool[id].height = 1;
-        pool[id].users = 1;
-
-    }
-    else
-    {
-        ++pool[id].users;
-    }
+    coreIn.activate();
+    setParams(data);
 }
+
+Texture::Texture(Core& coreIn, unsigned int color, bool smooth, bool clamp) :
+    Texture(coreIn, hexify(color), smooth, clamp)
+{}
 
 Texture::Texture(const Texture &in) :
-    id(in.id)
+    id(in.id),
+    bank(in.bank)
 {
-    ++pool[id].users;
+    ++bank[id].users;
 }
 
 Texture::~Texture()
 {
-    if (--pool[id].users == 0)
+    auto iter = bank.find(id);
+    if (--iter->second.users == 0)
     {
-        glDeleteTextures(1, &pool[id].id);
-        pool.erase(pool.find(id));
+        glDeleteTextures(1, &iter->second.id);
+        bank.erase(iter);
     }
 }
 
@@ -152,36 +189,72 @@ Texture &Texture::operator=(const Texture &in)
 {
     if (id == in.id) return *this;
 
-    if (--pool[id].users == 0)
+    auto iter = bank.find(id);
+    if (--iter->second.users == 0)
     {
-        glDeleteTextures(1, &pool[id].id);
-        pool.erase(pool.find(id));
+        glDeleteTextures(1, &iter->second.id);
+        bank.erase(iter);
     }
 
     id = in.id;
-    ++pool[id].users;
+    ++ bank[id].users;
 
     return *this;
 }
 
-void Texture::bind() const
+void Texture::bind(unsigned int slot) const
 {
-    glBindTexture(GL_TEXTURE_2D, pool[id].id);
+    if (slot > 31) throw TextureException(this, "Invalid texture slot!");
+    glActiveTexture(GL_TEXTURE0+slot);
+    glBindTexture(GL_TEXTURE_2D, bank[id].id);
 }
 
 unsigned int Texture::getWidth() const
 {
-    return pool[id].width;
+    return bank[id].width;
 }
 
 unsigned int Texture::getHeight() const
 {
-    return pool[id].height;
+    return bank[id].height;
 }
 
 const std::string& Texture::getName() const
 {
     return id.name;
+}
+
+void Texture::setParams(const Data& data)
+{
+    if (data.size() != sizeof(int)*2+dataWidth(data)*dataHeight(data)*4)
+    {
+        throw TextureException(this, "Invalid data!");
+    }
+
+    GLuint newID;
+    glGenTextures(1, &newID);
+    glBindTexture(GL_TEXTURE_2D, newID);
+
+    GLuint filter = (id.smooth)? GL_LINEAR : GL_NEAREST;
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter);
+
+    GLuint wrap = (id.clamp)? GL_CLAMP : GL_REPEAT;
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrap);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrap);
+
+    glTexImage2D(
+        GL_TEXTURE_2D, 0, GL_RGBA,
+        dataWidth(data), dataHeight(data),
+        0, GL_RGBA, GL_UNSIGNED_BYTE, &data[sizeof(int)*2]
+    );
+
+    Value& val = bank[id];
+
+    val.id = newID;
+    val.width = dataWidth(data);
+    val.height = dataHeight(data);
+    val.users = 1;
 }
 
 } // namespace Inugami

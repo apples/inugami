@@ -14,25 +14,59 @@ Permission is granted to anyone to use this software for any purpose, including 
 
 *******************************************************************************/
 
-#ifndef INUGAMI_H_INCLUDED
-#define INUGAMI_H_INCLUDED
+#ifndef INUGAMI_SPRITESHEET_H
+#define INUGAMI_SPRITESHEET_H
 
-#include "animatedsprite.h"
-#include "camera.h"
-#include "core.h"
-#include "font.h"
-#include "interface.h"
-#include "inugami.h"
-#include "loaders.h"
-#include "logger.h"
-#include "math.h"
-#include "mathtypes.h"
-#include "mesh.h"
-#include "opengl.h"
-#include "shader.h"
-#include "spritesheet.h"
-#include "texture.h"
-#include "transform.h"
-#include "utility.h"
+#include "inugami.hpp"
 
-#endif // INUGAMI_H_INCLUDED
+#include "mesh.hpp"
+#include "texture.hpp"
+
+#include <map>
+#include <string>
+#include <vector>
+
+namespace Inugami {
+
+class Spritesheet
+{
+    friend class SharedBank;
+public:
+    Spritesheet(Core& coreIn, const std::string &filename, unsigned int w, unsigned int h, float cx = 0.5f, float cy = 0.5f);
+    Spritesheet(const Spritesheet& in);
+    virtual ~Spritesheet();
+
+    void draw(unsigned int r, unsigned int c);
+
+    Mesh &getMesh(unsigned int r, unsigned int c);
+    Texture &getTex();
+
+private:
+    class Index
+    {
+    public:
+        bool operator<(const Index &in) const;
+        unsigned int w, h;
+        unsigned int tw, th;
+        float cx, cy;
+    };
+
+    struct Value
+    {
+    public:
+        Value();
+        std::vector<Mesh*> meshes;
+        int users;
+    };
+
+    using Bank = std::map<Index, Value>;
+
+    Texture tex;
+    Index dim;
+
+    Bank& bank;
+};
+
+} // namespace Inugami
+
+#endif // INUGAMI_SPRITESHEET_H

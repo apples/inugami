@@ -14,13 +14,16 @@ Permission is granted to anyone to use this software for any purpose, including 
 
 *******************************************************************************/
 
-#ifndef UTILITY_H_INCLUDED
-#define UTILITY_H_INCLUDED
+#ifndef UTILITY_HPP_INCLUDED
+#define UTILITY_HPP_INCLUDED
 
+#include <iomanip>
 #include <vector>
 #include <stdexcept>
 #include <sstream>
 #include <string>
+#include <functional>
+#include <type_traits>
 
 namespace Inugami {
 
@@ -125,6 +128,32 @@ std::string stringify(const T &in)
     return ss.str();
 }
 
+template <typename T>
+typename std::enable_if<std::is_arithmetic<T>::value, std::string>::type
+    hexify(const T &in)
+{
+    std::stringstream ss;
+    ss.fill('0');
+    ss << "0x" << std::hex << std::setw(8) << in;
+    return ss.str();
+}
+
+template <typename T>
+std::string hexify(const T *in)
+{
+    std::stringstream ss;
+    ss << in;
+    return ss.str();
+}
+
+inline unsigned int dehexify(std::string in)
+{
+    unsigned int rval;
+    std::stringstream ss(in);
+    ss >> std::hex >> rval;
+    return rval;
+}
+
 template <typename T1, typename T2>
 bool chainComp(const T1& first, const T2& second)
 {
@@ -143,8 +172,15 @@ template <typename T>
 class ConstMap
 {
 public:
+    using Iterator = typename T::const_iterator;
+
     ConstMap(const T& in) : data(in) {}
     ConstMap(const ConstMap& in) : data(in.data) {}
+
+    operator const T& () { return data; }
+
+    Iterator begin() { return data.begin(); }
+    Iterator end() { return data.end(); }
 
     const typename T::mapped_type& operator[](const typename T::key_type& in) const
     {
@@ -153,9 +189,83 @@ public:
         return i->second;
     }
 
+private:
     const T& data;
 };
 
+//Abandon all hope, ye who enter here.
+template <
+    typename R = std::vector<int>,
+    typename L = int,
+    typename V = typename R::value_type
+//    typename I = std::function< void(V&)       >,
+//    typename F = std::function< bool(const V&) >,
+//    typename T = std::function<    V(const V&) >
+    >
+R comprehend(
+    const L& start, const L& stop,
+    std::function< void(L&)       > advance,// =   [](V& i)      {++i;},
+    std::function< bool(const L&) > condition,// = [](const V&)  {return true;},
+    std::function<    V(const L&) > transform// = [](const V& i){return i;}
+    )
+{
+    //NOTE This is a workaround for a g++ bug as of g++ 4.7.1 (tdm64-1)
+    if (!advance)     advance = [](L& i)      {++i;}         ;
+    if (!condition) condition = [](const L&)  {return true;} ;
+    //if (!transform) transform = [](const L& i){return V(i);} ;
+
+    R rval;
+    for (L i=start; i!=stop; advance(i))
+    {
+        if (condition(i))
+        {
+            rval.push_back(transform(i));
+        }
+    }
+    return rval;
+}
+
+//ConstAttr allows Owner to set it, but outsiders can only cast.
+template <typename T, class Owner>
+class ConstAttr
+{
+    friend Owner;
+public:
+    operator const T& () const {return data;}
+    T* operator->() {return &data;}
+private:
+    ConstAttr() : data() {}
+    ConstAttr(const T& in) : data(in) {}
+    T data;
+};
+
+template <typename T, class Owner>
+class ConstAttr <T*, Owner>
+{
+    friend Owner;
+public:
+    operator T* () const {return data;}
+    T* operator->() {return data;}
+private:
+    ConstAttr() : data() {}
+    ConstAttr(T* in) : data(in) {}
+    T* data;
+};
+
+template <typename T>
+typename std::enable_if<!std::is_pointer<T>::value, bool>::type
+equalInstance(const T& a, const T& b)
+{
+    return (&a == &b);
+}
+
+template <typename T>
+typename std::enable_if<std::is_pointer<T>::value, bool>::type
+equalInstance(T a, T b)
+{
+    return (a == b);
+}
+
 } // namespace Inugami
 
-#endif // UTILITY_H_INCLUDED
+#endif // UTILITY_HPP_INCLUDED

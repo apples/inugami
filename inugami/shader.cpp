@@ -14,13 +14,37 @@ Permission is granted to anyone to use this software for any purpose, including 
 
 *******************************************************************************/
 
-#include "shader.h"
+#include "shader.hpp"
 
-#include "loaders.h"
+#include "loaders.hpp"
+#include "exception.hpp"
 
 #include <stdexcept>
+#include <vector>
 
 namespace Inugami {
+
+class ShaderException : public Exception
+{
+public:
+    ShaderException(const std::string &codeStr, const std::string &errStr) :
+        code(codeStr), err(errStr)
+    {}
+
+    virtual const char* what() const noexcept override
+    {
+        std::string rval;
+        rval += "Shader error:\n";
+        rval += "    -- SHADER CODE --\n";
+        rval += code;
+        rval += "    -- SHADER ERROR --\n";
+        rval += err;
+        return rval.c_str();
+    }
+
+    std::string code;
+    std::string err;
+};
 
 Shader::Shader(const Program &source)
 {
@@ -32,7 +56,14 @@ Shader::Shader(const Program &source)
         glCompileShader(id);
         GLint status;
         glGetShaderiv(id, GL_COMPILE_STATUS, &status);
-        return (status == GL_TRUE);
+        if (status != GL_TRUE)
+        {
+            GLsizei len = 0;
+            glGetShaderiv(id, GL_INFO_LOG_LENGTH, &len);
+            std::vector<GLchar> log(len);
+            glGetShaderInfoLog(id, 1024, &len, &log[0]);
+            throw ShaderException(codeStr, &log[0]);
+        }
     };
 
     static std::map<Type, GLint> shaderTypes = {
@@ -48,21 +79,37 @@ Shader::Shader(const Program &source)
     for (auto& p : source)
     {
         ids[p.first] = glCreateShader(shaderTypes[p.first]);
-        if (!compile(ids[p.first], p.second))
-        {
-            throw std::runtime_error("Failed to compile shader!");
-        }
+        compile(ids[p.first], p.second);
     }
 
     program = glCreateProgram();
     for (auto &p : ids) glAttachShader(program, p.second);
     glLinkProgram(program);
-    for (auto &p : ids) glDeleteShader(p.second);
 
     GLint status;
     glGetShaderiv(program, GL_LINK_STATUS, &status);
 
-    if (status == GL_FALSE) throw std::runtime_error("Failed to link shader!");
+    if (status == GL_FALSE)
+    {
+        GLsizei len = 0;
+        glGetProgramiv(program, GL_INFO_LOG_LENGTH, &len);
+        if (len>1)
+        {
+            std::vector<GLchar> log(len);
+            glGetProgramInfoLog(program, len, &len, &log[0]);
+            throw ShaderException("\n", &log[0]);
+        }
+        else
+        {
+            throw ShaderException("\n", "UNKNOWN ERROR.\nSORRY.\n");
+        }
+    }
+
+    for (auto &p : ids)
+    {
+        glDetachShader(program, p.second);
+        glDeleteShader(p.second);
+    }
 }
 
 Shader::~Shader()
@@ -79,6 +126,11 @@ void Shader::setUniform(const std::string& name, const float val) const
 {
     GLint loc = glGetUniformLocation(program, name.c_str());
     glUniform1f(loc, val);
+}
+
+void Shader::setUniform(const std::string& name, const double val) const
+{
+    setUniform(name, float(val));
 }
 
 void Shader::setUniform(const std::string& name, const int val) const
