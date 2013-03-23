@@ -21,6 +21,7 @@ namespace Inugami{ class Texture; }
 
 #include "inugami.hpp"
 
+#include "image.hpp"
 #include "opengl.hpp"
 
 #include <map>
@@ -35,17 +36,8 @@ class Texture final
     friend class SharedBank;
     friend class TextureException;
 public:
-    using Data = std::vector<char>;
-    static int& initData(Data& in, int width, int height);
-    static int& dataWidth(Data& in);
-    static int& dataHeight(Data& in);
-    static char* dataPixel(Data& in, int x, int y);
-    static const int& dataWidth(const Data& in);
-    static const int& dataHeight(const Data& in);
-    static const char* dataPixel(const Data& in, int x, int y);
-
     Texture(Core& coreIn, const std::string &filename, bool smooth=false, bool clamp=false);
-    Texture(Core& coreIn, const Data& data, bool smooth=false, bool clamp=false);
+    Texture(Core& coreIn, const Image& img, bool smooth=false, bool clamp=false);
     Texture(Core& coreIn, unsigned int color, bool smooth=false, bool clamp=false);
     Texture(const Texture &in);
     ~Texture();
@@ -81,7 +73,7 @@ private:
 
     using Bank = std::map<Index, Value>;
 
-    void setParams(const Data& data);
+    void setParams(const Image& data);
 
     Index id;
 

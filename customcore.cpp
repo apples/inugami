@@ -28,6 +28,7 @@ Permission is granted to anyone to use this software for any purpose, including 
 #include <libnoise/noise.h>
 
 #include <fstream>
+#include <map>
 #include <utility>
 
 using namespace Inugami;
@@ -41,7 +42,7 @@ CustomCore::CustomCore(const RenderParams &params) :
     shaderOn(true),
 
     shieldTex   (new Texture(*this, "data/shield.png", true, false)),
-    noiseTex    (generateNoise(shieldTex->getWidth()/2, shieldTex->getHeight()/2, 16.0)),
+    noiseTex    (generateNoise(shieldTex->getWidth(), shieldTex->getHeight(), 16.0)),
     font        (new Spritesheet(*this, "data/font.png", 8, 8)),
     fontRoll    (new AnimatedSprite(*this)),
     shield      (new Mesh(*this, "data/shield.obj")),
@@ -274,13 +275,18 @@ void CustomCore::idle()
 
 Texture* CustomCore::generateNoise(int width, int height, double freq)
 {
-    static Texture::Data* data = nullptr;
+    static std::map<int,unsigned char Image::Pixel::*> subpix = {
+        {0,&Image::Pixel::red},
+        {1,&Image::Pixel::green},
+        {2,&Image::Pixel::blue},
+        {3,&Image::Pixel::alpha}
+    };
 
-    if (!data)
+    static Image* img = nullptr;
+
+    if (!img)
     {
-        data = new Texture::Data;
-
-        Texture::initData(*data, width, height);
+        img = new Image(width, height);
 
         noise::module::Perlin perlin;
         perlin.SetFrequency(freq);
@@ -306,11 +312,11 @@ Texture* CustomCore::generateNoise(int width, int height, double freq)
                     val = val*0.5 + 0.5;
                     val = clamp(val, 0.0, 1.0);
 
-                    Texture::dataPixel(*data, j, i)[octave] = 255*val;
+                    img->pixelAt(j,i).*subpix[octave] = 255*val;
                 }
             }
         }
     }
 
-    return new Texture(*this, *data, true, false);
+    return new Texture(*this, *img, true, false);
 }

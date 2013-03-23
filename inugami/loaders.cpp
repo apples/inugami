@@ -20,9 +20,6 @@ Permission is granted to anyone to use this software for any purpose, including 
 #include "mesh.hpp"
 #include "utility.hpp"
 
-#include <IL/il.h>
-#include <IL/ilu.h>
-
 #include <algorithm>
 #include <array>
 #include <fstream>
@@ -30,51 +27,6 @@ Permission is granted to anyone to use this software for any purpose, including 
 #include <sstream>
 
 namespace Inugami {
-
-bool loadImageFromFile(const std::string &filename, std::vector<char> &target)
-{
-    static bool initialized = false;
-    if (!initialized)
-    {
-        ilInit();
-        initialized = true;
-    }
-
-    ILuint imageID;
-    ilGenImages(1, &imageID);
-    ilBindImage(imageID);
-
-    if (ilLoadImage(filename.c_str()))
-    {
-        if (ilConvertImage(IL_RGBA, IL_UNSIGNED_BYTE))
-        {
-            ILinfo imageInfo;
-            iluGetImageInfo(&imageInfo);
-            if (imageInfo.Origin == IL_ORIGIN_UPPER_LEFT)
-            {
-                iluFlipImage();
-            }
-
-            target.resize(imageInfo.SizeOfData+sizeof(int)*2);
-            *reinterpret_cast<int*>(&target[0]) = imageInfo.Width;
-            *reinterpret_cast<int*>(&target[sizeof(int)]) = imageInfo.Height;
-
-            char *data = reinterpret_cast<char*>(ilGetData());
-
-            for (unsigned int i=0; i<imageInfo.SizeOfData; ++i)
-            {
-                target[i+8] = data[i];
-            }
-
-            ilDeleteImages(1, &imageID);
-
-            return true;
-        }
-    }
-
-    ilDeleteImages(1, &imageID);
-    return false;
-}
 
 std::string loadTextFromFile(const std::string &filename)
 {

@@ -26,8 +26,6 @@ Permission is granted to anyone to use this software for any purpose, including 
 
 namespace Inugami {
 
-bool loadImageFromFile(const std::string &filename, std::vector<char> &target);
-
 /** \brief Loads a file into a string.
  *
  * \param filename const std::string& File name.

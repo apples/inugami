@@ -23,6 +23,7 @@ class AnimatedSprite;
 class Camera;
 class Core;
 class Exception;
+class Image;
 class Interface;
 class Mesh;
 class Profiler;

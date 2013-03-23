@@ -47,43 +47,6 @@ public:
     std::string err;
 };
 
-int& Texture::initData(Data& in, int width, int height) //static
-{
-    in.resize(sizeof(int)*2+width*height*4);
-    dataWidth(in) = width;
-    dataHeight(in) = height;
-}
-
-int& Texture::dataWidth(Data& in) //static
-{
-    return *reinterpret_cast<int*>(&in[0]);
-}
-
-int& Texture::dataHeight(Data& in) //static
-{
-    return *reinterpret_cast<int*>(&in[sizeof(int)]);
-}
-
-char* Texture::dataPixel(Data& in, int x, int y) //static
-{
-    return &in[sizeof(int)*2+(y*dataWidth(in)+x)*4];
-}
-
-const int& Texture::dataWidth(const Data& in) //static
-{
-    return *reinterpret_cast<const int*>(&in[0]);
-}
-
-const int& Texture::dataHeight(const Data& in) //static
-{
-    return *reinterpret_cast<const int*>(&in[sizeof(int)]);
-}
-
-const char* Texture::dataPixel(const Data& in, int x, int y) //static
-{
-    return &in[sizeof(int)*2+(y*dataWidth(in)+x)*4];
-}
-
 Texture::Index::Index(const std::string &inName, bool inSmooth, bool inClamp) :
     name(inName),
     smooth(inSmooth), clamp(inClamp)
@@ -122,33 +85,30 @@ Texture::Value::Value() :
     users(0)
 {}
 
-Texture::Texture(Core& coreIn, const std::string &filename, bool smooth, bool clamp) :
-    id(filename, smooth, clamp),
+Texture::Texture(Core& coreIn, const std::string &name, bool smooth, bool clamp) :
+    id(name, smooth, clamp),
     bank(coreIn.banks->textureBank)
 {
     if (bank.find(id) == bank.end())
     {
-        std::vector<char> data;
+        Image img;
 
         coreIn.activate();
 
         if (id.name.substr(0,2) == "0x" && id.name.size() == 10)
         {
-            data.resize(sizeof(int)*3);
-            dataWidth(data) = 1;
-            dataHeight(data) = 1;
-
-            for (int i=0; i<4; ++i)
-            {
-                dataPixel(data,0,0)[i] = dehexify(id.name.substr(2+i*2,2));
-            }
+            img.resize(1,1);
+            img.pixelAt(0,0).red   = dehexify(id.name.substr(2,2));
+            img.pixelAt(0,0).green = dehexify(id.name.substr(4,2));
+            img.pixelAt(0,0).blue  = dehexify(id.name.substr(6,2));
+            img.pixelAt(0,0).alpha = dehexify(id.name.substr(8,2));
         }
         else
         {
-            if (!loadImageFromFile(id.name, data)) throw TextureException(this, "Failed to load image!");
+            img = Image(name);
         }
 
-        setParams(data);
+        setParams(img);
     }
     else
     {
@@ -156,12 +116,12 @@ Texture::Texture(Core& coreIn, const std::string &filename, bool smooth, bool cl
     }
 }
 
-Texture::Texture(Core& coreIn, const Data &data, bool smooth, bool clamp) :
+Texture::Texture(Core& coreIn, const Image& img, bool smooth, bool clamp) :
     id(stringify(this), smooth, clamp),
     bank(coreIn.banks->textureBank)
 {
     coreIn.activate();
-    setParams(data);
+    setParams(img);
 }
 
 Texture::Texture(Core& coreIn, unsigned int color, bool smooth, bool clamp) :
@@ -224,13 +184,8 @@ const std::string& Texture::getName() const
     return id.name;
 }
 
-void Texture::setParams(const Data& data)
+void Texture::setParams(const Image& img)
 {
-    if (data.size() != sizeof(int)*2+dataWidth(data)*dataHeight(data)*4)
-    {
-        throw TextureException(this, "Invalid data!");
-    }
-
     GLuint newID;
     glGenTextures(1, &newID);
     glBindTexture(GL_TEXTURE_2D, newID);
@@ -245,15 +200,15 @@ void Texture::setParams(const Data& data)
 
     glTexImage2D(
         GL_TEXTURE_2D, 0, GL_RGBA,
-        dataWidth(data), dataHeight(data),
-        0, GL_RGBA, GL_UNSIGNED_BYTE, &data[sizeof(int)*2]
+        img.width, img.height,
+        0, GL_RGBA, GL_UNSIGNED_BYTE, &img.pixelAt(0,0)
     );
 
     Value& val = bank[id];
 
     val.id = newID;
-    val.width = dataWidth(data);
-    val.height = dataHeight(data);
+    val.width = img.width;
+    val.height = img.height;
     val.users = 1;
 }
 

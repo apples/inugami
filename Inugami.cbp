@@ -64,6 +64,8 @@
 		<Unit filename="inugami/core.hpp" />
 		<Unit filename="inugami/exception.cpp" />
 		<Unit filename="inugami/exception.hpp" />
+		<Unit filename="inugami/image.cpp" />
+		<Unit filename="inugami/image.hpp" />
 		<Unit filename="inugami/interface.cpp" />
 		<Unit filename="inugami/interface.hpp" />
 		<Unit filename="inugami/inugami.hpp" />
