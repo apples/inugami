@@ -107,7 +107,7 @@ Core::Core(const RenderParams &params) :
     glEnable(GL_TEXTURE_2D);
     glShadeModel(GL_FLAT);
 
-    glClearColor(1.0, 0.0, 1.0, 0.0);
+    glClearColor(0.3, 0.3, 0.3, 0.0);
 
     glClearDepth(1);
     glDepthFunc(GL_LEQUAL);

@@ -26,7 +26,6 @@ Current features are:
 Current limitations are:
     Models do not support animation
     No support for 3D textures
-    No support for multiple textures
     
 Note that Inugami is only meant for graphics, and other systems, such as audio, networking, and physics, must be found elsewhere.
 
@@ -36,7 +35,7 @@ Inugami depends on the following software libraries:
     DevIL   	1.7.8
     GLEW    	1.9.0
     GLFW    	3.0
-    GLM     	0.9.4.1
+    GLM     	0.9.3.3
 
 The demo program depends on these additional libraries:
     libnoise	1.0.0

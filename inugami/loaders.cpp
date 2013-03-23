@@ -23,6 +23,7 @@ Permission is granted to anyone to use this software for any purpose, including 
 #include <IL/il.h>
 #include <IL/ilu.h>
 
+#include <algorithm>
 #include <array>
 #include <fstream>
 #include <string>
@@ -91,11 +92,11 @@ std::string loadTextFromFile(const std::string &filename)
 
 bool loadObjFromFile(const std::string& filename, Mesh::Value* target)
 {
-    typedef ::glm::vec3 vec3;
-    typedef ::glm::vec2 vec2;
+    using ::glm::vec3;
+    using ::glm::vec2;
 
     std::ifstream inFile(filename.c_str());
-    std::string inString, command, pointstr[8], elem[3];
+    std::string inString, command, pointstr[8];
     std::stringstream ss, ss2;
 
     std::vector<vec3> positions;
@@ -114,31 +115,34 @@ bool loadObjFromFile(const std::string& filename, Mesh::Value* target)
         ss.str(inString);
         ss >> command;
 
-        if (command == "#") continue;
+        if (command[0] == '#') continue;
 
         if (command == "v")
         {
-            positions.push_back(vec3());
-            ss >> positions.back().x;
-            ss >> positions.back().y;
-            ss >> positions.back().z;
+            vec3 tmp;
+            ss >> tmp.x;
+            ss >> tmp.y;
+            ss >> tmp.z;
+            positions.push_back(tmp);
             continue;
         }
 
         if (command == "vn")
         {
-            normals.push_back(vec3());
-            ss >> normals.back().x;
-            ss >> normals.back().y;
-            ss >> normals.back().z;
+            vec3 tmp;
+            ss >> tmp.x;
+            ss >> tmp.y;
+            ss >> tmp.z;
+            normals.push_back(tmp);
             continue;
         }
 
         if (command == "vt")
         {
-            texcoords.push_back(vec2());
-            ss >> texcoords.back().x;
-            ss >> texcoords.back().y;
+            vec2 tmp;
+            ss >> tmp.x;
+            ss >> tmp.y;
+            texcoords.push_back(tmp);
             continue;
         }
 
@@ -149,43 +153,43 @@ bool loadObjFromFile(const std::string& filename, Mesh::Value* target)
 
             if (np == 3)
             {
-                tris.push_back(std::array<VDATA, 3>());
+                std::array<VDATA, 3> tmptri;
                 for (int i=0; i<np; ++i)
                 {
-                    size_t firstSlash = pointstr[i].find("/");
-                    if (firstSlash != std::string::npos)
+                    std::replace(pointstr[i].begin(), pointstr[i].end(), '/', ' ');
+                    ss2.clear();
+                    ss2.str(pointstr[i]);
+                    if (ss2 >> tmptri[i].p)
                     {
-                        elem[0] = pointstr[i].substr(0,firstSlash);
-                        pointstr[i] = pointstr[i].substr(firstSlash+1);
-                        size_t secondSlash = pointstr[i].find("/");
-                        if (secondSlash != std::string::npos)
+                        --tmptri[i].p;
+
+                        if (ss2 >> tmptri[i].t)
                         {
-                            elem[1] = pointstr[i].substr(0,secondSlash);
-                            elem[2] = pointstr[i].substr(secondSlash+1);
+                            --tmptri[i].t;
+
+                            if (ss2 >> tmptri[i].n)
+                            {
+                                --tmptri[i].n;
+                            }
+                            else
+                            {
+                                tmptri[i].t = -1;
+                            }
                         }
                         else
                         {
-                            elem[1] = pointstr[i];
-                            elem[2] = "0";
+                            tmptri[i].n = -1;
+                            tmptri[i].t = -1;
                         }
                     }
                     else
                     {
-                        elem[0] = pointstr[i];
-                        elem[1] = "0";
-                        elem[2] = "0";
+                        tmptri[i].p = -1;
+                        tmptri[i].n = -1;
+                        tmptri[i].t = -1;
                     }
-
-                    ss2.clear();
-                    ss2.str("");
-                    ss2 << elem[0] << " " << elem[1] << " " << elem[2];
-                    ss2 >> tris.back()[i].p;
-                    ss2 >> tris.back()[i].t;
-                    ss2 >> tris.back()[i].n;
-                    --tris.back()[i].p;
-                    --tris.back()[i].t;
-                    --tris.back()[i].n;
                 }
+                tris.push_back(tmptri);
             }
 
             continue;

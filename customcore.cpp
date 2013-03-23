@@ -41,7 +41,7 @@ CustomCore::CustomCore(const RenderParams &params) :
     shaderOn(true),
 
     shieldTex   (new Texture(*this, "data/shield.png", true, false)),
-    noiseTex    (generateNoise(shieldTex->getWidth()*2, shieldTex->getHeight()*2, 16.0)),
+    noiseTex    (generateNoise(shieldTex->getWidth()/2, shieldTex->getHeight()/2, 16.0)),
     font        (new Spritesheet(*this, "data/font.png", 8, 8)),
     fontRoll    (new AnimatedSprite(*this)),
     shield      (new Mesh(*this, "data/shield.obj")),
@@ -169,11 +169,11 @@ void CustomCore::tick()
     if (keyQ) rotation = wrap(rotation-=3.0, 0.0f, 360.0f);
     if (keyE) rotation = wrap(rotation+=1.0, 0.0f, 360.0f);
 
-    if (keyO || keyMinus) dissolveMin = clamp(dissolveMin-=0.005f, 0.f, 1.f);
-    if (keyP || keyEqual) dissolveMin = clamp(dissolveMin+=0.005f, 0.f, 1.f);
+    if (keyO || keyMinus) dissolveMin = clamp(dissolveMin-=0.005f, -0.25f, 1.25f);
+    if (keyP || keyEqual) dissolveMin = clamp(dissolveMin+=0.005f, -0.25f, 1.25f);
 
-    if (keyLSB || keyMinus) dissolveMax = clamp(dissolveMax-=0.005f, 0.f, 1.f);
-    if (keyRSB || keyEqual) dissolveMax = clamp(dissolveMax+=0.005f, 0.f, 1.f);
+    if (keyLSB || keyMinus) dissolveMax = clamp(dissolveMax-=0.005f, -0.25f, 1.25f);
+    if (keyRSB || keyEqual) dissolveMax = clamp(dissolveMax+=0.005f, -0.25f, 1.25f);
 
     //Animations can be reset to their initial state
     if (keySpace) fontRoll->reset();
@@ -274,37 +274,43 @@ void CustomCore::idle()
 
 Texture* CustomCore::generateNoise(int width, int height, double freq)
 {
-    Texture::Data data;
-    Texture::initData(data, width, height);
+    static Texture::Data* data = nullptr;
 
-    noise::module::Perlin perlin;
-    perlin.SetFrequency(freq);
-
-    constexpr double xRange = 1.0;
-    constexpr double yRange = 1.0;
-    const double xFactor = xRange/double(width);
-    const double yFactor = yRange/double(height);
-
-    for (int i=0; i<height; ++i)
+    if (!data)
     {
-        for (int j=0; j<width; ++j)
+        data = new Texture::Data;
+
+        Texture::initData(*data, width, height);
+
+        noise::module::Perlin perlin;
+        perlin.SetFrequency(freq);
+
+        constexpr double xRange = 1.0;
+        constexpr double yRange = 1.0;
+        const double xFactor = xRange/double(width);
+        const double yFactor = yRange/double(height);
+
+        for (int i=0; i<height; ++i)
         {
-            const double x = xFactor*double(i);
-            const double y = yFactor*double(j);
-            const double z = 0.0;
-
-            for (int octave = 0; octave < 4; ++octave)
+            for (int j=0; j<width; ++j)
             {
-                perlin.SetOctaveCount(octave*2+2);
+                const double x = xFactor*double(i);
+                const double y = yFactor*double(j);
+                const double z = 0.0;
 
-                double val = perlin.GetValue(x,y,z);
-                val = val*0.5 + 0.5;
-                val = clamp(val, 0.0, 1.0);
+                for (int octave = 0; octave < 4; ++octave)
+                {
+                    perlin.SetOctaveCount(octave*2+2);
 
-                Texture::dataPixel(data, j, i)[octave] = 255*val;
+                    double val = perlin.GetValue(x,y,z);
+                    val = val*0.5 + 0.5;
+                    val = clamp(val, 0.0, 1.0);
+
+                    Texture::dataPixel(*data, j, i)[octave] = 255*val;
+                }
             }
         }
     }
 
-    return new Texture(*this, data, true, false);
+    return new Texture(*this, *data, true, false);
 }

@@ -42,12 +42,21 @@ vec3 shiftColor(vec3 cin) {
 }
 
 void main() {
-    vec4 noise = texture( noiseTex, TexCoord );
-    if (noise.a < dissolveMin) discard;
-    if (noise.a > dissolveMax) discard;
+    float noise = texture( noiseTex, TexCoord ).a;
 
-    vec4 texColor = texture( Tex0, TexCoord );
-    texColor = vec4(shiftColor(texColor.xyz), texColor.w);
-    texColor.xyz = texColor.xyz*clamp(dot(Normal, normalize(lightPos-Position)), 0.1,1.0);
+    float burn = max(max(dissolveMin-noise, noise-dissolveMax)*5.0, 0.0);
+    if (burn > 1.0) discard;
+
+    vec4 texColor;
+    if (burn > 0.0)
+    {
+        texColor = mix(vec4(1.0,0.0,0.0,1.0),vec4(0.0,0.0,0.0,1.0),burn);
+    }
+    else
+    {
+        texColor = texture(Tex0, TexCoord);
+        texColor.xyz = shiftColor(texColor.xyz);
+        texColor.xyz = texColor.xyz*clamp(dot(Normal, normalize(lightPos-Position)), 0.1,1.0);
+    }
     FragColor = texColor;
 }

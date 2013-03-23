@@ -21,18 +21,22 @@ Permission is granted to anyone to use this software for any purpose, including 
 #include "sharedbank.hpp"
 #include "utility.hpp"
 
+#include <algorithm>
+
+using namespace std;
+
 namespace Inugami {
 
 class MeshException : public Exception
 {
 public:
-    MeshException(const Mesh* source, std::string error) :
+    MeshException(const Mesh* source, string error) :
         mesh(source), err(error)
     {}
 
     virtual const char* what() const noexcept override
     {
-        std::string rval;
+        string rval;
         rval += "Mesh Exception: ";
         rval += hexify(mesh);
         rval += "; ";
@@ -43,15 +47,34 @@ public:
     }
 
     const Mesh* mesh;
-    std::string err;
+    string err;
 };
 
-bool Mesh::Vertex::operator==(const Vertex &in)
+bool Mesh::Vertex::operator==(const Vertex &in) const
 {
     return (pos==in.pos&&norm==in.norm&&uv==in.uv);
 }
+/*
+bool Mesh::Vertex::operator!=(const Vertex &in) const
+{
+    return (pos!=in.pos||norm!=in.norm||uv!=in.uv);
+}
 
-bool Mesh::Triangle::operator==(const Triangle &in)
+bool Mesh::Vertex::operator<(const Vertex &in) const
+{
+    return chainComp(
+        pos.x, in.pos.x,
+        pos.y, in.pos.y,
+        pos.z, in.pos.z,
+        norm.x, in.norm.x,
+        norm.y, in.norm.y,
+        norm.z, in.norm.z,
+        uv.x, in.uv.x,
+        uv.y, in.uv.y
+    );
+}
+*/
+bool Mesh::Triangle::operator==(const Triangle &in) const
 {
     return (v[0]==in.v[0]&&v[1]==in.v[1]&&v[2]==in.v[2]);
 }
@@ -92,12 +115,26 @@ Mesh::Value::~Value()
 
 int Mesh::Value::addVertex(const Vertex &in)
 {
+    /*
+    auto iter = lower_bound(vertices.begin(), vertices.end(), in);
+    int pos = iter-vertices.begin();
+    if (iter == vertices.end())
+    {
+        vertices.insert(iter, in);
+    }
+    else if (*iter != in)
+    {
+        vertices.insert(iter, in);
+        for (auto& tri : triangles) for (auto& v : tri.v) if (v >= pos) ++v;
+    }
+    */
     return addOnce(vertices, in);
 }
 
 int Mesh::Value::addTriangle(const Triangle &in)
 {
-    return addOnce(triangles, in);
+    triangles.push_back(in);
+    return triangles.size()-1;
 }
 
 void Mesh::Value::reserve(int v, int t)
@@ -115,7 +152,7 @@ Mesh::Mesh(Core& coreIn) :
     ++val->users;
 }
 
-Mesh::Mesh(Core& coreIn, const std::string& fileName, bool autoInit) :
+Mesh::Mesh(Core& coreIn, const string& fileName, bool autoInit) :
     id{fileName},
     val(nullptr),
     bank(coreIn.banks->meshBank)

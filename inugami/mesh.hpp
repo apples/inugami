@@ -21,6 +21,7 @@ Permission is granted to anyone to use this software for any purpose, including 
 
 #include "opengl.hpp"
 
+#include <array>
 #include <string>
 #include <map>
 #include <vector>
@@ -36,7 +37,7 @@ public:
     class Vertex
     {
     public:
-        bool operator==(const Vertex &in);
+        bool operator==(const Vertex &in) const;
         ::glm::vec3 pos;
         ::glm::vec3 norm;
         ::glm::vec2 uv;
@@ -45,8 +46,8 @@ public:
     class Triangle
     {
     public:
-        bool operator==(const Triangle &in);
-        unsigned int v[3];
+        bool operator==(const Triangle &in) const;
+        std::array<unsigned int, 3> v;
     };
 
     Mesh(Core& coreIn);
