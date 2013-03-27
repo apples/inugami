@@ -1,8 +1,11 @@
 #ifndef INUGAMI_IMAGE_H
 #define INUGAMI_IMAGE_H
 
+#include "utility.hpp"
+
 #include <png++/png.hpp>
 
+#include <array>
 #include <string>
 #include <vector>
 
@@ -11,11 +14,15 @@ namespace Inugami {
 class Image
 {
 public:
-    using Pixel = png::rgba_pixel;
+    using Pixel = std::array<unsigned char,4>;
+    using SubPixel = unsigned char;
+
+    static Image fromGradient(int w, int h, const Pixel& a, float ax, float ay, const Pixel& b, float bx, float by);
+    static Image fromPNG(const std::string& filename);
+    static Image fromNoise(int w, int h, double freq);
 
     Image();
-    Image(int w, int h);
-    Image(const std::string& filename);
+    Image(int w, int h, const Pixel& color = Pixel{{255,255,255,255}});
     Image(const Image& in);
     Image(Image&& in);
 
@@ -26,7 +33,8 @@ public:
     const Pixel& pixelAt(int x, int y) const;
     void resize(int w, int h);
 
-    int width, height;
+    ConstAttr<int,Image> width, height;
+
 private:
     std::vector<Pixel> pixels;
 };

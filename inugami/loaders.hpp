@@ -34,8 +34,6 @@ namespace Inugami {
  */
 std::string loadTextFromFile(const std::string &filename);
 
-bool loadObjFromFile(const std::string &filename, Mesh::Value* target);
-
 } // namespace Inugami
 
 #endif // INUGAMI_LOADERS_H

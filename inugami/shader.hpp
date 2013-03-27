@@ -17,6 +17,8 @@ Permission is granted to anyone to use this software for any purpose, including 
 #ifndef INUGAMI_SHADER_H
 #define INUGAMI_SHADER_H
 
+#include "inugami.hpp"
+
 #include "opengl.hpp"
 
 #include <list>
@@ -28,16 +30,14 @@ namespace Inugami {
 class Shader
 {
 public:
-    enum class Type
-    {
-        VERT, TCS, TES, GEO, FRAG
-    };
+    Shader() = delete;
+    Shader(const ShaderProgram &in);
+    Shader(const Shader& in);
+    Shader(Shader&& in);
+    virtual ~Shader();
 
-    typedef std::map<Type, std::string> Program;
-
-    Shader(const Program &in);
-    Shader(const Shader&) = delete;
-    ~Shader();
+    Shader& operator=(const Shader& in);
+    Shader& operator=(Shader&& in);
 
     void bind() const;
 
@@ -52,7 +52,18 @@ public:
     void setUniform(const std::string& name, const ::glm::mat4 &val) const;
 
 private:
-    GLuint program;
+    class Shared
+    {
+    public:
+        Shared();
+        ~Shared();
+        GLuint program;
+        int users;
+    };
+
+    GLuint getUniformLocation(const std::string& name) const;
+
+    Shared* share;
 };
 
 } // namespace Inugami

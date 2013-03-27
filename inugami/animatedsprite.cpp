@@ -22,20 +22,31 @@ Permission is granted to anyone to use this software for any purpose, including 
 #include "utility.hpp"
 
 #include <stdexcept>
+#include <utility>
+
+using namespace std;
 
 namespace Inugami {
 
-AnimatedSprite::AnimatedSprite(Core& in) :
+AnimatedSprite::AnimatedSprite(const Spritesheet& in) :
     flipX(false), flipY(false), rot(0.f),
-    sheet(nullptr), sprites(), sequence(),
+    sheet(in), sprites(), sequence(),
     mode(Mode::NORMAL), ended(false),
     timer(0),
     pos(0), dir(1)
 {}
 
 AnimatedSprite::AnimatedSprite(const AnimatedSprite& in) :
-    flipX(in.flipX), flipY(in.flipY), rot(0.f),
-    sheet(new Spritesheet(*in.sheet)), sprites(in.sprites), sequence(in.sequence),
+    flipX(in.flipX), flipY(in.flipY), rot(in.rot),
+    sheet(in.sheet), sprites(in.sprites), sequence(in.sequence),
+    mode(in.mode), ended(in.ended),
+    timer(in.timer),
+    pos(in.pos), dir(in.dir)
+{}
+
+AnimatedSprite::AnimatedSprite(AnimatedSprite&& in) :
+    flipX(in.flipX), flipY(in.flipY), rot(in.rot),
+    sheet(move(in.sheet)), sprites(move(in.sprites)), sequence(move(in.sequence)),
     mode(in.mode), ended(in.ended),
     timer(in.timer),
     pos(in.pos), dir(in.dir)
@@ -44,7 +55,7 @@ AnimatedSprite::AnimatedSprite(const AnimatedSprite& in) :
 AnimatedSprite::~AnimatedSprite()
 {}
 
-void AnimatedSprite::setSpritesheet(Spritesheet* in)
+void AnimatedSprite::setSpritesheet(const Spritesheet& in)
 {
     sheet = in;
     sprites.clear();
@@ -58,8 +69,6 @@ void AnimatedSprite::setMode(Mode in)
 
 void AnimatedSprite::setSprites(const SpriteList &in)
 {
-    if (sheet == nullptr) throw std::logic_error("Spritesheet not set!");
-
     sprites.clear();
     sprites = in;
 
@@ -69,13 +78,7 @@ void AnimatedSprite::setSprites(const SpriteList &in)
 void AnimatedSprite::setSequence(const FrameList &in)
 {
     sequence.clear();
-    sequence.reserve(in.size());
-    for (auto &p : in)
-    {
-        if (p.first >= sprites.size()) throw std::out_of_range("Sprite not found!");
-        if (p.second == 0) throw std::out_of_range("Duration cannot be 0.");
-        sequence.push_back(p);
-    }
+    sequence = in;
     timer = sequence[0].second;
 }
 
@@ -89,7 +92,7 @@ void AnimatedSprite::draw(Core& core, Transform in)
         in.scale(Vec3{(flipX)?-1.f:1.f, (flipY)?-1.f:1.f, 1.f});
         in.rotate(rot, Vec3{0.f, 0.f, 1.f});
         core.modelMatrix(in);
-        sheet->draw(sprite.first, sprite.second);
+        sheet.draw(sprite.first, sprite.second);
 
         if (--timer == 0)
         {

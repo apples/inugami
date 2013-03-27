@@ -21,7 +21,7 @@ Permission is granted to anyone to use this software for any purpose, including 
 #include "interface.hpp"
 #include "loaders.hpp"
 #include "shader.hpp"
-#include "sharedbank.hpp"
+#include "shaderprogram.hpp"
 
 #include <iomanip>
 #include <ostream>
@@ -73,9 +73,7 @@ Core::Core(const RenderParams &params) :
     windowTitleShowFPS(false),
     window(nullptr),
 
-    shader(nullptr),
-
-    banks(new SharedBank)
+    shader(nullptr)
 {
     if (numCores == 0) glfwInit();
 
@@ -124,7 +122,7 @@ Core::Core(const RenderParams &params) :
     glEnableClientState(GL_NORMAL_ARRAY);
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
-    createDefaultShader();
+    shader = new Shader(ShaderProgram::fromDefault());
 
     iface = new Interface(window);
 
@@ -136,10 +134,9 @@ Core::~Core()
     activate();
 
     delete iface;
+    delete shader;
 
     glfwDestroyWindow(window);
-
-    if (--banks->users == 0) delete banks;
 
     if (--numCores == 0)
     {
@@ -171,7 +168,7 @@ void Core::beginFrame()
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    getShader()->bind();
+    getShader().bind();
 
     //Title
     if (windowTitleShowFPS)
@@ -225,15 +222,15 @@ void Core::applyCam(const Camera& in)
         glDisable(GL_DEPTH_TEST);
     }
 
-    getShader()->setUniform("projectionMatrix", in.getProjection());
-    getShader()->setUniform("viewMatrix", in.getView());
-    getShader()->setUniform("modelMatrix", ::glm::mat4(1.f));
+    getShader().setUniform("projectionMatrix", in.getProjection());
+    getShader().setUniform("viewMatrix", in.getView());
+    getShader().setUniform("modelMatrix", ::glm::mat4(1.f));
 }
 
 void Core::modelMatrix(const Mat4& in)
 {
     activate();
-    getShader()->setUniform("modelMatrix", in);
+    getShader().setUniform("modelMatrix", in);
 }
 
 void Core::setWindowTitle(const char *text, bool showFPS)
@@ -291,61 +288,21 @@ int Core::go()
     return 0;
 }
 
-const Shader* Core::getShader() const
+const Shader& Core::getShader() const
 {
-    if (!shader) return banks->shader;
-    return shader;
+    return *shader;
 }
 
-void Core::setShader(Shader* in)
+void Core::setShader(const Shader& in)
 {
-    shader = in;
+    delete shader;
+    shader = new Shader(in);
+    shader->bind();
 }
 
 int Core::getWindowParam(int param) const
 {
     return glfwGetWindowParam(window, param);
-}
-
-void Core::createDefaultShader()
-{
-    if (!banks->shader)
-    {
-        Shader::Program program;
-        program[Shader::Type::VERT] =
-            "#version 400\n"
-            "layout (location = 0) in vec3 VertexPosition;\n"
-            "layout (location = 1) in vec3 VertexNormal;\n"
-            "layout (location = 2) in vec2 VertexTexCoord;\n"
-            "uniform mat4 projectionMatrix;\n"
-            "uniform mat4 viewMatrix;\n"
-            "uniform mat4 modelMatrix;\n"
-            "out vec3 Position;\n"
-            "out vec3 Normal;\n"
-            "out vec2 TexCoord;\n"
-            "void main()\n"
-            "{\n"
-            "    TexCoord = VertexTexCoord;\n"
-            "    Normal = normalize(VertexNormal);\n"
-            "    Position = VertexPosition/5;\n"
-            "    mat4 modelViewProjectionMatrix = projectionMatrix * viewMatrix * modelMatrix;\n"
-            "    gl_Position = modelViewProjectionMatrix * vec4(VertexPosition,1.0);\n"
-            "}\n"
-        ;
-        program[Shader::Type::FRAG] =
-            "#version 400\n"
-            "in vec3 Position;\n"
-            "in vec3 Normal;\n"
-            "in vec2 TexCoord;\n"
-            "uniform sampler2D Tex1;\n"
-            "out vec4 FragColor;\n"
-            "void main() {\n"
-            "    vec4 texColor = texture( Tex1, TexCoord );\n"
-            "    FragColor = texColor;\n"
-            "}\n"
-        ;
-        banks->shader = new Shader(program);
-    }
 }
 
 std::string Core::getDiagnostic() const
@@ -366,55 +323,11 @@ std::string Core::getDiagnostic() const
     rval << "\t\tVSync:      " << rparams.vsync << "\n";
     rval << "\t\tFSAA:       " << rparams.fsaaSamples << "\n";
 
-    rval << "\tMeshes:\n";
-    for (auto& p : banks->meshBank)
-    {
-        rval << "\t\tName: \"" << p.first.name << "\"\n";
-        rval << "\t\t\tVertices:    " << p.second.vertices.size() << "\n";
-        rval << "\t\t\tTriangles:   " << p.second.triangles.size() << "\n";
-        rval << "\t\t\tInitialized: " << p.second.initted << "\n";
-        rval << "\t\t\tVAO ID:      " << hexify(p.second.vao) << "\n";
-        rval << "\t\t\tVBO ID:      " << hexify(p.second.vbo) << "\n";
-        rval << "\t\t\tELE ID:      " << hexify(p.second.ele) << "\n";
-        rval << "\t\t\tUsers:       " << p.second.users << "\n";
-    }
-
-    rval << "\tTextures:\n";
-    for (auto& p : banks->textureBank)
-    {
-        rval << "\t\tName: \"" << p.first.name << "\"";
-            if (p.first.clamp)  rval << " [CLAMP]";
-            if (p.first.smooth) rval << " [SMOOTH]";
-        rval << "\n";
-        rval << "\t\t\tGL ID:      " << hexify(p.second.id) << "\n";
-        rval << "\t\t\tDimensions: " << p.second.width << "x" << p.second.height << "\n";
-        rval << "\t\t\tUsers:      " << p.second.users << "\n";
-    }
-
-    rval << "\tSpritesheets:\n";
-    for (auto& p : banks->spritesheetBank)
-    {
-        rval << "\t\tDimensions:";
-            rval << " [" << p.first.w << "x" << p.first.h << "]";
-            rval << " [" << p.first.tw << "x" << p.first.th << "]";
-            rval << " [" << p.first.cx << "x" << p.first.cy << "]";
-        rval << "\n";
-        rval << "\t\t\tUsers:    " << p.second.users << "\n";
-        rval << "\t\t\tMeshes:\n";
-        for (auto& pm : p.second.meshes)
-        {
-            rval << "\t\t\t\t\"" << pm->id.name << "\"\n";
-        }
-    }
-
     rval << "\tWindow Title:   \"" << windowTitle << "\"";
         if (windowTitleShowFPS) rval << " [FPS]";
     rval << "\n";
 
     rval << "\tWindow ID:      " << hexify(window) << "\n";
-
-    rval << "\tDefault Shader: " << hexify(banks->shader) << "\n";
-    rval << "\tCustom Shader:  " << hexify(shader) << "\n";
 
     rval << "-- END CORE DIAGNOSIS --\n";
 

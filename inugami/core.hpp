@@ -127,16 +127,16 @@ public:
      */
     int go();
 
-    /** @brief Gets a pointer to the current shader.
-     * @return Pointer to the current shader.
+    /** @brief Gets the current shader.
+     * @return Reference to the current shader.
      */
-    const Shader* getShader() const;
+    const Shader& getShader() const;
 
     /** @brief Sets the current shader.
-     *  Sets the target shader for use in rendering. If nullptr, default shader is used.
-     *  @param in Pointer to the target shader.
+     *  Sets the target shader for use in rendering.
+     *  @param in Reference to the target shader.
      */
-    void setShader(Shader* in);
+    void setShader(const Shader& in);
 
     int getWindowParam(int param) const;
 
@@ -161,8 +161,6 @@ private:
 
     static int numCores;
 
-    void createDefaultShader();
-
     std::vector<Callback> callbacks;
 
     double frameStartTime;
@@ -177,9 +175,7 @@ private:
 
     Window window;
 
-    Shader *shader;
-
-    SharedBank* banks;
+    Shader* shader;
 };
 
 } // namespace Inugami

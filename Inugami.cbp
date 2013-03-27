@@ -5,6 +5,7 @@
 		<Option title="Inugami" />
 		<Option pch_mode="2" />
 		<Option compiler="gcc" />
+		<Option virtualFolders="Utilities/;Shaders/;Resource Handles/;Resource Data/;OpenGL/;Core/;" />
 		<Build>
 			<Target title="Debug">
 				<Option output="game_d" prefix_auto="1" extension_auto="1" />
@@ -33,11 +34,12 @@
 		</Build>
 		<Compiler>
 			<Add option="-std=c++11" />
+			<Add option="-Wextra" />
 			<Add option="-Wall" />
 		</Compiler>
 		<Linker>
-			<Add library="IL" />
-			<Add library="ILU" />
+			<Add library="yaml-cpp" />
+			<Add library="png" />
 			<Add library="noise" />
 			<Add library="GLEW" />
 			<Add library="glfw3" />
@@ -56,45 +58,123 @@
 		</Linker>
 		<Unit filename="customcore.cpp" />
 		<Unit filename="customcore.hpp" />
-		<Unit filename="inugami/animatedsprite.cpp" />
-		<Unit filename="inugami/animatedsprite.hpp" />
-		<Unit filename="inugami/camera.cpp" />
-		<Unit filename="inugami/camera.hpp" />
-		<Unit filename="inugami/core.cpp" />
-		<Unit filename="inugami/core.hpp" />
-		<Unit filename="inugami/exception.cpp" />
-		<Unit filename="inugami/exception.hpp" />
-		<Unit filename="inugami/image.cpp" />
-		<Unit filename="inugami/image.hpp" />
-		<Unit filename="inugami/interface.cpp" />
-		<Unit filename="inugami/interface.hpp" />
-		<Unit filename="inugami/inugami.hpp" />
-		<Unit filename="inugami/loaders.cpp" />
-		<Unit filename="inugami/loaders.hpp" />
-		<Unit filename="inugami/logger.hpp" />
-		<Unit filename="inugami/math.hpp" />
-		<Unit filename="inugami/mathtypes.hpp" />
-		<Unit filename="inugami/mesh.cpp" />
-		<Unit filename="inugami/mesh.hpp" />
-		<Unit filename="inugami/opengl.hpp" />
-		<Unit filename="inugami/profiler.cpp" />
-		<Unit filename="inugami/profiler.hpp" />
-		<Unit filename="inugami/shader.cpp" />
-		<Unit filename="inugami/shader.hpp" />
-		<Unit filename="inugami/sharedbank.cpp" />
-		<Unit filename="inugami/sharedbank.hpp" />
-		<Unit filename="inugami/spritesheet.cpp" />
-		<Unit filename="inugami/spritesheet.hpp" />
-		<Unit filename="inugami/texture.cpp" />
-		<Unit filename="inugami/texture.hpp" />
-		<Unit filename="inugami/transform.cpp" />
-		<Unit filename="inugami/transform.hpp" />
-		<Unit filename="inugami/utility.hpp" />
+		<Unit filename="inugami/animatedsprite.cpp">
+			<Option virtualFolder="Resource Handles/" />
+		</Unit>
+		<Unit filename="inugami/animatedsprite.hpp">
+			<Option virtualFolder="Resource Handles/" />
+		</Unit>
+		<Unit filename="inugami/camera.cpp">
+			<Option virtualFolder="OpenGL/" />
+		</Unit>
+		<Unit filename="inugami/camera.hpp">
+			<Option virtualFolder="OpenGL/" />
+		</Unit>
+		<Unit filename="inugami/core.cpp">
+			<Option virtualFolder="Core/" />
+		</Unit>
+		<Unit filename="inugami/core.hpp">
+			<Option virtualFolder="Core/" />
+		</Unit>
+		<Unit filename="inugami/exception.cpp">
+			<Option virtualFolder="Utilities/" />
+		</Unit>
+		<Unit filename="inugami/exception.hpp">
+			<Option virtualFolder="Utilities/" />
+		</Unit>
+		<Unit filename="inugami/geometry.cpp">
+			<Option virtualFolder="Resource Data/" />
+		</Unit>
+		<Unit filename="inugami/geometry.hpp">
+			<Option virtualFolder="Resource Data/" />
+		</Unit>
+		<Unit filename="inugami/image.cpp">
+			<Option virtualFolder="Resource Data/" />
+		</Unit>
+		<Unit filename="inugami/image.hpp">
+			<Option virtualFolder="Resource Data/" />
+		</Unit>
+		<Unit filename="inugami/interface.cpp">
+			<Option virtualFolder="Core/" />
+		</Unit>
+		<Unit filename="inugami/interface.hpp">
+			<Option virtualFolder="Core/" />
+		</Unit>
+		<Unit filename="inugami/inugami.hpp">
+			<Option virtualFolder="Core/" />
+		</Unit>
+		<Unit filename="inugami/loaders.cpp">
+			<Option virtualFolder="Utilities/" />
+		</Unit>
+		<Unit filename="inugami/loaders.hpp">
+			<Option virtualFolder="Utilities/" />
+		</Unit>
+		<Unit filename="inugami/logger.hpp">
+			<Option virtualFolder="Utilities/" />
+		</Unit>
+		<Unit filename="inugami/math.hpp">
+			<Option virtualFolder="Utilities/" />
+		</Unit>
+		<Unit filename="inugami/mathtypes.hpp">
+			<Option virtualFolder="Utilities/" />
+		</Unit>
+		<Unit filename="inugami/mesh.cpp">
+			<Option virtualFolder="Resource Handles/" />
+		</Unit>
+		<Unit filename="inugami/mesh.hpp">
+			<Option virtualFolder="Resource Handles/" />
+		</Unit>
+		<Unit filename="inugami/opengl.hpp">
+			<Option virtualFolder="OpenGL/" />
+		</Unit>
+		<Unit filename="inugami/profiler.cpp">
+			<Option virtualFolder="Utilities/" />
+		</Unit>
+		<Unit filename="inugami/profiler.hpp">
+			<Option virtualFolder="Utilities/" />
+		</Unit>
+		<Unit filename="inugami/shader.cpp">
+			<Option virtualFolder="Resource Handles/" />
+		</Unit>
+		<Unit filename="inugami/shader.hpp">
+			<Option virtualFolder="Resource Handles/" />
+		</Unit>
+		<Unit filename="inugami/shaderprogram.cpp">
+			<Option virtualFolder="Resource Data/" />
+		</Unit>
+		<Unit filename="inugami/shaderprogram.hpp">
+			<Option virtualFolder="Resource Data/" />
+		</Unit>
+		<Unit filename="inugami/spritesheet.cpp">
+			<Option virtualFolder="Resource Handles/" />
+		</Unit>
+		<Unit filename="inugami/spritesheet.hpp">
+			<Option virtualFolder="Resource Handles/" />
+		</Unit>
+		<Unit filename="inugami/texture.cpp">
+			<Option virtualFolder="Resource Handles/" />
+		</Unit>
+		<Unit filename="inugami/texture.hpp">
+			<Option virtualFolder="Resource Handles/" />
+		</Unit>
+		<Unit filename="inugami/transform.cpp">
+			<Option virtualFolder="OpenGL/" />
+		</Unit>
+		<Unit filename="inugami/transform.hpp">
+			<Option virtualFolder="OpenGL/" />
+		</Unit>
+		<Unit filename="inugami/utility.hpp">
+			<Option virtualFolder="Utilities/" />
+		</Unit>
 		<Unit filename="main.cpp" />
 		<Unit filename="meta.cpp" />
 		<Unit filename="meta.hpp" />
-		<Unit filename="shaders/crazy.frag" />
-		<Unit filename="shaders/crazy.vert" />
+		<Unit filename="shaders/crazy.frag">
+			<Option virtualFolder="Shaders/" />
+		</Unit>
+		<Unit filename="shaders/crazy.vert">
+			<Option virtualFolder="Shaders/" />
+		</Unit>
 		<Extensions>
 			<code_completion />
 			<envvars />

@@ -18,6 +18,7 @@ Permission is granted to anyone to use this software for any purpose, including 
 #define INUGAMI_ANIMATEDSPRITE_H
 
 #include "inugami.hpp"
+#include "spritesheet.hpp"
 #include "transform.hpp"
 
 #include <array>
@@ -41,11 +42,13 @@ public:
     typedef std::vector<Sprite> SpriteList;
     typedef std::vector<Frame> FrameList;
 
-    AnimatedSprite(Core& in);
+    AnimatedSprite() = delete;
+    AnimatedSprite(const Spritesheet& in);
     AnimatedSprite(const AnimatedSprite& in);
+    AnimatedSprite(AnimatedSprite&& in);
     virtual ~AnimatedSprite();
 
-    void setSpritesheet(Spritesheet *in);
+    void setSpritesheet(const Spritesheet& in);
     void setMode(Mode in);
     void setSprites(const SpriteList &in);
     void setSequence(const FrameList &in);
@@ -58,12 +61,12 @@ public:
     float rot;
 
 private:
-    Spritesheet *sheet;
+    Spritesheet sheet;
     SpriteList sprites;
     FrameList sequence;
     Mode mode;
     bool ended;
-    unsigned int timer;
+    int timer;
     int pos, dir;
 };
 

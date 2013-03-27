@@ -21,83 +21,38 @@ Permission is granted to anyone to use this software for any purpose, including 
 
 #include "opengl.hpp"
 
-#include <array>
-#include <string>
-#include <map>
-#include <vector>
-
 namespace Inugami {
 
 class Mesh
 {
-    friend class Core;
-    friend class SharedBank;
     friend class MeshException;
 public:
-    class Vertex
-    {
-    public:
-        bool operator==(const Vertex &in) const;
-        ::glm::vec3 pos;
-        ::glm::vec3 norm;
-        ::glm::vec2 uv;
-    };
-
-    class Triangle
-    {
-    public:
-        bool operator==(const Triangle &in) const;
-        std::array<unsigned int, 3> v;
-    };
-
-    Mesh(Core& coreIn);
-    Mesh(Core& coreIn, const std::string& fileName, bool autoInit=true);
+    Mesh() = delete;
+    Mesh(const Geometry& in);
     Mesh(const Mesh& in);
+    Mesh(Mesh&& in);
     virtual ~Mesh();
 
-    const Mesh &init() const;
+    Mesh& operator=(const Mesh& in);
+    Mesh& operator=(Mesh&& in);
+
     void draw() const;
 
-    int addVertex(const Vertex &in) const;
-    int addTriangle(const Triangle &in) const;
-    void reserve(int v, int t) const;
-
 private:
-    class Index
+    class Shared
     {
     public:
-        bool operator<(const Index& in) const;
-        std::string name;
-    };
-
-    class Value
-    {
-    public:
-        Value();
-        Value(const Value& in);
-        ~Value();
-
-        int addVertex(const Vertex &in);
-        int addTriangle(const Triangle &in);
-        void reserve(int v, int t);
-
-        std::vector<Vertex> vertices;
-        std::vector<Triangle> triangles;
-
-        bool initted;
-        GLuint vbo, vao, ele;
-
+        Shared();
+        ~Shared();
+        GLuint vertexBuffer;
+        GLuint pointArray, pointElements;
+        GLuint lineArray, lineElements;
+        GLuint triangleArray, triangleElements;
+        int pointCount, lineCount, triangleCount;
         int users;
     };
 
-    using Bank = std::map<Index, Value>;
-
-    Index id;
-    Value* val;
-
-    Bank& bank;
-
-    friend bool loadObjFromFile(const std::string&, Mesh::Value*);
+    Shared* share;
 };
 
 } // namespace Inugami

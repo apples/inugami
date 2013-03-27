@@ -33,51 +33,31 @@ namespace Inugami {
 
 class Texture final
 {
-    friend class SharedBank;
     friend class TextureException;
 public:
-    Texture(Core& coreIn, const std::string &filename, bool smooth=false, bool clamp=false);
-    Texture(Core& coreIn, const Image& img, bool smooth=false, bool clamp=false);
-    Texture(Core& coreIn, unsigned int color, bool smooth=false, bool clamp=false);
+    Texture() = delete;
+    Texture(const Image& img, bool smooth=false, bool clamp=false);
     Texture(const Texture &in);
+    Texture(Texture&& in);
     ~Texture();
 
     Texture &operator=(const Texture &in);
+    Texture &operator=(Texture&& in);
 
     void bind(unsigned int slot) const;
-    unsigned int getWidth() const;
-    unsigned int getHeight() const;
 
-    const std::string& getName() const;
+    ConstAttr<int,Texture> width, height;
 
 private:
-    class Index
+    struct Shared
     {
-    public:
-        Index();
-        Index(const std::string &inName, bool inSmooth, bool inClamp);
-        bool operator<(const Index &in) const;
-        bool operator==(const Index &in) const;
-        std::string name;
-        bool smooth, clamp;
-    };
-
-    class Value
-    {
-    public:
-        Value();
-        GLuint id;
-        unsigned int width, height;
         int users;
+        GLuint id;
     };
 
-    using Bank = std::map<Index, Value>;
+    Shared* share;
 
-    void setParams(const Image& data);
-
-    Index id;
-
-    Bank& bank;
+    void upload(const Image& data, bool smooth, bool clamp);
 };
 
 } // namespace Inugami

@@ -16,129 +16,117 @@ Permission is granted to anyone to use this software for any purpose, including 
 
 #include "spritesheet.hpp"
 
-#include "core.hpp"
-#include "sharedbank.hpp"
+#include "geometry.hpp"
 #include "utility.hpp"
 
 #include <limits>
-#include <string>
+#include <utility>
+
+using namespace std;
 
 namespace Inugami {
 
-bool Spritesheet::Index::operator<(const Index &in) const
-{
-    return chainComp(w, in.w,
-                     h, in.h,
-                     tw, in.tw,
-                     th, in.th,
-                     cx, in.cx,
-                     cy, in.cy);
-}
-
-Spritesheet::Value::Value() :
-    meshes(), users(0)
+Spritesheet::Spritesheet(const Image& img, int tw, int th, float cx, float cy) :
+    Spritesheet(Texture(img, false, false), tw, th, cx, cy)
 {}
 
-Spritesheet::Spritesheet(Core& coreIn, const std::string& filename, unsigned int w, unsigned int h, float cx, float cy) :
-    tex(coreIn, filename, false, false),
-    bank(coreIn.banks->spritesheetBank)
+Spritesheet::Spritesheet(const Texture& in, int tw, int th, float cx, float cy) :
+    tilesX(0), tilesY(0),
+    tex(in),
+    meshes()
 {
-    constexpr float E = std::numeric_limits<float>::epsilon() * 1.0e3;
+    generateMeshes(tw, th, cx, cy);
+}
 
-    dim.w = tex.getWidth()/w;
-    dim.h = tex.getHeight()/h;
-    dim.tw = w;
-    dim.th = h;
-    dim.cx = cx;
-    dim.cy = cy;
-
-    auto& val = bank[dim];
-
-    if (val.users == 0)
-    {
-        auto& sprites = val.meshes;
-        sprites.resize(dim.w * dim.h);
-
-        Mesh::Vertex vert;
-        vert.pos.z = 0.0f;
-        vert.norm.x = 0.0f;
-        vert.norm.y = 0.0f;
-        vert.norm.z = 1.0f;
-
-        ::glm::vec2 uvStep;
-        uvStep.x = float(w)/float(tex.getWidth());
-        uvStep.y = float(h)/float(tex.getHeight());
-
-        for (unsigned int r = 0; r<dim.h; ++r)
-        {
-            for (unsigned int c = 0; c<dim.w; ++c)
-            {
-                float u = float(c)*uvStep.x;
-                float v = 1.0f-float(r)*uvStep.y;
-
-                Mesh &mesh = *new Mesh(coreIn);
-                sprites[r*dim.w +c] = &mesh;
-
-                Mesh::Triangle tri;
-
-                vert.pos.x = -float(w)*cx;
-                vert.pos.y = float(h)*cy;
-                vert.uv.x = u+E;
-                vert.uv.y = v-E;
-                tri.v[0] = mesh.addVertex(vert);
-                vert.pos.y = -float(h)*(1.0f-cy);
-                vert.uv.y = v-uvStep.y+E;
-                tri.v[1] = mesh.addVertex(vert);
-                vert.pos.x = float(w)*(1.0f-cx);
-                vert.uv.x = u+uvStep.x-E;
-                tri.v[2] = mesh.addVertex(vert);
-                mesh.addTriangle(tri);
-                tri.v[1] = tri.v[2];
-                vert.pos.y = float(h)*cy;
-                vert.uv.y = v-E;
-                tri.v[2] = mesh.addVertex(vert);
-                mesh.addTriangle(tri);
-
-                mesh.init();
-            }
-        }
-    }
-
-    ++val.users;
+Spritesheet::Spritesheet(Texture&& in, int tw, int th, float cx, float cy) :
+    tilesX(0), tilesY(0),
+    tex(in),
+    meshes()
+{
+    generateMeshes(tw, th, cx, cy);
 }
 
 Spritesheet::Spritesheet(const Spritesheet& in) :
+    tilesX(in.tilesX), tilesY(in.tilesY),
     tex(in.tex),
-    dim(in.dim),
-    bank(in.bank)
-{
-    ++ bank[dim].users;
-}
+    meshes(in.meshes)
+{}
+
+Spritesheet::Spritesheet(Spritesheet&& in) :
+    tilesX(in.tilesX), tilesY(in.tilesY),
+    tex(move(in.tex)),
+    meshes(move(in.meshes))
+{}
 
 Spritesheet::~Spritesheet()
+{}
+
+Spritesheet& Spritesheet::operator=(const Spritesheet& in)
 {
-    auto iter = bank.find(dim);
-    if (-- iter->second.users == 0)
+    tex = in.tex;
+    meshes = in.meshes;
+
+    return *this;
+}
+
+Spritesheet& Spritesheet::operator=(Spritesheet&& in)
+{
+    tex = move(in.tex);
+    meshes = move(in.meshes);
+
+    return *this;
+}
+
+void Spritesheet::draw(int r, int c) const
+{
+    tex.bind(0);
+    meshes[r*tilesX+c].draw();
+}
+
+void Spritesheet::generateMeshes(int tw, int th, float cx, float cy)
+{
+    constexpr float E = numeric_limits<float>::epsilon() * 1.0e3;
+
+    tilesX = tex.width/tw;
+    tilesY = tex.height/th;
+
+    Geometry::Vertex vert[4];
+    Geometry::Triangle tri;
+
+    vert[0].pos = Geometry::Vec3{-cx*tw, -cy*th, 0.f};
+    vert[1].pos = Geometry::Vec3{-cx*tw,  cy*th, 0.f};
+    vert[2].pos = Geometry::Vec3{ cx*tw,  cy*th, 0.f};
+    vert[3].pos = Geometry::Vec3{ cx*tw, -cy*th, 0.f};
+    vert[0].norm = Geometry::Vec3{0.f, 0.f, 1.f};
+    vert[1].norm = Geometry::Vec3{0.f, 0.f, 1.f};
+    vert[2].norm = Geometry::Vec3{0.f, 0.f, 1.f};
+    vert[3].norm = Geometry::Vec3{0.f, 0.f, 1.f};
+
+    for (int r = 0; r<tilesY; ++r)
     {
-        bank.erase(iter);
+        for (int c = 0; c<tilesX; ++c)
+        {
+            Geometry geo;
+
+            vert[0].tex = Geometry::Vec2{float(c)/float(tilesX), float(tilesY-r-1)/float(tilesY)};
+            tri[0] = addOnce(geo.vertices, vert[0]);
+
+            vert[1].tex = Geometry::Vec2{float(c)/float(tilesX), float(tilesY-r)/float(tilesY)};
+            tri[1] = addOnce(geo.vertices, vert[1]);
+
+            vert[2].tex = Geometry::Vec2{float(c+1)/float(tilesX), float(tilesY-r)/float(tilesY)};
+            tri[2] = addOnce(geo.vertices, vert[2]);
+
+            geo.triangles.push_back(tri);
+
+            vert[3].tex = Geometry::Vec2{float(c+1)/float(tilesX), float(tilesY-r-1)/float(tilesY)};
+            tri[1] = addOnce(geo.vertices, vert[3]);
+
+            geo.triangles.push_back(tri);
+
+            meshes.emplace_back(geo);
+        }
     }
-}
-
-void Spritesheet::draw(unsigned int r, unsigned int c)
-{
-    getTex().bind(0);
-    getMesh(r, c).draw();
-}
-
-Mesh &Spritesheet::getMesh(unsigned int r, unsigned int c)
-{
-    if (c>dim.w || r>dim.h) throw;
-    return *bank[dim].meshes[r*dim.w+c];
-}
-
-Texture &Spritesheet::getTex()
-{
-    return tex;
 }
 
 } // namespace Inugami

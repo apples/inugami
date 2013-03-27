@@ -18,8 +18,11 @@ Permission is granted to anyone to use this software for any purpose, including 
 
 #include "loaders.hpp"
 #include "exception.hpp"
+#include "shaderprogram.hpp"
 
-#include <stdexcept>
+#include <yaml-cpp/yaml.h>
+
+#include <array>
 #include <vector>
 
 namespace Inugami {
@@ -46,7 +49,18 @@ public:
     std::string err;
 };
 
-Shader::Shader(const Program &source)
+Shader::Shared::Shared() :
+    program(glCreateProgram()),
+    users(1)
+{}
+
+Shader::Shared::~Shared()
+{
+    glDeleteProgram(program);
+}
+
+Shader::Shader(const ShaderProgram &source) :
+    share(new Shared)
 {
     auto compile = [](const GLuint id, const std::string &codeStr)
     {
@@ -66,37 +80,40 @@ Shader::Shader(const Program &source)
         }
     };
 
-    static std::map<Type, GLint> shaderTypes = {
-        {Type::VERT, GL_VERTEX_SHADER},
-        {Type::TCS, GL_TESS_CONTROL_SHADER},
-        {Type::TES, GL_TESS_EVALUATION_SHADER},
-        {Type::GEO, GL_GEOMETRY_SHADER},
-        {Type::FRAG, GL_FRAGMENT_SHADER}
+    static std::array<GLuint, 5> shaderTypes = {
+        GL_VERTEX_SHADER,
+        GL_TESS_CONTROL_SHADER,
+        GL_TESS_EVALUATION_SHADER,
+        GL_GEOMETRY_SHADER,
+        GL_FRAGMENT_SHADER
     };
 
-    std::map<Type, GLuint> ids;
+    std::vector<GLuint> ids;
 
-    for (auto& p : source)
+    for (int i=0; i<5; ++i)
     {
-        ids[p.first] = glCreateShader(shaderTypes[p.first]);
-        compile(ids[p.first], p.second);
+        if (source.sources[i] != "")
+        {
+            GLuint shader = glCreateShader(shaderTypes[i]);
+            ids.push_back(shader);
+            compile(shader, source.sources[i]);
+        }
     }
 
-    program = glCreateProgram();
-    for (auto &p : ids) glAttachShader(program, p.second);
-    glLinkProgram(program);
+    for (auto &p : ids) glAttachShader(share->program, p);
+    glLinkProgram(share->program);
 
     GLint status;
-    glGetShaderiv(program, GL_LINK_STATUS, &status);
+    glGetShaderiv(share->program, GL_LINK_STATUS, &status);
 
     if (status == GL_FALSE)
     {
         GLsizei len = 0;
-        glGetProgramiv(program, GL_INFO_LOG_LENGTH, &len);
+        glGetProgramiv(share->program, GL_INFO_LOG_LENGTH, &len);
         if (len>1)
         {
             std::vector<GLchar> log(len);
-            glGetProgramInfoLog(program, len, &len, &log[0]);
+            glGetProgramInfoLog(share->program, len, &len, &log[0]);
             throw ShaderException("\n", &log[0]);
         }
         else
@@ -107,25 +124,39 @@ Shader::Shader(const Program &source)
 
     for (auto &p : ids)
     {
-        glDetachShader(program, p.second);
-        glDeleteShader(p.second);
+        glDetachShader(share->program, p);
+        glDeleteShader(p);
     }
+}
+
+Shader::Shader(const Shader& in) :
+    share(in.share)
+{
+    ++share->users;
+}
+
+Shader::Shader(Shader&& in) :
+    share(in.share)
+{
+    in.share = nullptr;
 }
 
 Shader::~Shader()
 {
-    glDeleteProgram(program);
+    if (--share->users == 0)
+    {
+        delete share;
+    }
 }
 
 void Shader::bind() const
 {
-    glUseProgram(program);
+    glUseProgram(share->program);
 }
 
 void Shader::setUniform(const std::string& name, const float val) const
 {
-    GLint loc = glGetUniformLocation(program, name.c_str());
-    glUniform1f(loc, val);
+    glUniform1f(getUniformLocation(name.c_str()), val);
 }
 
 void Shader::setUniform(const std::string& name, const double val) const
@@ -135,38 +166,39 @@ void Shader::setUniform(const std::string& name, const double val) const
 
 void Shader::setUniform(const std::string& name, const int val) const
 {
-    GLint loc = glGetUniformLocation(program, name.c_str());
-    glUniform1i(loc, val);
+    glUniform1i(getUniformLocation(name.c_str()), val);
 }
 
 void Shader::setUniform(const std::string& name, const ::glm::vec2 &val) const
 {
-    GLint loc = glGetUniformLocation(program, name.c_str());
-    glUniform2fv(loc, 1, &val[0]);
+    glUniform2fv(getUniformLocation(name.c_str()), 1, &val[0]);
 }
 
 void Shader::setUniform(const std::string& name, const ::glm::vec3 &val) const
 {
-    GLint loc = glGetUniformLocation(program, name.c_str());
-    glUniform3fv(loc, 1, &val[0]);
+    glUniform3fv(getUniformLocation(name.c_str()), 1, &val[0]);
 }
 
 void Shader::setUniform(const std::string& name, const ::glm::vec4 &val) const
 {
-    GLint loc = glGetUniformLocation(program, name.c_str());
-    glUniform4fv(loc, 1, &val[0]);
+    glUniform4fv(getUniformLocation(name.c_str()), 1, &val[0]);
 }
 
 void Shader::setUniform(const std::string& name, const ::glm::mat3 &val) const
 {
-    GLint loc = glGetUniformLocation(program, name.c_str());
-    glUniformMatrix3fv(loc, 1, GL_FALSE, &val[0][0]);
+    glUniformMatrix3fv(getUniformLocation(name.c_str()), 1, GL_FALSE, &val[0][0]);
 }
 
 void Shader::setUniform(const std::string& name, const ::glm::mat4 &val) const
 {
-    GLint loc = glGetUniformLocation(program, name.c_str());
-    glUniformMatrix4fv(loc, 1, GL_FALSE, &val[0][0]);
+    glUniformMatrix4fv(getUniformLocation(name.c_str()), 1, GL_FALSE, &val[0][0]);
+}
+
+GLuint Shader::getUniformLocation(const std::string& name) const
+{
+    GLint loc = glGetUniformLocation(share->program, name.c_str());
+    if (loc == -1) throw ShaderException("", "Could not find uniform "+name);
+    return loc;
 }
 
 } // namespace Inugami

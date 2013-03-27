@@ -16,16 +16,40 @@ Permission is granted to anyone to use this software for any purpose, including 
 
 #include "mesh.hpp"
 
-#include "core.hpp"
 #include "exception.hpp"
-#include "sharedbank.hpp"
+#include "geometry.hpp"
 #include "utility.hpp"
 
-#include <algorithm>
+#include <string>
 
 using namespace std;
 
 namespace Inugami {
+
+template <class Container>
+static void initVertexArray(GLuint vertexArray, GLuint elementArray, const Container& data)
+{
+    glBindVertexArray(vertexArray);
+    glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(1);
+    glEnableVertexAttribArray(2);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Geometry::Vertex), (GLvoid*)0);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Geometry::Vertex), (GLvoid*)(sizeof(Geometry::Vec3)));
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Geometry::Vertex), (GLvoid*)(sizeof(Geometry::Vec3)*2));
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementArray);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(typename Container::value_type)*data.size(), &data[0], GL_STATIC_DRAW);
+}
+
+static void drawVertexArray(GLuint vertexArray, GLuint mode, GLuint elementCount)
+{
+    if (elementCount > 0)
+    {
+        glBindVertexArray(vertexArray);
+        glDrawElements(mode, elementCount, GL_UNSIGNED_INT, 0);
+    }
+}
 
 class MeshException : public Exception
 {
@@ -40,8 +64,6 @@ public:
         rval += "Mesh Exception: ";
         rval += hexify(mesh);
         rval += "; ";
-        rval += mesh->id.name;
-        rval += "; ";
         rval += err;
         return rval.c_str();
     }
@@ -50,181 +72,100 @@ public:
     string err;
 };
 
-bool Mesh::Vertex::operator==(const Vertex &in) const
+Mesh::Shared::Shared() :
+    vertexBuffer(0),
+    pointArray(0), pointElements(0),
+    lineArray(0), lineElements(0),
+    triangleArray(0), triangleElements(0),
+    pointCount(0), lineCount(0), triangleCount(0),
+    users(1)
 {
-    return (pos==in.pos&&norm==in.norm&&uv==in.uv);
-}
-/*
-bool Mesh::Vertex::operator!=(const Vertex &in) const
-{
-    return (pos!=in.pos||norm!=in.norm||uv!=in.uv);
-}
-
-bool Mesh::Vertex::operator<(const Vertex &in) const
-{
-    return chainComp(
-        pos.x, in.pos.x,
-        pos.y, in.pos.y,
-        pos.z, in.pos.z,
-        norm.x, in.norm.x,
-        norm.y, in.norm.y,
-        norm.z, in.norm.z,
-        uv.x, in.uv.x,
-        uv.y, in.uv.y
-    );
-}
-*/
-bool Mesh::Triangle::operator==(const Triangle &in) const
-{
-    return (v[0]==in.v[0]&&v[1]==in.v[1]&&v[2]==in.v[2]);
+    glGenBuffers(1, &vertexBuffer);
+    glGenVertexArrays(1, &pointArray);
+    glGenVertexArrays(1, &lineArray);
+    glGenVertexArrays(1, &triangleArray);
+    glGenBuffers(1, &pointElements);
+    glGenBuffers(1, &lineElements);
+    glGenBuffers(1, &triangleElements);
 }
 
-bool Mesh::Index::operator<(const Index& in) const
+Mesh::Shared::~Shared()
 {
-    return chainComp(name, in.name);
+    glDeleteBuffers(1, &triangleElements);
+    glDeleteBuffers(1, &lineElements);
+    glDeleteBuffers(1, &pointElements);
+    glDeleteVertexArrays(1, &triangleArray);
+    glDeleteVertexArrays(1, &lineArray);
+    glDeleteVertexArrays(1, &pointArray);
+    glDeleteBuffers(1, &vertexBuffer);
 }
 
-Mesh::Value::Value() :
-    vertices(), triangles(),
-    initted(false),
-    vbo(0), vao(0), ele(0),
-    users(0)
+Mesh::Mesh(const Geometry& in) :
+    share(new Shared)
 {
-    glGenVertexArrays(1, &vao);
-    glGenBuffers(1, &vbo);
-    glGenBuffers(1, &ele);
-}
+    glBindBuffer(GL_ARRAY_BUFFER, share->vertexBuffer);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(Geometry::Vertex)*in.vertices.size(), &in.vertices[0], GL_STATIC_DRAW);
 
-Mesh::Value::Value(const Value& in) :
-    vertices(in.vertices), triangles(in.triangles),
-    initted(false),
-    vbo(0), vao(0), ele(0),
-    users(0)
-{
-    glGenVertexArrays(1, &vao);
-    glGenBuffers(1, &vbo);
-    glGenBuffers(1, &ele);
-}
+    initVertexArray(share->pointArray, share->pointElements, in.points);
+    initVertexArray(share->lineArray, share->lineElements, in.lines);
+    initVertexArray(share->triangleArray, share->triangleElements, in.triangles);
 
-Mesh::Value::~Value()
-{
-    glDeleteBuffers(1, &ele);
-    glDeleteBuffers(1, &vbo);
-    glDeleteVertexArrays(1, &vao);
-}
-
-int Mesh::Value::addVertex(const Vertex &in)
-{
-    /*
-    auto iter = lower_bound(vertices.begin(), vertices.end(), in);
-    int pos = iter-vertices.begin();
-    if (iter == vertices.end())
-    {
-        vertices.insert(iter, in);
-    }
-    else if (*iter != in)
-    {
-        vertices.insert(iter, in);
-        for (auto& tri : triangles) for (auto& v : tri.v) if (v >= pos) ++v;
-    }
-    */
-    return addOnce(vertices, in);
-}
-
-int Mesh::Value::addTriangle(const Triangle &in)
-{
-    triangles.push_back(in);
-    return triangles.size()-1;
-}
-
-void Mesh::Value::reserve(int v, int t)
-{
-    if (v>=0) vertices.reserve(v);
-    if (t>=0) triangles.reserve(t);
-}
-
-Mesh::Mesh(Core& coreIn) :
-    id{hexify(this)},
-    val(nullptr),
-    bank(coreIn.banks->meshBank)
-{
-    val = &bank[id];
-    ++val->users;
-}
-
-Mesh::Mesh(Core& coreIn, const string& fileName, bool autoInit) :
-    id{fileName},
-    val(nullptr),
-    bank(coreIn.banks->meshBank)
-{
-    val = &bank[id];
-    if (val->users == 0) loadObjFromFile(fileName, val);
-    ++val->users;
-
-    if (autoInit) init();
+    share->pointCount = in.points.size();
+    share->lineCount = in.lines.size()*2;
+    share->triangleCount = in.triangles.size()*3;
 }
 
 Mesh::Mesh(const Mesh& in) :
-    id(in.id),
-    val(in.val),
-    bank(in.bank)
+    share(in.share)
 {
-    ++val->users;
+    ++share->users;
+}
+
+Mesh::Mesh(Mesh&& in) :
+    share(in.share)
+{
+    in.share = nullptr;
+}
+
+Mesh& Mesh::operator=(const Mesh& in)
+{
+    if (share && --share->users == 0)
+    {
+        delete share;
+    }
+
+    share = in.share;
+    ++share->users;
+
+    return *this;
+}
+
+Mesh& Mesh::operator=(Mesh&& in)
+{
+    if (share && --share->users == 0)
+    {
+        delete share;
+    }
+
+    share = in.share;
+    in.share = nullptr;
+
+    return *this;
 }
 
 Mesh::~Mesh()
 {
-    if (--val->users == 0)
+    if (share && --share->users == 0)
     {
-        bank.erase(bank.find(id));
+        delete share;
     }
-}
-
-const Mesh& Mesh::init() const
-{
-    val->vertices.shrink_to_fit();
-    val->triangles.shrink_to_fit();
-
-    glBindVertexArray(val->vao);
-    glEnableVertexAttribArray(0);
-    glEnableVertexAttribArray(1);
-    glEnableVertexAttribArray(2);
-
-    glBindBuffer(GL_ARRAY_BUFFER, val->vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex)*val->vertices.size(), &val->vertices[0], GL_STATIC_DRAW);
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)0);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)(sizeof(::glm::vec3)));
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)(sizeof(::glm::vec3)*2));
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, val->ele);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Triangle)*val->triangles.size(), &val->triangles[0], GL_STATIC_DRAW);
-
-    val->initted = true;
-    return *this;
 }
 
 void Mesh::draw() const
 {
-    if (!val->initted) throw MeshException(this, "Can't draw; Not initialized!");
-
-    glBindVertexArray(val->vao);
-    glDrawElements(GL_TRIANGLES, val->triangles.size()*3, GL_UNSIGNED_INT, 0);
-}
-
-int Mesh::addVertex(const Vertex &in) const
-{
-    return val->addVertex(in);
-}
-
-int Mesh::addTriangle(const Triangle &in) const
-{
-    return val->addTriangle(in);
-}
-
-void Mesh::reserve(int v, int t) const
-{
-    val->reserve(v,t);
+    drawVertexArray(share->triangleArray, GL_TRIANGLES, share->triangleCount);
+    drawVertexArray(share->lineArray, GL_LINES, share->lineCount);
+    drawVertexArray(share->pointArray, GL_POINTS, share->pointCount);
 }
 
 } // namespace Inugami

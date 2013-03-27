@@ -22,49 +22,33 @@ Permission is granted to anyone to use this software for any purpose, including 
 #include "mesh.hpp"
 #include "texture.hpp"
 
-#include <map>
-#include <string>
 #include <vector>
 
 namespace Inugami {
 
 class Spritesheet
 {
-    friend class SharedBank;
 public:
-    Spritesheet(Core& coreIn, const std::string &filename, unsigned int w, unsigned int h, float cx = 0.5f, float cy = 0.5f);
+    Spritesheet() = delete;
+    Spritesheet(const Image& img, int tw, int th, float cx=0.5f, float cy=0.5f);
+    Spritesheet(const Texture& in, int tw, int th, float cx=0.5f, float cy=0.5f);
+    Spritesheet(Texture&& in, int tw, int th, float cx = 0.5f, float cy = 0.5f);
     Spritesheet(const Spritesheet& in);
+    Spritesheet(Spritesheet&& in);
     virtual ~Spritesheet();
 
-    void draw(unsigned int r, unsigned int c);
+    Spritesheet& operator=(const Spritesheet& in);
+    Spritesheet& operator=(Spritesheet&& in);
 
-    Mesh &getMesh(unsigned int r, unsigned int c);
-    Texture &getTex();
+    void draw(int r, int c) const;
+
+    ConstAttr<int,Spritesheet> tilesX, tilesY;
 
 private:
-    class Index
-    {
-    public:
-        bool operator<(const Index &in) const;
-        unsigned int w, h;
-        unsigned int tw, th;
-        float cx, cy;
-    };
-
-    struct Value
-    {
-    public:
-        Value();
-        std::vector<Mesh*> meshes;
-        int users;
-    };
-
-    using Bank = std::map<Index, Value>;
+    void generateMeshes(int tw, int th, float cx, float cy);
 
     Texture tex;
-    Index dim;
-
-    Bank& bank;
+    std::vector<Mesh> meshes;
 };
 
 } // namespace Inugami

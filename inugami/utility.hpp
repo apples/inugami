@@ -254,14 +254,14 @@ private:
 
 template <typename T>
 typename std::enable_if<!std::is_pointer<T>::value, bool>::type
-equalInstance(const T& a, const T& b)
+sameInstance(const T& a, const T& b)
 {
     return (&a == &b);
 }
 
 template <typename T>
 typename std::enable_if<std::is_pointer<T>::value, bool>::type
-equalInstance(T a, T b)
+sameInstance(T a, T b)
 {
     return (a == b);
 }

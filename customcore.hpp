@@ -36,21 +36,19 @@ public:
     void idle();
 
 private:
-    Inugami::Texture* generateNoise(int width, int height, double freq);
-
     float rotation;
     float dissolveMin, dissolveMax;
     unsigned int ticks;
     bool highDef;
     bool shaderOn;
 
-    Inugami::Texture        *shieldTex;
-    Inugami::Texture        *noiseTex;
-    Inugami::Spritesheet    *font;
-    Inugami::AnimatedSprite *fontRoll;
-
-    Inugami::Mesh *shield, *shieldHD;
-    Inugami::Shader *crazy;
+    Inugami::Texture        shieldTex;
+    Inugami::Texture        noiseTex;
+    Inugami::AnimatedSprite fontRoll;
+    Inugami::Mesh           shield;
+    Inugami::Mesh           shieldHD;
+    Inugami::Shader         defaultShader;
+    Inugami::Shader         crazyShader;
 };
 
 #endif // CUSTOMCORE_H
