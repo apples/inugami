@@ -1,14 +1,32 @@
 ﻿README
 
-Inugami Version: 0.1
+Inugami Version: 0.2.0
 
 Inugami is a framework designed for rapid prototyping of games.
 
-It is intended for small projects, however, it scales very well, and should make a good base for any project.
+Goal:
 
-Please note that Inugami is built for my personal needs, and may not be suitable for every project.
+Inugami was created out of a need for a robust, fully object-oriented,
+up-to-date, cross-platform game and simulation framework for C++. Inugami takes
+full advantage of the latest C++11 features and is built upon GLFW, which is
+also in very active development.
 
-As of this writing, Inugami is INCOMPLETE and may contain several errors. If you plan on using Inugami in your own project, please consider contacting me for usability information.
+One of the most important aspects of Inugami is that it is not an engine. It
+does not actually "do" anything, but it merely provides the developer with
+a set of tools and boilerplate code.
+
+Inugami is designed to be incredibly intuitive and simplistic. This is largely
+influenced by the Ludum Dare event, in which participants do not have time to
+fight with the intricacies of their language and tools. The developer should be
+able to create a fresh Inugami project, and be able to get a window on the
+screen with no more than half a page of code.
+
+What does "Inugami" mean?
+
+An inugami is a spirit dog from Japanese folklore. Typically, an inugami is
+summoned from the corpse of a decapitated dog. Although a bit gruesome, I
+chose the name "Inugami" because this framework is formed from the many dead
+projects I have created in the past.
 
 Full documentation is embedded with Doxygen comments.
 
@@ -26,8 +44,10 @@ Current features are:
 Current limitations are:
     Models do not support animation
     No support for 3D textures
-    
-Note that Inugami is only meant for graphics, and other systems, such as audio, networking, and physics, must be found elsewhere.
+
+Planned features:
+    Audio
+    Networking
 
 COMPILING:
 
@@ -35,56 +55,100 @@ Inugami depends on the following software libraries:
     GLEW    	1.9.0
     GLFW    	3.0
     GLM     	0.9.3.3
-    libpng		1.2.49
 
-The demo program depends on these additional libraries:
-    libnoise	1.0.0
+The following libraries are used for optional components:
+    libpng++    0.2.5   Image::fromPNG()
+    libnoise	1.0.0   Image::fromNoise()
+    libyaml-cpp 0.5.0   Shader::fromYAML()
     
-Inugami is designed to be compiled together with your project, for easy tweaking, but it should work just fine as a static library or DLL or whatever. I recommend using the demo project as a template.
+Inugami is designed to be compiled together with your project, for easy
+tweaking, but it should work just fine as a static library or DLL or whatever.
+I recommend using the demo project as a template.
 
 BASIC USAGE:
 
-You must create a Core to use the framework.
-It is recommended to use the scheduler via Core::addCallback(...).
-If a callback has a negative frequency, it is called as often as possible.
+Setup:
 
-If you want multiple windows, simply create multiple Cores.
+It is recommended that you derive a custom core from the Core class, for ease
+of use. Of course, the existing Core is fully functional. Either way, you need
+to create a Core.
 
-Use the Core's Interface "iface" to grab keyboard and mouse input.
-Make sure to call iface->poll() every frame.
+After creating a Core, create functions that would normally be in your main
+loop, such as draw(), tick(), and idle(), and add them to the Core's scheduler
+using Core::addCallback().
 
-All GLFW and OpenGL functions should work as normal.
-Your drawing routine must start with Core::beginFrame() and end with Core::endFrame().
+To load resources, you should use the Image, Geometry, and ShaderProgram
+clases. After filling these objects with data, send them to Texture, Mesh, and
+Shader, respectively. After the handles have been created, the original data
+can be safely destroyed.
 
-Create a camera and use it with Core::applyCam().
+Some other resources, such as Spritesheet, have similar semantics.
 
-The Transformation class allows you to easy handle matrices.
+Drawing:
 
-Texture images are loaded when a Texture object is created. If a texture file has already been loaded, the resource is shared.
+Every frame, the first thing you should do is call Core::startFrame(). If you
+want to use a shader other than the default, call Core::setShader(). Then,
+create a Camera and use it's functions to position it, and use Core::applyCam()
+to send it to the shader.
 
-Please see the demo project for a decent example of usage.
+Now, you may use Texture::bind() to bind a Texture, and Mesh::draw() to draw the
+Mesh. Note that resources such as Spritesheet automatically bind their Texture.
+
+After everything has been drawn, call Core::endFrame() to flush the graphics.
+
+Interface:
+
+Using Core::iface, you can get input from mouse and keyboard. You should use the
+_ivkFoo string literals to obtain proper keycodes. It is recommended to use
+the Interface::getProxy() function to obtain an object representing a specific
+key. These objects have special functions, such as Proxy::pressed(), that act as
+edge detectors.
+
+Closing:
+
+You should regularly check Core::shouldClose() to find out if the user or OS has
+requested that the window be closed. This could be a result of the user clicking
+the close button on the window, pressing Alt+F4, or the system sending any
+other kind of close request.
+
+When closing, you should first delete all of the loaded resource handles, and
+then delete the Core.
 
 LISCENSE:
 
-Inugami is liscensed under the unmodified zlib/libpng liscense. Full text can be found below, or at http://opensource.org/licenses/zlib-license.php.
+Inugami is liscensed under the unmodified zlib/libpng liscense. Full text can be
+found below, or at http://opensource.org/licenses/zlib-license.php.
 
 /*******************************************************************************
+ * Inugami - An OpenGL framwork designed for rapid game development
+ * Version: 0.2.0
+ * https://github.com/DBRalir/Inugami
+ *
+ * Copyright (c) 2012 Jeramy Harrison <dbralir@gmail.com>
+ *
+ * This software is provided 'as-is', without any express or implied warranty.
+ * In no event will the authors be held liable for any damages arising from the
+ * use of this software.
+ *
+ * Permission is granted to anyone to use this software for any purpose,
+ * including commercial applications, and to alter it and redistribute it
+ * freely, subject to the following restrictions:
+ *
+ *  1. The origin of this software must not be misrepresented; you must not
+ *     claim that you wrote the original software. If you use this software
+ *     in a product, an acknowledgment in the product documentation would be
+ *     appreciated but is not required.
+ *
+ *  2. Altered source versions must be plainly marked as such, and must not be
+ *     misrepresented as being the original software.
+ *
+ *  3. This notice may not be removed or altered from any source distribution.
+ *
+ ******************************************************************************/
 
-Copyright (c) 2012 Jeramy Harrison
-
-This software is provided 'as-is', without any express or implied warranty. In no event will the authors be held liable for any damages arising from the use of this software.
-
-Permission is granted to anyone to use this software for any purpose, including commercial applications, and to alter it and redistribute it freely, subject to the following restrictions:
-
-    1. The origin of this software must not be misrepresented; you must not claim that you wrote the original software. If you use this software in a product, an acknowledgment in the product documentation would be appreciated but is not required.
-
-    2. Altered source versions must be plainly marked as such, and must not be misrepresented as being the original software.
-
-    3. This notice may not be removed or altered from any source distribution.
-
-*******************************************************************************/
-
-For those unfamiliar, this basically means that you can do whatever you want with the source code as long as you don't claim ownership or remove the liscense.
+For those unfamiliar, this basically means that you can do whatever you want
+with the source code as long as you don't claim ownership or remove the
+liscense.
 
 CONTACT INFO:
 

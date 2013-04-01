@@ -11,4 +11,5 @@ game_d
 *.txt
 obj/*
 bin/*
+docs/*
 glm/*

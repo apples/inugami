@@ -1,3 +1,30 @@
+/*******************************************************************************
+ * Inugami - An OpenGL framwork designed for rapid game development
+ * Version: 0.2.0
+ * https://github.com/DBRalir/Inugami
+ * 
+ * Copyright (c) 2012 Jeramy Harrison <dbralir@gmail.com>
+ * 
+ * This software is provided 'as-is', without any express or implied warranty.
+ * In no event will the authors be held liable for any damages arising from the
+ * use of this software.
+ * 
+ * Permission is granted to anyone to use this software for any purpose,
+ * including commercial applications, and to alter it and redistribute it
+ * freely, subject to the following restrictions:
+ * 
+ *  1. The origin of this software must not be misrepresented; you must not
+ *     claim that you wrote the original software. If you use this software
+ *     in a product, an acknowledgment in the product documentation would be
+ *     appreciated but is not required.
+ *
+ *  2. Altered source versions must be plainly marked as such, and must not be
+ *     misrepresented as being the original software.
+ *
+ *  3. This notice may not be removed or altered from any source distribution.
+ *
+ ******************************************************************************/
+
 #include "image.hpp"
 
 #include "math.hpp"
@@ -12,30 +39,6 @@
 using namespace std;
 
 namespace Inugami {
-
-Image Image::fromGradient(int w, int h, const Pixel& a, float ax, float ay, const Pixel& b, float bx, float by) //static
-{
-    Image rval(w, h);
-
-    float gx = bx-ax;
-    float gy = by-ay;
-    float mag = std::sqrt(gx*gx+gy*gy);
-    gx /= mag;
-    gy /= mag;
-
-    for (int y=0; y<h; ++y)
-    {
-        float py = (float(y)/float(h-1))-ay;
-        for (int x=0; x<w; ++x)
-        {
-            float px = (float(x)/float(w-1))-ax;
-            float proj = clamp((px*gx+py*gy)/mag, 0.f, 1.f);
-            for (int i=0; i<4; ++i) rval.pixelAt(x, y)[i] = a[i] + (b[i]-a[i])*proj;
-        }
-    }
-
-    return rval;
-}
 
 Image Image::fromPNG(const string& filename) //static
 {

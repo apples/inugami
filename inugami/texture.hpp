@@ -1,20 +1,29 @@
 /*******************************************************************************
-
-Copyright (c) 2012 Jeramy Harrison
-
-This software is provided 'as-is', without any express or implied warranty. In no event will the authors be held liable for any damages arising from the use of this software.
-
-Permission is granted to anyone to use this software for any purpose, including commercial applications, and to alter it and redistribute it freely, subject to the following restrictions:
-
-    1. The origin of this software must not be misrepresented; you must not claim that you wrote the original software. If you use this software in a product, an acknowledgment in the product documentation would be appreciated but is not required.
-
-    2. Altered source versions must be plainly marked as such, and must not be misrepresented as being the original software.
-
-    3. This notice may not be removed or altered from any source distribution.
-
-*******************************************************************************/
-
-namespace Inugami{ class Texture; }
+ * Inugami - An OpenGL framwork designed for rapid game development
+ * Version: 0.2.0
+ * https://github.com/DBRalir/Inugami
+ *
+ * Copyright (c) 2012 Jeramy Harrison <dbralir@gmail.com>
+ *
+ * This software is provided 'as-is', without any express or implied warranty.
+ * In no event will the authors be held liable for any damages arising from the
+ * use of this software.
+ *
+ * Permission is granted to anyone to use this software for any purpose,
+ * including commercial applications, and to alter it and redistribute it
+ * freely, subject to the following restrictions:
+ *
+ *  1. The origin of this software must not be misrepresented; you must not
+ *     claim that you wrote the original software. If you use this software
+ *     in a product, an acknowledgment in the product documentation would be
+ *     appreciated but is not required.
+ *
+ *  2. Altered source versions must be plainly marked as such, and must not be
+ *     misrepresented as being the original software.
+ *
+ *  3. This notice may not be removed or altered from any source distribution.
+ *
+ ******************************************************************************/
 
 #ifndef INUGAMI_TEXTURE_H
 #define INUGAMI_TEXTURE_H
@@ -31,22 +40,52 @@ namespace Inugami{ class Texture; }
 
 namespace Inugami {
 
-class Texture final
+/*! @brief Handle to a texture.
+ */
+class Texture
 {
     friend class TextureException;
 public:
     Texture() = delete;
+    
+    /*! @brief Primary constructor.
+     * 
+     *  Creates a Texture from the given Image.
+     * 
+     *  @param img Image to upload.
+     *  @param smooth Applies a smoothing filter.
+     *  @param clamp Clamps texture coordinates to the image.
+     */
     Texture(const Image& img, bool smooth=false, bool clamp=false);
+    
+    /*! @brief Copy constructor.
+     */
     Texture(const Texture &in);
+    
+    /*! @brief Move constructor.
+     */
     Texture(Texture&& in);
+    
+    /*! @brief Destructor.
+     */
     ~Texture();
 
+    /*! @brief Copy assignment.
+     */
     Texture &operator=(const Texture &in);
+    
+    /*! @brief Move assignment.
+     */
     Texture &operator=(Texture&& in);
 
+    /*! @brief Binds the texture.
+     * 
+     *  @param slot Texture slot to bind.
+     */
     void bind(unsigned int slot) const;
 
-    ConstAttr<int,Texture> width, height;
+    ConstAttr<int,Texture> width;   //!< Width of the texture.
+    ConstAttr<int,Texture> height;  //!< Height of the texture.
 
 private:
     struct Shared

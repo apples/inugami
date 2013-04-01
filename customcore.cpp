@@ -249,7 +249,7 @@ void CustomCore::draw()
 void CustomCore::idle()
 {
     ScopedProfile prof(profiler, "CustomCore: Idle");
-    if (iface->keyDown(GLFW_KEY_ESC) || getWindowParam(GLFW_SHOULD_CLOSE))
+    if (iface->keyDown(GLFW_KEY_ESC) || shouldClose())
     {
         //Stopping a core at any time will cause the scheduler to return
         running = false;
