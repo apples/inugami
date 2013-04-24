@@ -30,6 +30,7 @@
 
 #include "inugami.hpp"
 
+#include "exception.hpp"
 #include "opengl.hpp"
 
 #include <list>
@@ -38,33 +39,46 @@
 
 namespace Inugami {
 
+/*! @brief Shader exception.
+ *
+ *  This exception is throw upon compile errors or uniform errors.
+ */
+class ShaderException : public Exception
+{
+public:
+    ShaderException(const std::string &codeStr, const std::string &errStr);
+    virtual const char* what() const noexcept override;
+    std::string code;
+    std::string err;
+};
+
 /*! @brief Shader handle.
- * 
+ *
  *  This object manages shader programs for OpenGL.
  */
 class Shader
 {
 public:
     Shader() = delete;
-    
+
     /*! @brief Primary constructor.
      *
      *  Constructs the Shader from the given ShaderProgram. The ShaderProgram
      *  does not need to contain every type of shader, but at least a vertex
      *  and fragment shader are recommended.
-     * 
+     *
      *  @param in ShaderProgram to upload.
      */
     Shader(const ShaderProgram &in);
-    
+
     /*! @brief Copy constructor.
      */
     Shader(const Shader& in);
-    
+
     /*! @brief Move constructor.
      */
     Shader(Shader&& in);
-    
+
     /*! @brief Destructor.
      */
     virtual ~Shader();
@@ -72,7 +86,7 @@ public:
     /*! @brief Copy assignment.
      */
     Shader& operator=(const Shader& in);
-    
+
     /*! @brief Move assignment.
      */
     Shader& operator=(Shader&& in);
@@ -82,79 +96,88 @@ public:
     void bind() const;
 
     /*! @brief Sets a uniform variable in the shader.
-     * 
+     *
      *  @param name Name of uniform.
      *  @param val Value to upload.
      */
     void setUniform(const std::string& name, const bool val) const;
 
     /*! @brief Sets a uniform variable in the shader.
-     * 
+     *
      *  @param name Name of uniform.
      *  @param val Value to upload.
      */
     void setUniform(const std::string& name, const float val) const;
 
     /*! @brief Sets a uniform variable in the shader.
-     * 
+     *
      *  @param name Name of uniform.
      *  @param val Value to upload.
      */
     void setUniform(const std::string& name, const double val) const;
 
     /*! @brief Sets a uniform variable in the shader.
-     * 
+     *
      *  @param name Name of uniform.
      *  @param val Value to upload.
      */
     void setUniform(const std::string& name, const int val) const;
 
     /*! @brief Sets a uniform variable in the shader.
-     * 
+     *
      *  @param name Name of uniform.
      *  @param val Value to upload.
      */
     void setUniform(const std::string& name, const ::glm::vec2 &val) const;
 
     /*! @brief Sets a uniform variable in the shader.
-     * 
+     *
      *  @param name Name of uniform.
      *  @param val Value to upload.
      */
     void setUniform(const std::string& name, const ::glm::vec3 &val) const;
 
     /*! @brief Sets a uniform variable in the shader.
-     * 
+     *
      *  @param name Name of uniform.
      *  @param val Value to upload.
      */
     void setUniform(const std::string& name, const ::glm::vec4 &val) const;
 
     /*! @brief Sets a uniform variable in the shader.
-     * 
+     *
      *  @param name Name of uniform.
      *  @param val Value to upload.
      */
     void setUniform(const std::string& name, const ::glm::mat3 &val) const;
 
     /*! @brief Sets a uniform variable in the shader.
-     * 
+     *
      *  @param name Name of uniform.
      *  @param val Value to upload.
      */
     void setUniform(const std::string& name, const ::glm::mat4 &val) const;
 
 private:
+    struct Uniform
+    {
+        GLenum type;
+        GLint size;
+        GLint location;
+    };
+
     class Shared
     {
     public:
         Shared();
         ~Shared();
         GLuint program;
+        std::map<std::string,Uniform> uniforms;
         int users;
     };
 
-    GLuint getUniformLocation(const std::string& name) const;
+    void initUniforms();
+    const Uniform& getUniform(const std::string& name) const;
 
     Shared* share;
 };

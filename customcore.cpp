@@ -1,18 +1,29 @@
 /*******************************************************************************
-
-Copyright (c) 2012 Jeramy Harrison
-
-This software is provided 'as-is', without any express or implied warranty. In no event will the authors be held liable for any damages arising from the use of this software.
-
-Permission is granted to anyone to use this software for any purpose, including commercial applications, and to alter it and redistribute it freely, subject to the following restrictions:
-
-    1. The origin of this software must not be misrepresented; you must not claim that you wrote the original software. If you use this software in a product, an acknowledgment in the product documentation would be appreciated but is not required.
-
-    2. Altered source versions must be plainly marked as such, and must not be misrepresented as being the original software.
-
-    3. This notice may not be removed or altered from any source distribution.
-
-*******************************************************************************/
+ * Inugami - An OpenGL framwork designed for rapid game development
+ * Version: 0.2.0
+ * https://github.com/DBRalir/Inugami
+ *
+ * Copyright (c) 2012 Jeramy Harrison <dbralir@gmail.com>
+ *
+ * This software is provided 'as-is', without any express or implied warranty.
+ * In no event will the authors be held liable for any damages arising from the
+ * use of this software.
+ *
+ * Permission is granted to anyone to use this software for any purpose,
+ * including commercial applications, and to alter it and redistribute it
+ * freely, subject to the following restrictions:
+ *
+ *  1. The origin of this software must not be misrepresented; you must not
+ *     claim that you wrote the original software. If you use this software
+ *     in a product, an acknowledgment in the product documentation would be
+ *     appreciated but is not required.
+ *
+ *  2. Altered source versions must be plainly marked as such, and must not be
+ *     misrepresented as being the original software.
+ *
+ *  3. This notice may not be removed or altered from any source distribution.
+ *
+ ******************************************************************************/
 
 #include "customcore.hpp"
 
@@ -43,7 +54,7 @@ CustomCore::CustomCore(const RenderParams &params) :
     shaderOn(true),
 
     shieldTex       (Image::fromPNG("data/shield.png"), true, false),
-    noiseTex        (Image::fromNoise(128,128,2.0), true, false),
+    noiseTex        (Image::fromNoise(16,16,2.0), false, false),
     fontRoll        (Spritesheet(Image::fromPNG("data/font.png"), 8, 8)),
     shield          (Geometry::fromOBJ("data/shield.obj")),
     shieldHD        (Geometry::fromOBJ("data/shieldHD.obj")),
@@ -88,9 +99,9 @@ CustomCore::CustomCore(const RenderParams &params) :
 
     crazyShader.bind();
     crazyShader.setUniform("Tex0", 0);
-    crazyShader.setUniform("noiseTex", 2);
+    crazyShader.setUniform("noiseTex", 1);
 
-    noiseTex.bind(2);
+    noiseTex.bind(1);
 }
 
 CustomCore::~CustomCore()
@@ -172,11 +183,11 @@ void CustomCore::tick()
     if (shaderOn)
     {
         crazyShader.bind();
-        crazyShader.setUniform("wobbleX", 1.0+0.25*std::sin(ticks/27.0));
-        crazyShader.setUniform("wobbleY", 1.0+0.25*std::cos(ticks/43.0));
-        crazyShader.setUniform("dissolveMin", dissolveMin );
-        crazyShader.setUniform("dissolveMax", dissolveMax );
-        crazyShader.setUniform("hue", ticks/67.0 );
+        //crazyShader.setUniform("wobbleX", float(1.0+0.25*std::sin(ticks/27.0)));
+        //crazyShader.setUniform("wobbleY", float(1.0+0.25*std::cos(ticks/43.0)));
+        crazyShader.setUniform("dissolveMin", float(dissolveMin) );
+        crazyShader.setUniform("dissolveMax", float(dissolveMax) );
+        crazyShader.setUniform("hue", float(ticks/67.0) );
 
         Vec3 light(0.f,0.f,-1.5f);
         light.x = 4.0*(iface->getMousePos().x/1024.0-0.5)*4.0/3.0;
@@ -216,7 +227,7 @@ void CustomCore::draw()
 
         //Textures are set using bind()
         shieldTex.bind(0);
-        noiseTex.bind(2);
+        noiseTex.bind(1);
 
         //Models use the currently bound texture
         if (highDef) shieldHD.draw();

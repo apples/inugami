@@ -44,10 +44,11 @@ vec3 shiftColor(vec3 cin) {
 void main() {
     float noise = texture( noiseTex, TexCoord ).a;
 
-    float burn = max(max(dissolveMin-noise, noise-dissolveMax)*5.0, 0.0);
+    float burn = max(max(dissolveMin-noise, noise-dissolveMax)*20.0, 0.0);
     if (burn > 1.0) discard;
 
     vec4 texColor;
+    //burn = 0.0;
     if (burn > 0.0)
     {
         texColor = mix(vec4(1.0,0.0,0.0,1.0),vec4(0.0,0.0,0.0,1.0),burn);

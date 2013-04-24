@@ -250,6 +250,8 @@ private:
 
     Window window;
 
+    Mat4 viewProjection;
+
     Shader* shader;
 };
 
