@@ -34,15 +34,15 @@
 namespace Inugami {
 
 /*! @brief Container for a shader program.
- * 
+ *
  *  This object is designed to be sent to a Shader for uploading to a GPU.
  */
 class ShaderProgram
 {
 public:
-    
+
     /*! @brief Type of shader.
-     *  
+     *
      *  | Type | Shader                 |
      *  |------|------------------------|
      *  | VERT | Vertex                 |
@@ -57,40 +57,29 @@ public:
     };
 
     /*! @brief Creates default shader.
-     * 
+     *
      *  The created shader is a very basic shader that has very limited
      *  functionality.
-     * 
+     *
      *  @return Basic shader.
      */
     static ShaderProgram fromDefault();
-    
+
     /*! @brief Creates shader from files.
-     * 
+     *
      *  Files beginning with the given prefix and ending with specific
      *  extensions (.vert, .tcs, .tes, .geo, and .frag) are loaded.
-     * 
+     *
      *  @param in File prefix.
-     * 
+     *
      *  @return %Shader.
      */
     static ShaderProgram fromName(std::string in);
-    
-    /*! @brief Creates a shader from a YAML file.
-     * 
-     *  Files specified in a YAML file are loaded. The YAML file must be a map
-     *  with optional keys "vert", "tcs", "tes", "geo", and "frag".
-     * 
-     *  @param in YAML file.
-     * 
-     *  @return %Shader.
-     */
-    static ShaderProgram fromYAML(const std::string& in);
 
     /*! @brief Default constructor.
      */
     ShaderProgram();
-    
+
     /*! @brief Destructor.
      */
     virtual ~ShaderProgram();

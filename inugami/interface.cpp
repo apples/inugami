@@ -140,7 +140,7 @@ bool Interface::mousePressed(int button, bool clr)
     return false;
 }
 
-auto Interface::getMousePos() const -> Coord<int>
+auto Interface::getMousePos() const -> Coord<double>
 {
     return mousePos;
 }
@@ -150,7 +150,7 @@ auto Interface::getMouseWheel() const -> Coord<double>
     return mouseWheel;
 }
 
-void Interface::setMousePos(int x, int y)
+void Interface::setMousePos(double x, double y)
 {
     mousePos.x = x;
     mousePos.y = y;
@@ -220,7 +220,7 @@ void Interface::mouseButtonCallback(Window win, int button, int action) //static
     }
 }
 
-void Interface::mousePositionCallback(Window win, int x, int y) //static
+void Interface::mousePositionCallback(Window win, double x, double y) //static
 {
     Interface* iface = windowMap[win];
     if (!iface) return;

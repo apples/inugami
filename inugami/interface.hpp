@@ -171,7 +171,7 @@ public:
      *
      *  @return Position in window coordinates.
      */
-    Coord<int> getMousePos() const;
+    Coord<double> getMousePos() const;
 
     /*! @brief Get the mouse wheel's state.
      *
@@ -184,7 +184,7 @@ public:
      *  @param x X coordinate.
      *  @param y Y coordinate.
      */
-    void setMousePos(int x, int y);
+    void setMousePos(double x, double y);
 
     /*! @brief Set the mouse wheel's position.
      *
@@ -231,7 +231,7 @@ private:
     static void keyboardCallback(Window win, int key, int action);
     static void unicodeCallback(Window win, unsigned int key);
     static void mouseButtonCallback(Window win, int button, int action);
-    static void mousePositionCallback(Window win, int x, int y);
+    static void mousePositionCallback(Window win, double x, double y);
     static void mouseWheelCallback(Window win, double x, double y);
 
     void clearPresses();
@@ -242,7 +242,7 @@ private:
     State<GLFW_KEY_LAST+1> keyStates;
     State<GLFW_MOUSE_BUTTON_LAST+1> mouseStates;
 
-    Coord<int> mousePos;
+    Coord<double> mousePos;
     Coord<double> mouseWheel;
 };
 

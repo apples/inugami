@@ -30,8 +30,6 @@
 #include "loaders.hpp"
 #include "shaderprogram.hpp"
 
-#include <yaml-cpp/yaml.h>
-
 #include <array>
 #include <vector>
 
@@ -117,15 +115,11 @@ Shader::Shader(const ShaderProgram &source) :
     {
         GLsizei len = 0;
         glGetProgramiv(share->program, GL_INFO_LOG_LENGTH, &len);
-        if (len>1)
+        if (len>=1)
         {
             std::vector<GLchar> log(len);
             glGetProgramInfoLog(share->program, len, &len, &log[0]);
             throw ShaderException("\n", &log[0]);
-        }
-        else
-        {
-            throw ShaderException("\n", "UNKNOWN ERROR.\nSORRY.\n");
         }
     }
 

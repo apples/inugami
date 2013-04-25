@@ -30,8 +30,6 @@
 #include "exception.hpp"
 #include "loaders.hpp"
 
-#include <yaml-cpp/yaml.h>
-
 #include <algorithm>
 #include <fstream>
 #include <map>
@@ -117,34 +115,6 @@ ShaderProgram ShaderProgram::fromName(std::string in) //static
         {
             rval.sources[i->second] = "";
         }
-    }
-
-    return rval;
-}
-
-ShaderProgram ShaderProgram::fromYAML(const std::string& in) //static
-{
-    static std::map<std::string, Type> typeStrings = {
-        {"vert", VERT},
-        {"tes", TES},
-        {"tcs", TCS},
-        {"geo", GEO},
-        {"frag", FRAG},
-    };
-
-    ShaderProgram rval;
-
-    YAML::Node yaml = YAML::LoadFile(in);
-
-    if (!yaml.IsMap()) throw ShaderProgramException("YAML data must be a map!");
-
-    for (auto i=yaml.begin(); i!=yaml.end(); ++i)
-    {
-        std::string key = i->first.as<std::string>();
-        std::transform(key.begin(), key.end(), key.begin(), ::tolower);
-        auto j = typeStrings.find(key);
-        if (j == typeStrings.end()) throw ShaderProgramException(std::string("Invalid shader type: ")+key);
-        rval.sources[j->second] = loadTextFromFile(i->second.as<std::string>());
     }
 
     return rval;

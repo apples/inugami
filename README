@@ -59,7 +59,6 @@ Inugami depends on the following software libraries:
 The following libraries are used for optional components:
     libpng++    0.2.5   Image::fromPNG()
     libnoise	1.0.0   Image::fromNoise()
-    libyaml-cpp 0.5.0   Shader::fromYAML()
     
 Inugami is designed to be compiled together with your project, for easy
 tweaking, but it should work just fine as a static library or DLL or whatever.
