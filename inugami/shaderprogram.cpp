@@ -39,8 +39,18 @@ namespace Inugami {
 class ShaderProgramException : public Exception
 {
 public:
-    ShaderProgramException(const std::string &errStr) :
-        err(errStr)
+    ShaderProgramException() = delete;
+
+    ShaderProgramException(const ShaderProgramException& in)
+        : err(in.err)
+    {}
+
+    ShaderProgramException(ShaderProgramException&& in)
+        : err(move(in.err))
+    {}
+
+    ShaderProgramException(const std::string &errStr)
+        : err(errStr)
     {}
 
     virtual const char* what() const noexcept override
@@ -59,7 +69,7 @@ ShaderProgram ShaderProgram::fromDefault() //static
     ShaderProgram rval;
 
     rval.sources[VERT] =
-        "#version 400\n"
+        "#version 330\n"
         "layout (location = 0) in vec3 VertexPosition;\n"
         "layout (location = 1) in vec3 VertexNormal;\n"
         "layout (location = 2) in vec2 VertexTexCoord;\n"
@@ -76,7 +86,7 @@ ShaderProgram ShaderProgram::fromDefault() //static
         "}\n"
     ;
     rval.sources[FRAG] =
-        "#version 400\n"
+        "#version 330\n"
         "in vec3 Position;\n"
         "in vec3 Normal;\n"
         "in vec2 TexCoord;\n"
@@ -120,8 +130,8 @@ ShaderProgram ShaderProgram::fromName(std::string in) //static
     return rval;
 }
 
-ShaderProgram::ShaderProgram() :
-    sources(5, "")
+ShaderProgram::ShaderProgram()
+    : sources(5, "")
 {}
 
 ShaderProgram::~ShaderProgram()

@@ -58,16 +58,24 @@ static void drawVertexArray(GLuint vertexArray, GLuint mode, GLuint elementCount
     if (elementCount > 0)
     {
         glBindVertexArray(vertexArray);
-        glDrawElements(mode, elementCount, GL_UNSIGNED_INT, 0);
+        glDrawElements(mode, elementCount, GL_UNSIGNED_INT, nullptr);
     }
 }
 
 class MeshException : public Exception
 {
 public:
-    MeshException(const Mesh* source, string error) :
-        mesh(source), err(error)
+    MeshException() = delete;
+    MeshException(const MeshException&) = delete;
+    MeshException(MeshException&&) = delete;
+
+    MeshException(const Mesh* source, string error)
+        : mesh(source)
+        , err(error)
     {}
+
+    MeshException& operator=(const MeshException&) = delete;
+    MeshException& operator=(MeshException&&) = delete;
 
     virtual const char* what() const noexcept override
     {
@@ -83,13 +91,18 @@ public:
     string err;
 };
 
-Mesh::Shared::Shared() :
-    vertexBuffer(0),
-    pointArray(0), pointElements(0),
-    lineArray(0), lineElements(0),
-    triangleArray(0), triangleElements(0),
-    pointCount(0), lineCount(0), triangleCount(0),
-    users(1)
+Mesh::Shared::Shared()
+    : vertexBuffer(0)
+    , pointArray(0)
+    , pointElements(0)
+    , lineArray(0)
+    , lineElements(0)
+    , triangleArray(0)
+    , triangleElements(0)
+    , pointCount(0)
+    , lineCount(0)
+    , triangleCount(0)
+    , users(1)
 {
     glGenBuffers(1, &vertexBuffer);
     glGenVertexArrays(1, &pointArray);
@@ -111,8 +124,8 @@ Mesh::Shared::~Shared()
     glDeleteBuffers(1, &vertexBuffer);
 }
 
-Mesh::Mesh(const Geometry& in) :
-    share(new Shared)
+Mesh::Mesh(const Geometry& in)
+    : share(new Shared)
 {
     glBindBuffer(GL_ARRAY_BUFFER, share->vertexBuffer);
     glBufferData(GL_ARRAY_BUFFER, sizeof(Geometry::Vertex)*in.vertices.size(), &in.vertices[0], GL_STATIC_DRAW);
@@ -126,14 +139,14 @@ Mesh::Mesh(const Geometry& in) :
     share->triangleCount = in.triangles.size()*3;
 }
 
-Mesh::Mesh(const Mesh& in) :
-    share(in.share)
+Mesh::Mesh(const Mesh& in)
+    : share(in.share)
 {
     ++share->users;
 }
 
-Mesh::Mesh(Mesh&& in) :
-    share(in.share)
+Mesh::Mesh(Mesh&& in)
+    : share(in.share)
 {
     in.share = nullptr;
 }

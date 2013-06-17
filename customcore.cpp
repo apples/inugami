@@ -45,21 +45,21 @@
 
 using namespace Inugami;
 
-CustomCore::CustomCore(const RenderParams &params) :
-    Core(params),
-    rotation(0.f),
-    dissolveMin(0.25f), dissolveMax(0.75f),
-    ticks(0),
-    highDef(true),
-    shaderOn(true),
+CustomCore::CustomCore(const RenderParams &params)
+    : Core(params)
+    , rotation(0.f)
+    , dissolveMin(0.25f), dissolveMax(0.75f)
+    , ticks(0)
+    , highDef(true)
+    , shaderOn(true)
 
-    shieldTex       (Image::fromPNG("data/shield.png"), true, false),
-    noiseTex        (Image::fromNoise(16,16,2.0), false, false),
-    fontRoll        (Spritesheet(Image::fromPNG("data/font.png"), 8, 8)),
-    shield          (Geometry::fromOBJ("data/shield.obj")),
-    shieldHD        (Geometry::fromOBJ("data/shieldHD.obj")),
-    defaultShader   (getShader()),
-    crazyShader     (ShaderProgram::fromName("shaders/crazy"))
+    , shieldTex       (Image::fromPNG("data/shield.png"), true, false)
+    , noiseTex        (Image::fromNoise(16,16), false, false)
+    , fontRoll        (Spritesheet(Image::fromPNG("data/font.png"), 8, 8))
+    , shield          (Geometry::fromOBJ("data/shield.obj"))
+    , shieldHD        (Geometry::fromOBJ("data/shieldHD.obj"))
+    , defaultShader   (getShader())
+    , crazyShader     (ShaderProgram::fromName("shaders/crazy"))
 {
     ScopedProfile prof(profiler, "CustomCore: Constructor");
 
@@ -93,7 +93,6 @@ CustomCore::CustomCore(const RenderParams &params) :
     logger->log<5>("Adding callbacks...");
     addCallback(std::bind(&CustomCore::tick, this), 60.0);
     addCallback(std::bind(&CustomCore::draw, this), 60.0);
-    addCallback(std::bind(&CustomCore::idle, this), 120.0);
 
     setWindowTitle("Inugami Demo", true);
 
@@ -132,7 +131,7 @@ void CustomCore::tick()
     iface->poll();
 
     //Key Proxies can be cast to bool
-    if (keyESC)
+    if (keyESC || shouldClose())
     {
         running = false;
         return;
@@ -255,14 +254,4 @@ void CustomCore::draw()
 
     //endFrame() swaps the buffer to the screen
     endFrame();
-}
-
-void CustomCore::idle()
-{
-    ScopedProfile prof(profiler, "CustomCore: Idle");
-    if (iface->keyDown(GLFW_KEY_ESC) || shouldClose())
-    {
-        //Stopping a core at any time will cause the scheduler to return
-        running = false;
-    }
 }

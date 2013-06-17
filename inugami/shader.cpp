@@ -64,8 +64,8 @@ Shader::Shared::~Shared()
     glDeleteProgram(program);
 }
 
-Shader::Shader(const ShaderProgram &source) :
-    share(new Shared)
+Shader::Shader(const ShaderProgram &source)
+    : share(new Shared)
 {
     auto compile = [](const GLuint id, const std::string &codeStr)
     {
@@ -75,7 +75,7 @@ Shader::Shader(const ShaderProgram &source) :
         glCompileShader(id);
         GLint status;
         glGetShaderiv(id, GL_COMPILE_STATUS, &status);
-        if (status != GL_TRUE)
+        if (status == GL_FALSE)
         {
             GLsizei len = 0;
             glGetShaderiv(id, GL_INFO_LOG_LENGTH, &len);
@@ -109,7 +109,7 @@ Shader::Shader(const ShaderProgram &source) :
     glLinkProgram(share->program);
 
     GLint status;
-    glGetShaderiv(share->program, GL_LINK_STATUS, &status);
+    glGetProgramiv(share->program, GL_LINK_STATUS, &status);
 
     if (status == GL_FALSE)
     {
@@ -132,14 +132,14 @@ Shader::Shader(const ShaderProgram &source) :
     initUniforms();
 }
 
-Shader::Shader(const Shader& in) :
-    share(in.share)
+Shader::Shader(const Shader& in)
+    : share(in.share)
 {
     ++share->users;
 }
 
-Shader::Shader(Shader&& in) :
-    share(in.share)
+Shader::Shader(Shader&& in)
+    : share(in.share)
 {
     in.share = nullptr;
 }

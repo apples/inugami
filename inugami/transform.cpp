@@ -29,16 +29,16 @@
 
 namespace Inugami {
 
-Transform::Transform() :
-    stack{Mat4(1.f)}
+Transform::Transform()
+    : stack{Mat4(1.f)}
 {}
 
-Transform::Transform(const Transform& in) :
-    stack(in.stack)
+Transform::Transform(const Transform& in)
+    : stack(in.stack)
 {}
 
-Transform::Transform(Transform&& in) :
-    stack(move(in.stack))
+Transform::Transform(Transform&& in)
+    : stack(move(in.stack))
 {}
 
 Transform::~Transform()

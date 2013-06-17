@@ -39,14 +39,14 @@
 namespace Inugami {
 
 /*! @brief Adds an element to a container only once.
- * 
+ *
  *  Adds the given object to the container only if it does not already exist.
  *  The return value is the location of the newly added or already existing
  *  element.
- * 
+ *
  *  @param container Container.
  *  @param target Object to add to container.
- * 
+ *
  *  @return Position of element.
  */
 template <class C, typename T>
@@ -61,14 +61,14 @@ typename C::iterator addOnce(C &container, const T &target)
 }
 
 /*! @brief Adds an element to a container only once.
- * 
+ *
  *  Adds the given object to the container only if it does not already exist.
  *  The return value is the location of the newly added or already existing
  *  element.
- * 
+ *
  *  @param container Container.
  *  @param target Object to add to container.
- * 
+ *
  *  @return Position of element.
  */
 template <typename T>
@@ -84,11 +84,11 @@ typename std::vector<T>::size_type addOnce(std::vector<T> &container, const T &t
 }
 
 /*! @brief Turns an object into a string.
- * 
+ *
  *  The object is turned into a string using a stream.
- * 
+ *
  *  @param in Object to stringify.
- * 
+ *
  *  @return String representation of object.
  */
 template <typename T>
@@ -100,12 +100,12 @@ std::string stringify(const T &in)
 }
 
 /*! @brief Turns an arithmetic object into a hexadecimal string.
- * 
+ *
  *  The object is turned into a hexadecimal string using a stream. The object
  *  must be an arithmetic type.
- * 
+ *
  *  @param in Object to hexify.
- * 
+ *
  *  @return Hexadecimal representation of object.
  */
 template <typename T>
@@ -119,11 +119,11 @@ typename std::enable_if<std::is_arithmetic<T>::value, std::string>::type
 }
 
 /*! @brief Turns an object pointer into a hexadecimal string.
- * 
+ *
  *  The object pointer is turned into a hexadecimal string using a stream.
- * 
+ *
  *  @param in Object pointer to hexify.
- * 
+ *
  *  @return Hexadecimal representation of object pointer.
  */
 template <typename T>
@@ -135,9 +135,9 @@ std::string hexify(const T *in)
 }
 
 /*! @brief Turns a hexadecimal string into an integer.
- * 
+ *
  *  @param in String to dehexify.
- * 
+ *
  *  @return Integer represented by the string.
  */
 inline unsigned int dehexify(std::string in)
@@ -155,16 +155,16 @@ bool chainComp(const T1& first, const T2& second)
 }
 
 /*! @brief Compares a sequence of pairs of objects.
- * 
+ *
  *  Continuously compares the pairs of objects. If a the first object in the
  *  pair is less than the second object, return @c true immediately. If they
  *  are equal, drop them from the sequence and continue. If the first is
  *  greater than the second, return false.
- * 
+ *
  *  @param first First object of first pair.
  *  @param second Second object of first pair.
  *  @param args Other pairs.
- * 
+ *
  *  @return @c True or @c false based on a series of comparisons.
  */
 template <typename T1, typename T2, typename... A>
@@ -176,7 +176,7 @@ bool chainComp(const T1& first, const T2& second, const A&... args)
 }
 
 /*! @brief Constant proxy to a map.
- * 
+ *
  *  @tparam T Map type to represent.
  */
 template <typename T>
@@ -186,37 +186,50 @@ public:
     using Iterator = typename T::const_iterator;
 
     /*! @brief Primary constructor.
-     * 
+     *
      *  Construct a constant proxy to the given map.
-     * 
+     *
      *  @param in Map to represent.
      */
-    ConstMap(const T& in) : data(in) {}
-    
+    ConstMap(const T& in)
+        : data(in)
+    {}
+
     /*! @brief Copy constructor.
      */
-    ConstMap(const ConstMap& in) : data(in.data) {}
-    
+    ConstMap(const ConstMap& in)
+        : data(in.data)
+    {}
+
     /*! @brief Cast to represented type.
      */
-    operator const T& () { return data; }
+    operator const T&()
+    {
+        return data;
+    }
 
     /*! @brief Get beginning of map.
-     * 
+     *
      *  @return Constant iterator to map's beginning.
      */
-    Iterator begin() { return data.begin(); }
-    
+    Iterator begin()
+    {
+        return data.begin();
+    }
+
     /*! @brief Get end of map.
-     * 
+     *
      *  @return Constant iterator to map's end.
      */
-    Iterator end() { return data.end(); }
+    Iterator end()
+    {
+        return data.end();
+    }
 
     /*! @brief Subscript operator.
-     * 
+     *
      *  @param in Key to retreive value for.
-     * 
+     *
      *  @return Value corresponding to the given key.
      */
     const typename T::mapped_type& operator[](const typename T::key_type& in) const
@@ -265,12 +278,12 @@ R comprehend(
 }
 
 /*! @brief Constant attribute.
- * 
+ *
  *  This object is designed such that the parent class can freely manipulate
  *  the contained data, but outside classes can only access the data. It is
  *  intended to be a replacement for a getter when outsiders need to access
  *  the data as if it were a public member.
- * 
+ *
  *  @tparam T The type of data to hold.
  *  @tparam Owner The owner.
  */
@@ -282,34 +295,45 @@ public:
 
     /*! @brief Cast to constant T.
      */
-    operator const T& () const {return data;}
-    
+    operator const T& () const
+    {
+        return data;
+    }
+
     /*! @brief Indirection to data members.
      */
-    const T* operator->() {return &data;}
+    const T* operator->()
+    {
+        return &data;
+    }
+
 private:
 
     /*! @brief Default constructor.
      */
-    ConstAttr() : data() {}
-    
+    ConstAttr()
+        : data()
+    {}
+
     /*! @brief Value constructor.
      */
-    ConstAttr(const T& in) : data(in) {}
-    
+    ConstAttr(const T& in)
+        : data(in)
+    {}
+
     T data;
 };
 
 /*! @brief Constant pointer attribute.
- * 
+ *
  *  This object is designed such that the parent class can freely manipulate
  *  the contained data, but outside classes can only access the data. It is
  *  intended to be a replacement for a getter when outsiders need to access
  *  the data as if it were a public member.
- * 
+ *
  *  @note Only the pointer itself is constant; the data it points to is not
  *  protected.
- * 
+ *
  *  @tparam T The type of data to hold.
  *  @tparam Owner The owner.
  */
@@ -321,29 +345,40 @@ public:
 
     /*! @brief Cast to constant T pointer.
      */
-    operator T* () const {return data;}
-    
+    operator T* () const
+    {
+        return data;
+    }
+
     /*! @brief Indirection to data members.
      */
-    T* operator->() {return data;}
+    T* operator->()
+    {
+        return data;
+    }
+
 private:
 
     /*! @brief Default constructor.
      */
-    ConstAttr() : data() {}
-    
+    ConstAttr()
+        : data()
+    {}
+
     /*! @brief Value constructor.
      */
-    ConstAttr(T* in) : data(in) {}
-    
+    ConstAttr(T* in)
+        : data(in)
+    {}
+
     T* data;
 };
 
 /*! @brief Determines if two objects are the same instance.
- * 
+ *
  *  @param a First object.
  *  @param b Second object.
- * 
+ *
  *  @return @c True if the objects are the same instance.
  */
 template <typename T>
@@ -354,10 +389,10 @@ sameInstance(const T& a, const T& b)
 }
 
 /*! @brief Determines if two objects are the same instance.
- * 
+ *
  *  @param a Pointer to first object.
  *  @param b Pointer to second object.
- * 
+ *
  *  @return @c True if the objects are the same instance.
  */
 template <typename T>

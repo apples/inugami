@@ -44,7 +44,6 @@ public:
 
     void tick();
     void draw();
-    void idle();
 
 private:
     float rotation;

@@ -37,10 +37,10 @@ using namespace std;
 
 namespace Inugami {
 
-Geometry::Vertex::Vertex() :
-    pos(0.f, 0.f, 0.f),
-    norm(0.f, 0.f, 0.f),
-    tex(0.f, 0.f)
+Geometry::Vertex::Vertex()
+    : pos(0.f, 0.f, 0.f)
+    , norm(0.f, 0.f, 0.f)
+    , tex(0.f, 0.f)
 {}
 
 bool Geometry::Vertex::operator==(const Vertex& in) const
@@ -52,7 +52,7 @@ bool Geometry::Vertex::operator==(const Vertex& in) const
     );
 }
 
-Geometry Geometry::fromRect(float w, float h) //static
+Geometry Geometry::fromRect(float w, float h, float cx, float cy) //static
 {
     Geometry geo;
     Geometry::Triangle tri;
@@ -60,33 +60,27 @@ Geometry Geometry::fromRect(float w, float h) //static
 
     vert.norm = Vec3{-0.f, 0.f, 1.f};
 
-    vert.pos = Vec3{-w/2.f, -h/2.f, 0.f};
-    vert.tex = Vec2{0.f, 1.f};
+    vert.pos = Vec3{-w+w*cx, -h+h*cy, 0.f};
+    vert.tex = Vec2{0.f, 0.f};
     tri[0] = addOnce(geo.vertices, vert);
 
-    vert.pos = Vec3{-w/2.f, h/2.f, 0.f};
-    vert.tex = Vec2{0.f, 0.f};
+    vert.pos = Vec3{-w+w*cx, h*cy, 0.f};
+    vert.tex = Vec2{0.f, 1.f};
     tri[1] = addOnce(geo.vertices, vert);
 
-    vert.pos = Vec3{w/2.f, h/2.f, 0.f};
-    vert.tex = Vec2{1.f, 0.f};
+    vert.pos = Vec3{w*cx, h*cy, 0.f};
+    vert.tex = Vec2{1.f, 1.f};
     tri[2] = addOnce(geo.vertices, vert);
 
     geo.triangles.push_back(tri);
 
-    vert.pos = Vec3{w/2.f, -h/2.f, 0.f};
-    vert.tex = Vec2{1.f, 1.f};
+    vert.pos = Vec3{w*cx, -h+h*cy, 0.f};
+    vert.tex = Vec2{1.f, 0.f};
     tri[1] = addOnce(geo.vertices, vert);
 
     geo.triangles.push_back(tri);
 
     return geo;
-}
-
-Geometry Geometry::fromCuboid(float w, float h, float d) //static
-{
-    //TODO implement
-    throw;
 }
 
 Geometry Geometry::fromOBJ(const string& filename) //static
@@ -190,28 +184,55 @@ Geometry Geometry::fromOBJ(const string& filename) //static
     return rval;
 }
 
-Geometry::Geometry() :
-    vertices(),
-    points(),
-    lines(),
-    triangles()
+Geometry::Geometry()
+    : vertices()
+    , points()
+    , lines()
+    , triangles()
 {}
 
-Geometry::Geometry(const Geometry& in) :
-    vertices(in.vertices),
-    points(in.points),
-    lines(in.lines),
-    triangles(in.triangles)
+Geometry::Geometry(const Geometry& in)
+    : vertices(in.vertices)
+    , points(in.points)
+    , lines(in.lines)
+    , triangles(in.triangles)
 {}
 
-Geometry::Geometry(Geometry&& in) :
-    vertices(move(in.vertices)),
-    points(move(in.points)),
-    lines(move(in.lines)),
-    triangles(move(in.triangles))
+Geometry::Geometry(Geometry&& in)
+    : vertices(move(in.vertices))
+    , points(move(in.points))
+    , lines(move(in.lines))
+    , triangles(move(in.triangles))
 {}
 
 Geometry::~Geometry()
 {}
+
+Geometry& Geometry::operator=(const Geometry& in)
+{
+    vertices  = in.vertices;
+    points    = in.points;
+    lines     = in.lines;
+    triangles = in.triangles;
+    return *this;
+}
+
+Geometry& Geometry::operator=(Geometry&& in)
+{
+    vertices  = move(in.vertices);
+    points    = move(in.points);
+    lines     = move(in.lines);
+    triangles = move(in.triangles);
+    return *this;
+}
+
+Geometry& Geometry::operator+=(const Geometry& in)
+{
+    vertices.insert (vertices.end() , in.vertices.begin() , in.vertices.end());
+    points.insert   (points.end()   , in.points.begin()   , in.points.end());
+    lines.insert    (lines.end()    , in.lines.begin()    , in.lines.end());
+    triangles.insert(triangles.end(), in.triangles.begin(), in.triangles.end());
+    return *this;
+}
 
 } // namespace Inugami

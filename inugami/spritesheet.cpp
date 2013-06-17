@@ -37,36 +37,40 @@ using namespace std;
 
 namespace Inugami {
 
-Spritesheet::Spritesheet(const Image& img, int tw, int th, float cx, float cy) :
-    Spritesheet(Texture(img, false, false), tw, th, cx, cy)
+Spritesheet::Spritesheet(const Image& img, int tw, int th, float cx, float cy)
+    : Spritesheet(Texture(img, false, false), tw, th, cx, cy)
 {}
 
-Spritesheet::Spritesheet(const Texture& in, int tw, int th, float cx, float cy) :
-    tilesX(0), tilesY(0),
-    tex(in),
-    meshes()
+Spritesheet::Spritesheet(const Texture& in, int tw, int th, float cx, float cy)
+    : tilesX(0)
+    , tilesY(0)
+    , tex(in)
+    , meshes()
 {
     generateMeshes(tw, th, cx, cy);
 }
 
-Spritesheet::Spritesheet(Texture&& in, int tw, int th, float cx, float cy) :
-    tilesX(0), tilesY(0),
-    tex(in),
-    meshes()
+Spritesheet::Spritesheet(Texture&& in, int tw, int th, float cx, float cy)
+    : tilesX(0)
+    , tilesY(0)
+    , tex(in)
+    , meshes()
 {
     generateMeshes(tw, th, cx, cy);
 }
 
-Spritesheet::Spritesheet(const Spritesheet& in) :
-    tilesX(in.tilesX), tilesY(in.tilesY),
-    tex(in.tex),
-    meshes(in.meshes)
+Spritesheet::Spritesheet(const Spritesheet& in)
+    : tilesX(in.tilesX)
+    , tilesY(in.tilesY)
+    , tex(in.tex)
+    , meshes(in.meshes)
 {}
 
-Spritesheet::Spritesheet(Spritesheet&& in) :
-    tilesX(in.tilesX), tilesY(in.tilesY),
-    tex(move(in.tex)),
-    meshes(move(in.meshes))
+Spritesheet::Spritesheet(Spritesheet&& in)
+    : tilesX(in.tilesX)
+    , tilesY(in.tilesY)
+    , tex(move(in.tex))
+    , meshes(move(in.meshes))
 {}
 
 Spritesheet::~Spritesheet()
@@ -105,10 +109,10 @@ void Spritesheet::generateMeshes(int tw, int th, float cx, float cy)
     Geometry::Vertex vert[4];
     Geometry::Triangle tri;
 
-    vert[0].pos = Geometry::Vec3{-cx*tw, -cy*th, 0.f};
-    vert[1].pos = Geometry::Vec3{-cx*tw,  cy*th, 0.f};
-    vert[2].pos = Geometry::Vec3{ cx*tw,  cy*th, 0.f};
-    vert[3].pos = Geometry::Vec3{ cx*tw, -cy*th, 0.f};
+    vert[0].pos = Geometry::Vec3{-cx*tw,    -cy*th,    0.f};
+    vert[1].pos = Geometry::Vec3{-cx*tw,    -cy*th+th, 0.f};
+    vert[2].pos = Geometry::Vec3{-cx*tw+tw, -cy*th+th, 0.f};
+    vert[3].pos = Geometry::Vec3{-cx*tw+tw, -cy*th,    0.f};
     vert[0].norm = Geometry::Vec3{0.f, 0.f, 1.f};
     vert[1].norm = Geometry::Vec3{0.f, 0.f, 1.f};
     vert[2].norm = Geometry::Vec3{0.f, 0.f, 1.f};
@@ -120,18 +124,18 @@ void Spritesheet::generateMeshes(int tw, int th, float cx, float cy)
         {
             Geometry geo;
 
-            vert[0].tex = Geometry::Vec2{float(c)/float(tilesX), float(tilesY-r-1)/float(tilesY)};
+            vert[0].tex = Geometry::Vec2{float(c)/float(tilesX)+E, float(tilesY-r-1)/float(tilesY)+E};
             tri[0] = addOnce(geo.vertices, vert[0]);
 
-            vert[1].tex = Geometry::Vec2{float(c)/float(tilesX), float(tilesY-r)/float(tilesY)};
+            vert[1].tex = Geometry::Vec2{float(c)/float(tilesX)+E, float(tilesY-r)/float(tilesY)-E};
             tri[1] = addOnce(geo.vertices, vert[1]);
 
-            vert[2].tex = Geometry::Vec2{float(c+1)/float(tilesX), float(tilesY-r)/float(tilesY)};
+            vert[2].tex = Geometry::Vec2{float(c+1)/float(tilesX)-E, float(tilesY-r)/float(tilesY)-E};
             tri[2] = addOnce(geo.vertices, vert[2]);
 
             geo.triangles.push_back(tri);
 
-            vert[3].tex = Geometry::Vec2{float(c+1)/float(tilesX), float(tilesY-r-1)/float(tilesY)};
+            vert[3].tex = Geometry::Vec2{float(c+1)/float(tilesX)-E, float(tilesY-r-1)/float(tilesY)+E};
             tri[1] = addOnce(geo.vertices, vert[3]);
 
             geo.triangles.push_back(tri);

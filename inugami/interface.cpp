@@ -34,14 +34,14 @@ namespace Inugami {
 bool Interface::callbacksRegistered = false;
 std::map<Interface::Window, Interface*> Interface::windowMap;
 
-Interface::Proxy::Proxy() :
-    iface(nullptr),
-    key(0)
+Interface::Proxy::Proxy()
+    : iface(nullptr)
+    , key(0)
 {}
 
-Interface::Proxy::Proxy(Interface *const inIface, int k) :
-    iface(inIface),
-    key(k)
+Interface::Proxy::Proxy(Interface *const inIface, int k)
+    : iface(inIface)
+    , key(k)
 {}
 
 Interface::Proxy::operator bool() const
@@ -66,12 +66,12 @@ void Interface::Proxy::reassign(int k)
     key = k;
 }
 
-Interface::Interface(Window windowIN) :
-    window(windowIN),
-    keyBuffer(""),
-    keyStates(), mouseStates(),
-    mousePos{0,0},
-    mouseWheel{0.0,0.0}
+Interface::Interface(Window windowIN)
+    : window(windowIN)
+    , keyBuffer("")
+    , keyStates(), mouseStates()
+    , mousePos{0,0}
+    , mouseWheel{0.0,0.0}
 {
     windowMap[window] = this;
 
@@ -165,8 +165,8 @@ void Interface::setMouseWheel(double x, double y)
 
 void Interface::showMouse(bool show) const
 {
-    if (show) glfwSetInputMode(window, GLFW_CURSOR_MODE, GLFW_CURSOR_NORMAL);
-    else glfwSetInputMode(window, GLFW_CURSOR_MODE, GLFW_CURSOR_HIDDEN);
+    if (show) glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+    else glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
 }
 
 auto Interface::getProxy(int k) -> Proxy
@@ -180,7 +180,7 @@ void Interface::clearPresses()
     mouseStates.presses.reset();
 }
 
-void Interface::keyboardCallback(Window win, int key, int action) //static
+void Interface::keyboardCallback(Window win, int key, int, int action, int) //static
 {
     if (key<0 || key>GLFW_KEY_LAST) return;
     Interface* iface = windowMap[win];
@@ -204,7 +204,7 @@ void Interface::unicodeCallback(Window win, unsigned int key) //static
     iface->keyBuffer += char(key);
 }
 
-void Interface::mouseButtonCallback(Window win, int button, int action) //static
+void Interface::mouseButtonCallback(Window win, int button, int action, int) //static
 {
     Interface* iface = windowMap[win];
     if (!iface) return;
@@ -249,7 +249,7 @@ int operator "" _ivk(char in)
 
 int operator "" _ivkFunc(unsigned long long in)
 {
-    if (in == 0) return GLFW_KEY_ESC;
+    if (in == 0) return GLFW_KEY_ESCAPE;
     if (in <= 25) return GLFW_KEY_F1-1+in;
     return 0;
 }

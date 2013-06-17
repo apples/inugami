@@ -34,12 +34,13 @@
 
 namespace Inugami {
 
-Profiler::Profile::Profile() :
-    min(std::numeric_limits<double>::max()), max(-1.0),
-    average(0.0),
-    samples(0.0),
-    start(0.0),
-    children()
+Profiler::Profile::Profile()
+    : min(std::numeric_limits<double>::max())
+    , max(std::numeric_limits<double>::min())
+    , average(0.0)
+    , samples(0.0)
+    , start(0.0)
+    , children()
 {}
 
 auto Profiler::Profile::getChildren() const -> ConstMap<PMap>
@@ -47,9 +48,9 @@ auto Profiler::Profile::getChildren() const -> ConstMap<PMap>
     return children;
 }
 
-Profiler::Profiler() :
-    profiles(),
-    current()
+Profiler::Profiler()
+    : profiles()
+    , current()
 {}
 
 Profiler::~Profiler()
@@ -112,14 +113,16 @@ auto Profiler::getAll() -> ConstMap<PMap>
     return ConstMap<PMap>(profiles);
 }
 
-ScopedProfile::ScopedProfile(Profiler& in, const std::string& str) :
-    profiler(in), name(str)
+ScopedProfile::ScopedProfile(Profiler& in, const std::string& str)
+    : profiler(in)
+    , name(str)
 {
     profiler.start(name);
 }
 
-ScopedProfile::ScopedProfile(Profiler* in, const std::string& str) :
-    profiler(*in), name(str)
+ScopedProfile::ScopedProfile(Profiler* in, const std::string& str)
+    : profiler(*in)
+    , name(str)
 {
     profiler.start(name);
 }

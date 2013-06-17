@@ -39,8 +39,21 @@ namespace Inugami {
 class TextureException : public Exception
 {
 public:
-    TextureException(const Texture *source, std::string error) :
-        tex(source), err(error)
+    TextureException() = delete;
+
+    TextureException(const TextureException& in)
+        : tex(in.tex)
+        , err(in.err)
+    {}
+
+    TextureException(TextureException&& in)
+        : tex(in.tex)
+        , err(move(in.err))
+    {}
+
+    TextureException(const Texture *source, std::string error)
+        : tex(source)
+        , err(error)
     {}
 
     virtual const char* what() const noexcept override
@@ -55,23 +68,26 @@ public:
     std::string err;
 };
 
-Texture::Texture(const Image& img, bool smooth, bool clamp) :
-    width(img.width), height(img.height),
-    share(new Shared{1,0})
+Texture::Texture(const Image& img, bool smooth, bool clamp)
+    : width(img.width)
+    , height(img.height)
+    , share(new Shared{1,0})
 {
     upload(img, smooth, clamp);
 }
 
-Texture::Texture(const Texture &in) :
-    width(in.width), height(in.height),
-    share(in.share)
+Texture::Texture(const Texture &in)
+    : width(in.width)
+    , height(in.height)
+    , share(in.share)
 {
     ++share->users;
 }
 
-Texture::Texture(Texture&& in) :
-    width(in.width), height(in.height),
-    share(in.share)
+Texture::Texture(Texture&& in)
+    : width(in.width)
+    , height(in.height)
+    , share(in.share)
 {
     in.share = nullptr;
 }

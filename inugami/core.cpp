@@ -45,9 +45,25 @@ int Core::numCores = 0;
 class CoreException : public Exception
 {
 public:
-    CoreException(Core* c, std::string error) :
-        core(c), err(error)
+    CoreException() = delete;
+
+    CoreException(const CoreException& in)
+        : core(in.core)
+        , err(in.err)
     {}
+
+    CoreException(CoreException&& in)
+        : core(in.core)
+        , err(move(in.err))
+    {}
+
+    CoreException(Core* c, std::string error)
+        : core(c)
+        , err(error)
+    {}
+
+    CoreException& operator=(const CoreException&) = delete;
+    CoreException& operator=(CoreException&&) = delete;
 
     const char* what() const noexcept override
     {
@@ -63,33 +79,34 @@ public:
     std::string err;
 };
 
-Core::RenderParams::RenderParams() :
-    width(800), height(600),
-    fullscreen(false),
-    vsync(false),
-    fsaaSamples(0)
+Core::RenderParams::RenderParams()
+    : width(800)
+    , height(600)
+    , fullscreen(false)
+    , vsync(false)
+    , fsaaSamples(0)
 {}
 
-Core::Core(const RenderParams &params) :
-    running(false),
-    iface(nullptr),
+Core::Core(const RenderParams &params)
+    : running(false)
+    , iface(nullptr)
 
-    callbacks(),
+    , callbacks()
 
-    frameStartTime(0.f),
-    frameRateStack(10, 0.0),
-    frStackIterator(frameRateStack.begin()),
+    , frameStartTime(0.f)
+    , frameRateStack(10, 0.0)
+    , frStackIterator(frameRateStack.begin())
 
-    rparams(params),
-    aspectRatio(double(rparams.width)/double(rparams.height)),
+    , rparams(params)
+    , aspectRatio(double(rparams.width)/double(rparams.height))
 
-    windowTitle("Inugami"),
-    windowTitleShowFPS(false),
-    window(nullptr),
+    , windowTitle("Inugami")
+    , windowTitleShowFPS(false)
+    , window(nullptr)
 
-    viewProjection(1.f),
+    , viewProjection(1.f)
 
-    shader(nullptr)
+    , shader(nullptr)
 {
     if (numCores == 0) glfwInit();
 
@@ -167,7 +184,7 @@ void Core::activate() const
 
 void Core::deactivate() const
 {
-    glfwMakeContextCurrent(0);
+    glfwMakeContextCurrent(nullptr);
 }
 
 void Core::beginFrame()
@@ -323,9 +340,9 @@ void Core::setShader(const Shader& in)
     shader->bind();
 }
 
-int Core::getWindowParam(int param) const
+int Core::getWindowAttrib(int param) const
 {
-    return glfwGetWindowParam(window, param);
+    return glfwGetWindowAttrib(window, param);
 }
 
 bool Core::shouldClose() const

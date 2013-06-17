@@ -73,11 +73,15 @@ public:
      */
     Core(const RenderParams &params);
 
-    Core(const Core &in) = delete; //TODO Resource sharing between cores
+    Core(const Core& in) = delete; //TODO Resource sharing between cores
+    Core(Core&& in) = delete;
 
     /*! @brief Destructor.
      */
     virtual ~Core();
+
+    Core& operator=(const Core&) = delete;
+    Core& operator=(Core&&) = delete;
 
     /*! @brief Activates the core's context.
      */
@@ -183,17 +187,17 @@ public:
      */
     void setShader(const Shader& in);
 
-    /*! @brief Gets a window parameter.
+    /*! @brief Gets a window attribute.
      *
-     *  Gets a window paramter from GLFW.
+     *  Gets a window attribute from GLFW.
      *
-     *  @param param The parameter to get from GLFW.
+     *  @param param The attribute to get from GLFW.
      *
-     *  @return The parameter's value.
+     *  @return The attribute's value.
      *
      *  @todo Disguise GLFW.
      */
-    int getWindowParam(int param) const;
+    int getWindowAttrib(int param) const;
 
     /*! @brief Tells if the window should close.
      *

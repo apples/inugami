@@ -217,8 +217,13 @@ private:
     using Window = Core::Window;
 
     Interface() = delete;
+    Interface(const Interface&) = delete;
+    Interface(Interface&&) = delete;
     Interface(Window windowIN);
     virtual ~Interface();
+
+    Interface& operator=(const Interface&) = delete;
+    Interface& operator=(Interface&&) = delete;
 
     template <int m> struct State
     {
@@ -228,9 +233,9 @@ private:
     static bool callbacksRegistered;
     static std::map<Window, Interface*> windowMap;
 
-    static void keyboardCallback(Window win, int key, int action);
+    static void keyboardCallback(Window win, int key, int, int action, int);
     static void unicodeCallback(Window win, unsigned int key);
-    static void mouseButtonCallback(Window win, int button, int action);
+    static void mouseButtonCallback(Window win, int button, int action, int);
     static void mousePositionCallback(Window win, double x, double y);
     static void mouseWheelCallback(Window win, double x, double y);
 

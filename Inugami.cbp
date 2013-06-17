@@ -7,7 +7,8 @@
 		<Option compiler="gcc" />
 		<Option virtualFolders="OpenGL/;Resource Data/;Resource Handles/;Utilities/;Core/;Shaders/;" />
 		<Build>
-			<Target title="Debug">
+			<Target title="Debug - Linux">
+				<Option platforms="Unix;" />
 				<Option output="game_d" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/debug/" />
 				<Option type="1" />
@@ -18,8 +19,24 @@
 					<Add option="-fno-inline" />
 					<Add option="-fno-omit-frame-pointer" />
 				</Compiler>
+				<Linker>
+					<Add library="GLEW" />
+					<Add library="GL" />
+					<Add library="Xxf86vm" />
+					<Add library="m" />
+					<Add library="Xrender" />
+					<Add library="Xext" />
+					<Add library="X11" />
+					<Add library="xcb" />
+					<Add library="Xau" />
+					<Add library="Xdmcp" />
+					<Add library="rt" />
+					<Add library="Xrandr" />
+					<Add library="Xi" />
+				</Linker>
 			</Target>
-			<Target title="Release">
+			<Target title="Release - Linux">
+				<Option platforms="Unix;" />
 				<Option output="game" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/release/" />
 				<Option type="0" />
@@ -29,31 +46,82 @@
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
+					<Add library="GLEW" />
+					<Add library="GL" />
+					<Add library="Xxf86vm" />
+					<Add library="m" />
+					<Add library="Xrender" />
+					<Add library="Xext" />
+					<Add library="X11" />
+					<Add library="xcb" />
+					<Add library="Xau" />
+					<Add library="Xdmcp" />
+					<Add library="rt" />
+					<Add library="Xrandr" />
+					<Add library="Xi" />
+				</Linker>
+			</Target>
+			<Target title="Debug - Windows">
+				<Option platforms="Windows;" />
+				<Option output="game_d" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/debug/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-Wredundant-decls" />
+					<Add option="-Wunreachable-code" />
+					<Add option="-Wswitch-enum" />
+					<Add option="-Wswitch-default" />
+					<Add option="-Wzero-as-null-pointer-constant" />
+					<Add option="-std=c++11" />
+					<Add option="-Wextra" />
+					<Add option="-Wall" />
+				</Compiler>
+				<Linker>
+					<Add library="glfw3" />
+					<Add library="png" />
+				</Linker>
+			</Target>
+			<Target title="Release - Windows">
+				<Option platforms="Windows;" />
+				<Option output="game" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/release/" />
+				<Option type="0" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-fexpensive-optimizations" />
+					<Add option="-O3" />
+					<Add option="-static" />
+					<Add option="-DGLEW_STATIC" />
+					<Add option="-DPNG_STATIC" />
+					<Add option="-DZLIB_STATIC" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+					<Add option="-static" />
+					<Add library="z" />
+					<Add library="glew32" />
+					<Add library="opengl32" />
+					<Add library="glu32" />
+					<Add library="gdi32" />
+					<Add library="user32" />
+					<Add library="kernel32" />
 				</Linker>
 			</Target>
 		</Build>
 		<Compiler>
+			<Add option="-Wredundant-decls" />
+			<Add option="-Wunreachable-code" />
+			<Add option="-Wswitch-enum" />
+			<Add option="-Wswitch-default" />
+			<Add option="-Wzero-as-null-pointer-constant" />
 			<Add option="-std=c++11" />
 			<Add option="-Wextra" />
 			<Add option="-Wall" />
 		</Compiler>
 		<Linker>
-			<Add library="png" />
-			<Add library="noise" />
-			<Add library="GLEW" />
 			<Add library="glfw3" />
-			<Add library="rt" />
-			<Add library="Xrandr" />
-			<Add library="Xxf86vm" />
-			<Add library="GL" />
-			<Add library="m" />
-			<Add library="Xrender" />
-			<Add library="Xext" />
-			<Add library="X11" />
-			<Add library="pthread" />
-			<Add library="xcb" />
-			<Add library="Xau" />
-			<Add library="Xdmcp" />
+			<Add library="png" />
 		</Linker>
 		<Unit filename="customcore.cpp" />
 		<Unit filename="customcore.hpp" />

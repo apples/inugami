@@ -2,17 +2,17 @@
  * Inugami - An OpenGL framwork designed for rapid game development
  * Version: 0.2.0
  * https://github.com/DBRalir/Inugami
- * 
+ *
  * Copyright (c) 2012 Jeramy Harrison <dbralir@gmail.com>
- * 
+ *
  * This software is provided 'as-is', without any express or implied warranty.
  * In no event will the authors be held liable for any damages arising from the
  * use of this software.
- * 
+ *
  * Permission is granted to anyone to use this software for any purpose,
  * including commercial applications, and to alter it and redistribute it
  * freely, subject to the following restrictions:
- * 
+ *
  *  1. The origin of this software must not be misrepresented; you must not
  *     claim that you wrote the original software. If you use this software
  *     in a product, an acknowledgment in the product documentation would be
@@ -39,28 +39,52 @@ using namespace std;
 
 namespace Inugami {
 
-AnimatedSprite::AnimatedSprite(const Spritesheet& in) :
-    flipX(false), flipY(false), rot(0.f),
-    sheet(in), sprites(), sequence(),
-    mode(Mode::NORMAL), ended(false),
-    timer(0),
-    pos(0), dir(1)
+AnimatedSprite::AnimatedSprite(const Spritesheet& in)
+    : flipX(false)
+    , flipY(false)
+    , rot(0.f)
+
+    , sheet(in)
+    , sprites()
+    , sequence()
+    , mode(Mode::NORMAL)
+
+    , ended(false)
+    , timer(0)
+    , pos(0)
+    , dir(1)
 {}
 
-AnimatedSprite::AnimatedSprite(const AnimatedSprite& in) :
-    flipX(in.flipX), flipY(in.flipY), rot(in.rot),
-    sheet(in.sheet), sprites(in.sprites), sequence(in.sequence),
-    mode(in.mode), ended(in.ended),
-    timer(in.timer),
-    pos(in.pos), dir(in.dir)
+AnimatedSprite::AnimatedSprite(const AnimatedSprite& in)
+    : flipX(in.flipX)
+    , flipY(in.flipY)
+    , rot(in.rot)
+
+    , sheet(in.sheet)
+    , sprites(in.sprites)
+    , sequence(in.sequence)
+    , mode(in.mode)
+
+    , ended(in.ended)
+    , timer(in.timer)
+    , pos(in.pos)
+    , dir(in.dir)
 {}
 
-AnimatedSprite::AnimatedSprite(AnimatedSprite&& in) :
-    flipX(in.flipX), flipY(in.flipY), rot(in.rot),
-    sheet(move(in.sheet)), sprites(move(in.sprites)), sequence(move(in.sequence)),
-    mode(in.mode), ended(in.ended),
-    timer(in.timer),
-    pos(in.pos), dir(in.dir)
+AnimatedSprite::AnimatedSprite(AnimatedSprite&& in)
+    : flipX(in.flipX)
+    , flipY(in.flipY)
+    , rot(in.rot)
+
+    , sheet(move(in.sheet))
+    , sprites(move(in.sprites))
+    , sequence(move(in.sequence))
+    , mode(in.mode)
+
+    , ended(in.ended)
+    , timer(in.timer)
+    , pos(in.pos)
+    , dir(in.dir)
 {}
 
 AnimatedSprite::~AnimatedSprite()
