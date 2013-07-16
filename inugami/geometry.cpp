@@ -96,7 +96,6 @@ Geometry Geometry::fromOBJ(const string& filename) //static
     vector<Vec2> texcoords;
 
     struct VDATA {VDATA():p(-1),n(-1),t(-1){} int p, n, t;};
-    vector<array<VDATA,3>> tris;
 
     //READ FILE
 

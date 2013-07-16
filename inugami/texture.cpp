@@ -48,94 +48,77 @@ public:
 
     TextureException(TextureException&& in)
         : tex(in.tex)
-        , err(move(in.err))
+        , err(std::move(in.err))
     {}
 
     TextureException(const Texture *source, std::string error)
         : tex(source)
-        , err(error)
-    {}
+        , err("")
+    {
+        err += "Texture Exception: ";
+        err += error;
+    }
 
     virtual const char* what() const noexcept override
     {
-        std::string rval;
-        rval += "Texture Exception: ";
-        rval += err;
-        return rval.c_str();
+        return err.c_str();
     }
 
     const Texture *tex;
     std::string err;
 };
 
+Texture::Shared::Shared()
+    : id(0)
+{
+    glGenTextures(1, &id);
+}
+
+Texture::Shared::~Shared()
+{
+    glDeleteTextures(1, &id);
+}
+
 Texture::Texture(const Image& img, bool smooth, bool clamp)
-    : width(img.width)
+    : width (img.width)
     , height(img.height)
-    , share(new Shared{1,0})
+    , share (new Shared)
 {
     upload(img, smooth, clamp);
 }
 
 Texture::Texture(const Texture &in)
-    : width(in.width)
+    : width (in.width)
     , height(in.height)
-    , share(in.share)
-{
-    ++share->users;
-}
+    , share (in.share)
+{}
 
 Texture::Texture(Texture&& in)
-    : width(in.width)
-    , height(in.height)
-    , share(in.share)
-{
-    in.share = nullptr;
-}
+    : width (std::move(in.width))
+    , height(std::move(in.height))
+    , share (std::move(in.share))
+{}
 
 Texture::~Texture()
-{
-    if (share && --share->users == 0)
-    {
-        glDeleteTextures(1, &share->id);
-        delete share;
-    }
-}
+{}
 
 Texture& Texture::operator=(const Texture &in)
 {
-    if (sameInstance(share, in.share)) return *this;
+    if (this == &in || share == in.share) return *this;
 
-    width = in.width;
+    width  = in.width;
     height = in.height;
-
-    if (share && --share->users == 0)
-    {
-        glDeleteTextures(1, &share->id);
-        delete share;
-    }
-
-    share = in.share;
-    ++share->users;
-
+    share  = in.share;
     return *this;
 }
 
 Texture& Texture::operator=(Texture&& in)
 {
-    if (sameInstance(share, in.share)) return *this;
+    if (this == &in || share == in.share) return *this;
 
-    width = in.width;
-    height = in.height;
-
-    if (share && --share->users == 0)
-    {
-        glDeleteTextures(1, &share->id);
-        delete share;
-    }
-
-    share = in.share;
-    in.share = nullptr;
-
+    width  = std::move(in.width);
+    height = std::move(in.height);
+    share  = std::move(in.share);
     return *this;
 }
 
@@ -148,7 +131,6 @@ void Texture::bind(unsigned int slot) const
 
 void Texture::upload(const Image& img, bool smooth, bool clamp)
 {
-    glGenTextures(1, &share->id);
     glBindTexture(GL_TEXTURE_2D, share->id);
 
     GLuint filter = (smooth)? GL_LINEAR : GL_NEAREST;

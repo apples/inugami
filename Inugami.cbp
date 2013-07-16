@@ -5,7 +5,7 @@
 		<Option title="Inugami" />
 		<Option pch_mode="2" />
 		<Option compiler="gcc" />
-		<Option virtualFolders="OpenGL/;Resource Data/;Resource Handles/;Utilities/;Core/;Shaders/;" />
+		<Option virtualFolders="OpenGL\;Resource Data\;Resource Handles\;Utilities\;Core\;Shaders\;" />
 		<Build>
 			<Target title="Debug - Linux">
 				<Option platforms="Unix;" />
@@ -78,8 +78,14 @@
 					<Add option="-Wall" />
 				</Compiler>
 				<Linker>
-					<Add library="glfw3" />
-					<Add library="png" />
+					<Add option="-static" />
+					<Add library="z" />
+					<Add library="glew32" />
+					<Add library="opengl32" />
+					<Add library="glu32" />
+					<Add library="gdi32" />
+					<Add library="user32" />
+					<Add library="kernel32" />
 				</Linker>
 			</Target>
 			<Target title="Release - Windows">

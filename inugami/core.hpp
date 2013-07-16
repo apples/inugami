@@ -30,6 +30,7 @@
 
 #include "inugami.hpp"
 
+#include "shader.hpp"
 #include "transform.hpp"
 #include "utility.hpp"
 
@@ -207,15 +208,6 @@ public:
      */
     bool shouldClose() const;
 
-    /*! @brief Gets a string representation of the core.
-     *
-     *  The string returned will contain virtually all known information about
-     *  the core. You probably want to override this if you make a custom core.
-     *
-     *  @return String representation of the core.
-     */
-    virtual std::string getDiagnostic() const;
-
     /*! @brief True if the core is running.
      *
      *  Set this to @a false at any time to exit the go() cycle.
@@ -224,7 +216,7 @@ public:
 
     /*! @brief The core's human Interface.
      */
-    ConstAttr<Interface*, Core> iface;
+    ConstAttr<std::unique_ptr<Interface>, Core> iface;
 
 private:
     using Window = GLFWwindow*;
@@ -256,7 +248,7 @@ private:
 
     Mat4 viewProjection;
 
-    Shader* shader;
+    Shader shader;
 };
 
 } // namespace Inugami

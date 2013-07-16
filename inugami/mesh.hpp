@@ -32,10 +32,12 @@
 
 #include "opengl.hpp"
 
+#include <memory>
+
 namespace Inugami {
 
 /*! @brief Mesh handle.
- * 
+ *
  *  This class is basically a wrapper for OpenGL vertex arrays.
  */
 class Mesh
@@ -43,24 +45,24 @@ class Mesh
     friend class MeshException;
 public:
     Mesh() = delete;
-    
+
     /*! @brief Primary constructor.
-     * 
+     *
      *  Uploads a Geometry to the GPU. The Geometry can be safely deleted after
      *  construction.
-     * 
+     *
      *  @param in Geometry to upload.
      */
     Mesh(const Geometry& in);
-    
+
     /*! @brief Copy constructor.
      */
     Mesh(const Mesh& in);
-    
+
     /*! @brief Move constructor.
      */
     Mesh(Mesh&& in);
-    
+
     /*! @brief Destructor.
      */
     virtual ~Mesh();
@@ -68,7 +70,7 @@ public:
     /*! @brief Copy assignment.
      */
     Mesh& operator=(const Mesh& in);
-    
+
     /*! @brief Move assignment.
      */
     Mesh& operator=(Mesh&& in);
@@ -88,10 +90,9 @@ private:
         GLuint lineArray, lineElements;
         GLuint triangleArray, triangleElements;
         int pointCount, lineCount, triangleCount;
-        int users;
     };
 
-    Shared* share;
+    std::shared_ptr<Shared> share;
 };
 
 } // namespace Inugami

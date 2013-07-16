@@ -47,6 +47,21 @@ class Interface
 {
     friend class Core;
 public:
+    using Window = Core::Window;
+
+    Interface() = delete;
+    Interface(const Interface&) = delete;
+    Interface(Interface&&) = delete;
+
+    /*! @brief Primary constructor.
+     *
+     *  @param windowIn Window to attach.
+     */
+    Interface(Window windowIn);
+
+    /*! @brief Destructor.
+     */
+    virtual ~Interface();
 
     /*! @brief Coordinate template.
      */
@@ -214,17 +229,6 @@ public:
     Proxy getProxy(int k);
 
 private:
-    using Window = Core::Window;
-
-    Interface() = delete;
-    Interface(const Interface&) = delete;
-    Interface(Interface&&) = delete;
-    Interface(Window windowIN);
-    virtual ~Interface();
-
-    Interface& operator=(const Interface&) = delete;
-    Interface& operator=(Interface&&) = delete;
-
     template <int m> struct State
     {
         std::bitset<m> states, presses;

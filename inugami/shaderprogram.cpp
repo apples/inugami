@@ -51,14 +51,14 @@ public:
 
     ShaderProgramException(const std::string &errStr)
         : err(errStr)
-    {}
+    {
+        err += "ShaderProgram error: ";
+        err += errStr;
+    }
 
     virtual const char* what() const noexcept override
     {
-        std::string rval;
-        rval += "ShaderProgram error: ";
-        rval += err;
-        return rval.c_str();
+        return err.c_str();
     }
 
     std::string err;

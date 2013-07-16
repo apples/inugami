@@ -193,9 +193,6 @@ void CustomCore::tick()
         light.y = 4.0*(0.5-iface->getMousePos().y/768.0);
         crazyShader.setUniform( "lightPos", light );
     }
-
-    //A diagnostic can be useful for finding errors
-    if (keyF12.pressed()) std::ofstream("core_diagnostic.txt") << getDiagnostic();
 }
 
 void CustomCore::draw()

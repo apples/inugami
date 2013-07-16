@@ -35,6 +35,7 @@
 #include <string>
 #include <functional>
 #include <type_traits>
+#include <utility>
 
 namespace Inugami {
 
@@ -290,69 +291,19 @@ R comprehend(
 template <typename T, class Owner>
 class ConstAttr
 {
+    using Data = T;
     friend Owner;
 public:
-
     /*! @brief Cast to constant T.
      */
-    operator const T& () const
+    operator const Data& () const
     {
         return data;
     }
 
-    /*! @brief Indirection to data members.
+    /*! @brief Drill to data.
      */
-    const T* operator->()
-    {
-        return &data;
-    }
-
-private:
-
-    /*! @brief Default constructor.
-     */
-    ConstAttr()
-        : data()
-    {}
-
-    /*! @brief Value constructor.
-     */
-    ConstAttr(const T& in)
-        : data(in)
-    {}
-
-    T data;
-};
-
-/*! @brief Constant pointer attribute.
- *
- *  This object is designed such that the parent class can freely manipulate
- *  the contained data, but outside classes can only access the data. It is
- *  intended to be a replacement for a getter when outsiders need to access
- *  the data as if it were a public member.
- *
- *  @note Only the pointer itself is constant; the data it points to is not
- *  protected.
- *
- *  @tparam T The type of data to hold.
- *  @tparam Owner The owner.
- */
-template <typename T, class Owner>
-class ConstAttr <T*, Owner>
-{
-    friend Owner;
-public:
-
-    /*! @brief Cast to constant T pointer.
-     */
-    operator T* () const
-    {
-        return data;
-    }
-
-    /*! @brief Indirection to data members.
-     */
-    T* operator->()
+    const Data& operator->()
     {
         return data;
     }
@@ -365,13 +316,67 @@ private:
         : data()
     {}
 
-    /*! @brief Value constructor.
+    /*! @brief Copy constructor.
      */
-    ConstAttr(T* in)
-        : data(in)
+    ConstAttr(const ConstAttr& in)
+        : data(in.data)
     {}
 
-    T* data;
+    /*! @brief Move constructor.
+     */
+    ConstAttr(ConstAttr&& in)
+        : data(std::move(in.data))
+    {}
+
+    /*! @brief Template constructor.
+     */
+    template <typename... A>
+    ConstAttr(A&&... in)
+        : data(in...)
+    {}
+
+    /*! @brief Copy assignment.
+     */
+    ConstAttr& operator=(const ConstAttr& in)
+    {
+        data = in.data;
+        return *this;
+    }
+
+    /*! @brief Move assignment.
+     */
+    ConstAttr& operator=(ConstAttr&& in)
+    {
+        data = std::move(in.data);
+        return *this;
+    }
+
+    /*! @brief Copy data assignment.
+     */
+    ConstAttr& operator=(const Data& in)
+    {
+        data = in;
+        return *this;
+    }
+
+    /*! @brief Move data assignment.
+     */
+    ConstAttr& operator=(Data&& in)
+    {
+        data = std::move(in);
+        return *this;
+    }
+
+    /*! @brief Template assignment.
+     */
+    template <typename A>
+    ConstAttr& operator=(A&& in)
+    {
+        data = in;
+        return *this;
+    }
+
+    Data data;
 };
 
 /*! @brief Determines if two objects are the same instance.

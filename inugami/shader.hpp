@@ -34,6 +34,7 @@
 #include "opengl.hpp"
 
 #include <list>
+#include <memory>
 #include <string>
 #include <map>
 
@@ -59,7 +60,11 @@ public:
 class Shader
 {
 public:
-    Shader() = delete;
+    /*! @brief Default constructor.
+     *
+     *  Constructs an undefined shader.
+     */
+    Shader();
 
     /*! @brief Primary constructor.
      *
@@ -173,13 +178,12 @@ private:
         ~Shared();
         GLuint program;
         std::map<std::string,Uniform> uniforms;
-        int users;
     };
 
     void initUniforms();
     const Uniform& getUniform(const std::string& name) const;
 
-    Shared* share;
+    std::shared_ptr<Shared> share;
 };
 
 } // namespace Inugami

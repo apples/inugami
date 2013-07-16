@@ -71,20 +71,18 @@ public:
 
     MeshException(const Mesh* source, string error)
         : mesh(source)
-        , err(error)
-    {}
+        , err("")
+    {
+        err += "Mesh Exception: ";
+        err += error;
+    }
 
     MeshException& operator=(const MeshException&) = delete;
     MeshException& operator=(MeshException&&) = delete;
 
     virtual const char* what() const noexcept override
     {
-        string rval;
-        rval += "Mesh Exception: ";
-        rval += hexify(mesh);
-        rval += "; ";
-        rval += err;
-        return rval.c_str();
+        return err.c_str();
     }
 
     const Mesh* mesh;
@@ -102,7 +100,6 @@ Mesh::Shared::Shared()
     , pointCount(0)
     , lineCount(0)
     , triangleCount(0)
-    , users(1)
 {
     glGenBuffers(1, &vertexBuffer);
     glGenVertexArrays(1, &pointArray);
@@ -141,49 +138,26 @@ Mesh::Mesh(const Geometry& in)
 
 Mesh::Mesh(const Mesh& in)
     : share(in.share)
-{
-    ++share->users;
-}
+{}
 
 Mesh::Mesh(Mesh&& in)
-    : share(in.share)
-{
-    in.share = nullptr;
-}
+    : share(std::move(in.share))
+{}
 
 Mesh& Mesh::operator=(const Mesh& in)
 {
-    if (share && --share->users == 0)
-    {
-        delete share;
-    }
-
     share = in.share;
-    ++share->users;
-
     return *this;
 }
 
 Mesh& Mesh::operator=(Mesh&& in)
 {
-    if (share && --share->users == 0)
-    {
-        delete share;
-    }
-
-    share = in.share;
-    in.share = nullptr;
-
+    share = std::move(in.share);
     return *this;
 }
 
 Mesh::~Mesh()
-{
-    if (share && --share->users == 0)
-    {
-        delete share;
-    }
-}
+{}
 
 void Mesh::draw() const
 {

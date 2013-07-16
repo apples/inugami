@@ -34,6 +34,7 @@
 #include "opengl.hpp"
 
 #include <map>
+#include <memory>
 #include <string>
 #include <utility>
 #include <vector>
@@ -47,25 +48,25 @@ class Texture
     friend class TextureException;
 public:
     Texture() = delete;
-    
+
     /*! @brief Primary constructor.
-     * 
+     *
      *  Creates a Texture from the given Image.
-     * 
+     *
      *  @param img Image to upload.
      *  @param smooth Applies a smoothing filter.
      *  @param clamp Clamps texture coordinates to the image.
      */
     Texture(const Image& img, bool smooth=false, bool clamp=false);
-    
+
     /*! @brief Copy constructor.
      */
     Texture(const Texture &in);
-    
+
     /*! @brief Move constructor.
      */
     Texture(Texture&& in);
-    
+
     /*! @brief Destructor.
      */
     ~Texture();
@@ -73,13 +74,13 @@ public:
     /*! @brief Copy assignment.
      */
     Texture &operator=(const Texture &in);
-    
+
     /*! @brief Move assignment.
      */
     Texture &operator=(Texture&& in);
 
     /*! @brief Binds the texture.
-     * 
+     *
      *  @param slot Texture slot to bind.
      */
     void bind(unsigned int slot) const;
@@ -88,13 +89,15 @@ public:
     ConstAttr<int,Texture> height;  //!< Height of the texture.
 
 private:
-    struct Shared
+    class Shared
     {
-        int users;
+    public:
+        Shared();
+        ~Shared();
         GLuint id;
     };
 
-    Shared* share;
+    std::shared_ptr<Shared> share;
 
     void upload(const Image& data, bool smooth, bool clamp);
 };

@@ -31,7 +31,6 @@
 #include "exception.hpp"
 #include "interface.hpp"
 #include "loaders.hpp"
-#include "shader.hpp"
 #include "shaderprogram.hpp"
 
 #include <iomanip>
@@ -59,20 +58,18 @@ public:
 
     CoreException(Core* c, std::string error)
         : core(c)
-        , err(error)
-    {}
+        , err("")
+    {
+        err += "Core Exception: ";
+        err += error;
+    }
 
     CoreException& operator=(const CoreException&) = delete;
     CoreException& operator=(CoreException&&) = delete;
 
     const char* what() const noexcept override
     {
-        std::string rval;
-        rval += "Core Exception: ";
-        rval += hexify(core);
-        rval += "; ";
-        rval += err;
-        return rval.c_str();
+        return err.c_str();
     }
 
     Core* core;
@@ -106,7 +103,7 @@ Core::Core(const RenderParams &params)
 
     , viewProjection(1.f)
 
-    , shader(nullptr)
+    , shader()
 {
     if (numCores == 0) glfwInit();
 
@@ -155,9 +152,9 @@ Core::Core(const RenderParams &params)
     glEnableClientState(GL_NORMAL_ARRAY);
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
-    shader = new Shader(ShaderProgram::fromDefault());
+    shader = Shader(ShaderProgram::fromDefault());
 
-    iface = new Interface(window);
+    iface = std::unique_ptr<Interface>(new Interface(window));
 
     ++numCores;
 }
@@ -165,9 +162,6 @@ Core::Core(const RenderParams &params)
 Core::~Core()
 {
     activate();
-
-    delete iface;
-    delete shader;
 
     glfwDestroyWindow(window);
 
@@ -330,14 +324,13 @@ void Core::go()
 
 const Shader& Core::getShader() const
 {
-    return *shader;
+    return shader;
 }
 
 void Core::setShader(const Shader& in)
 {
-    delete shader;
-    shader = new Shader(in);
-    shader->bind();
+    shader = in;
+    shader.bind();
 }
 
 int Core::getWindowAttrib(int param) const
@@ -348,35 +341,6 @@ int Core::getWindowAttrib(int param) const
 bool Core::shouldClose() const
 {
     return glfwWindowShouldClose(window);
-}
-
-std::string Core::getDiagnostic() const
-{
-    std::stringstream rval;
-
-    rval << "-- BEGIN CORE DIAGNOSIS --\n";
-
-    rval << "\tCore location:  " << hexify(this) << "\n";
-    rval << "\tIface location: " << hexify((Interface*)iface) << "\n";
-
-    rval << "\tRunning:        " << running << "\n";
-    if (running) rval << "\t\tCurrent Framerate: " << getAverageFrameRate() << "\n";
-
-    rval << "\tRender Paramters:\n";
-    rval << "\t\tDimensions: " << rparams.width << "x" << rparams.height << "\n";
-    rval << "\t\tFullscreen: " << rparams.fullscreen << "\n";
-    rval << "\t\tVSync:      " << rparams.vsync << "\n";
-    rval << "\t\tFSAA:       " << rparams.fsaaSamples << "\n";
-
-    rval << "\tWindow Title:   \"" << windowTitle << "\"";
-        if (windowTitleShowFPS) rval << " [FPS]";
-    rval << "\n";
-
-    rval << "\tWindow ID:      " << hexify(window) << "\n";
-
-    rval << "-- END CORE DIAGNOSIS --\n";
-
-    return rval.str();
 }
 
 } // namespace Inugami

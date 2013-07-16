@@ -37,32 +37,35 @@ namespace Inugami {
 
 ShaderException::ShaderException(const std::string &codeStr, const std::string &errStr)
     : code(codeStr)
-    , err(errStr)
-{}
+    , err("")
+{
+    err += "Shader error:";
+    err += errStr;
+    if (code != "")
+    {
+        err += "\n    -- SHADER CODE --\n";
+        err += code;
+    }
+}
 
 const char* ShaderException::what() const noexcept
 {
-    std::string rval;
-    rval += "Shader error:";
-    rval += err;
-    if (code != "")
-    {
-        rval += "\n    -- SHADER CODE --\n";
-        rval += code;
-    }
-    return rval.c_str();
+    return err.c_str();
 }
 
 Shader::Shared::Shared()
     : program(glCreateProgram())
     , uniforms()
-    , users(1)
 {}
 
 Shader::Shared::~Shared()
 {
     glDeleteProgram(program);
 }
+
+Shader::Shader()
+    : share(nullptr)
+{}
 
 Shader::Shader(const ShaderProgram &source)
     : share(new Shared)
@@ -134,22 +137,25 @@ Shader::Shader(const ShaderProgram &source)
 
 Shader::Shader(const Shader& in)
     : share(in.share)
-{
-    ++share->users;
-}
+{}
 
 Shader::Shader(Shader&& in)
-    : share(in.share)
-{
-    in.share = nullptr;
-}
+    : share(std::move(in.share))
+{}
 
 Shader::~Shader()
+{}
+
+Shader& Shader::operator=(const Shader& in)
 {
-    if (--share->users == 0)
-    {
-        delete share;
-    }
+    share = in.share;
+    return *this;
+}
+
+Shader& Shader::operator=(Shader&& in)
+{
+    share = std::move(in.share);
+    return *this;
 }
 
 void Shader::bind() const
