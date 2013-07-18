@@ -50,48 +50,6 @@ Spritesheet::Spritesheet(const Texture& in, int tw, int th, float cx, float cy)
     generateMeshes(tw, th, cx, cy);
 }
 
-Spritesheet::Spritesheet(Texture&& in, int tw, int th, float cx, float cy)
-    : tilesX(0)
-    , tilesY(0)
-    , tex(in)
-    , meshes()
-{
-    generateMeshes(tw, th, cx, cy);
-}
-
-Spritesheet::Spritesheet(const Spritesheet& in)
-    : tilesX(in.tilesX)
-    , tilesY(in.tilesY)
-    , tex(in.tex)
-    , meshes(in.meshes)
-{}
-
-Spritesheet::Spritesheet(Spritesheet&& in)
-    : tilesX(in.tilesX)
-    , tilesY(in.tilesY)
-    , tex(move(in.tex))
-    , meshes(move(in.meshes))
-{}
-
-Spritesheet::~Spritesheet()
-{}
-
-Spritesheet& Spritesheet::operator=(const Spritesheet& in)
-{
-    tex = in.tex;
-    meshes = in.meshes;
-
-    return *this;
-}
-
-Spritesheet& Spritesheet::operator=(Spritesheet&& in)
-{
-    tex = move(in.tex);
-    meshes = move(in.meshes);
-
-    return *this;
-}
-
 void Spritesheet::draw(int r, int c) const
 {
     tex.bind(0);

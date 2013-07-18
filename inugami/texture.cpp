@@ -87,41 +87,6 @@ Texture::Texture(const Image& img, bool smooth, bool clamp)
     upload(img, smooth, clamp);
 }
 
-Texture::Texture(const Texture &in)
-    : width (in.width)
-    , height(in.height)
-    , share (in.share)
-{}
-
-Texture::Texture(Texture&& in)
-    : width (std::move(in.width))
-    , height(std::move(in.height))
-    , share (std::move(in.share))
-{}
-
-Texture::~Texture()
-{}
-
-Texture& Texture::operator=(const Texture &in)
-{
-    if (this == &in || share == in.share) return *this;
-
-    width  = in.width;
-    height = in.height;
-    share  = in.share;
-    return *this;
-}
-
-Texture& Texture::operator=(Texture&& in)
-{
-    if (this == &in || share == in.share) return *this;
-
-    width  = std::move(in.width);
-    height = std::move(in.height);
-    share  = std::move(in.share);
-    return *this;
-}
-
 void Texture::bind(unsigned int slot) const
 {
     if (slot > 31) throw TextureException(this, "Invalid texture slot!");

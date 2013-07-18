@@ -54,7 +54,6 @@ public:
     class Vertex
     {
     public:
-        Vertex();                                   //!< Default constructor.
         bool operator==(const Vertex& in) const;    //!< Equality operator.
         Vec3 pos;                                   //!< Position.
         Vec3 norm;                                  //!< Normal.
@@ -99,30 +98,6 @@ public:
      *  @return Geometry imported from the OBJ file.
      */
     static Geometry fromOBJ(const std::string& filename);
-
-    /*! @brief Default constructor.
-     */
-    Geometry();
-
-    /*! @brief Copy constructor.
-     */
-    Geometry(const Geometry& in);
-
-    /*! @brief Move constructor.
-     */
-    Geometry(Geometry&& in);
-
-    /*! @brief Destructor.
-     */
-    virtual ~Geometry();
-
-    /*! @brief Copy assignment operator.
-     */
-    Geometry& operator=(const Geometry& in);
-
-    /*! @brief Move assignment operator.
-     */
-    Geometry& operator=(Geometry&& in);
 
     /*! @brief Combination operator.
      */

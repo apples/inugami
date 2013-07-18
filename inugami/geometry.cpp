@@ -37,12 +37,6 @@ using namespace std;
 
 namespace Inugami {
 
-Geometry::Vertex::Vertex()
-    : pos(0.f, 0.f, 0.f)
-    , norm(0.f, 0.f, 0.f)
-    , tex(0.f, 0.f)
-{}
-
 bool Geometry::Vertex::operator==(const Vertex& in) const
 {
     return (
@@ -181,48 +175,6 @@ Geometry Geometry::fromOBJ(const string& filename) //static
     }
 
     return rval;
-}
-
-Geometry::Geometry()
-    : vertices()
-    , points()
-    , lines()
-    , triangles()
-{}
-
-Geometry::Geometry(const Geometry& in)
-    : vertices(in.vertices)
-    , points(in.points)
-    , lines(in.lines)
-    , triangles(in.triangles)
-{}
-
-Geometry::Geometry(Geometry&& in)
-    : vertices(move(in.vertices))
-    , points(move(in.points))
-    , lines(move(in.lines))
-    , triangles(move(in.triangles))
-{}
-
-Geometry::~Geometry()
-{}
-
-Geometry& Geometry::operator=(const Geometry& in)
-{
-    vertices  = in.vertices;
-    points    = in.points;
-    lines     = in.lines;
-    triangles = in.triangles;
-    return *this;
-}
-
-Geometry& Geometry::operator=(Geometry&& in)
-{
-    vertices  = move(in.vertices);
-    points    = move(in.points);
-    lines     = move(in.lines);
-    triangles = move(in.triangles);
-    return *this;
 }
 
 Geometry& Geometry::operator+=(const Geometry& in)

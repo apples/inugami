@@ -38,7 +38,7 @@
 namespace Inugami {
 
 /*! @brief Managed spritesheet.
- * 
+ *
  *  A Spritesheet is a collection of rectangular meshes designed for use with a
  *  specific texture.
  */
@@ -46,9 +46,9 @@ class Spritesheet
 {
 public:
     Spritesheet() = delete;
-    
+
     /*! @brief Raw Image constructor.
-     * 
+     *
      *  @param img Image to use as a texture.
      *  @param tw Width of each sprite, in pixels.
      *  @param th Height of each sprite, in pixels.
@@ -56,9 +56,9 @@ public:
      *  @param cy Y-center of each sprite, range 0 to 1.
      */
     Spritesheet(const Image& img, int tw, int th, float cx=0.5f, float cy=0.5f);
-    
+
     /*! @brief Texture constructor.
-     * 
+     *
      *  @param in Texture.
      *  @param tw Width of each sprite, in pixels.
      *  @param th Height of each sprite, in pixels.
@@ -66,39 +66,9 @@ public:
      *  @param cy Y-center of each sprite, range 0 to 1.
      */
     Spritesheet(const Texture& in, int tw, int th, float cx=0.5f, float cy=0.5f);
-    
-    /*! @brief Texture constructor.
-     * 
-     *  @param in Texture.
-     *  @param tw Width of each sprite, in pixels.
-     *  @param th Height of each sprite, in pixels.
-     *  @param cx X-center of each sprite, range 0 to 1.
-     *  @param cy Y-center of each sprite, range 0 to 1.
-     */
-    Spritesheet(Texture&& in, int tw, int th, float cx = 0.5f, float cy = 0.5f);
-    
-    /*! @brief Copy constructor.
-     */
-    Spritesheet(const Spritesheet& in);
-    
-    /*! @brief Move constructor.
-     */
-    Spritesheet(Spritesheet&& in);
-    
-    /*! @brief Destructor.
-     */
-    virtual ~Spritesheet();
-
-    /*! @brief Copy assignment.
-     */
-    Spritesheet& operator=(const Spritesheet& in);
-    
-    /*! @brief Move assignment.
-     */
-    Spritesheet& operator=(Spritesheet&& in);
 
     /*! @brief Draws a sprite.
-     * 
+     *
      *  @param r Row index of sprite.
      *  @param c Column index of sprite.
      */

@@ -46,16 +46,6 @@ class CoreException : public Exception
 public:
     CoreException() = delete;
 
-    CoreException(const CoreException& in)
-        : core(in.core)
-        , err(in.err)
-    {}
-
-    CoreException(CoreException&& in)
-        : core(in.core)
-        , err(move(in.err))
-    {}
-
     CoreException(Core* c, std::string error)
         : core(c)
         , err("")
@@ -63,9 +53,6 @@ public:
         err += "Core Exception: ";
         err += error;
     }
-
-    CoreException& operator=(const CoreException&) = delete;
-    CoreException& operator=(CoreException&&) = delete;
 
     const char* what() const noexcept override
     {

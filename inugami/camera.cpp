@@ -36,9 +36,6 @@ Camera::Camera()
     , view(1.0f)
 {}
 
-Camera::~Camera()
-{}
-
 Camera& Camera::perspective(float fov, float aspect, float near, float far)
 {
     projection = ::glm::perspective(fov, aspect, near, far);

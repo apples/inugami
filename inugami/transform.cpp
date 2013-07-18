@@ -33,17 +33,6 @@ Transform::Transform()
     : stack{Mat4(1.f)}
 {}
 
-Transform::Transform(const Transform& in)
-    : stack(in.stack)
-{}
-
-Transform::Transform(Transform&& in)
-    : stack(move(in.stack))
-{}
-
-Transform::~Transform()
-{}
-
 Transform::operator Mat4() const
 {
     return stack.back();

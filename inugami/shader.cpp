@@ -63,10 +63,6 @@ Shader::Shared::~Shared()
     glDeleteProgram(program);
 }
 
-Shader::Shader()
-    : share(nullptr)
-{}
-
 Shader::Shader(const ShaderProgram &source)
     : share(new Shared)
 {
@@ -133,29 +129,6 @@ Shader::Shader(const ShaderProgram &source)
     }
 
     initUniforms();
-}
-
-Shader::Shader(const Shader& in)
-    : share(in.share)
-{}
-
-Shader::Shader(Shader&& in)
-    : share(std::move(in.share))
-{}
-
-Shader::~Shader()
-{}
-
-Shader& Shader::operator=(const Shader& in)
-{
-    share = in.share;
-    return *this;
-}
-
-Shader& Shader::operator=(Shader&& in)
-{
-    share = std::move(in.share);
-    return *this;
 }
 
 void Shader::bind() const

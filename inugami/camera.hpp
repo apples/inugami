@@ -50,14 +50,6 @@ public:
      */
     Camera();
 
-    /*! @brief Copy constructor.
-     */
-    Camera(const Camera&) = default;
-
-    /*! @brief Destructor
-     */
-    virtual ~Camera();
-
     /*! @brief Applies a perspective viewport.
      *
      *  Sets up the matrices for perspective projection.

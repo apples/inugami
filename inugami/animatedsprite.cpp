@@ -55,41 +55,6 @@ AnimatedSprite::AnimatedSprite(const Spritesheet& in)
     , dir(1)
 {}
 
-AnimatedSprite::AnimatedSprite(const AnimatedSprite& in)
-    : flipX(in.flipX)
-    , flipY(in.flipY)
-    , rot(in.rot)
-
-    , sheet(in.sheet)
-    , sprites(in.sprites)
-    , sequence(in.sequence)
-    , mode(in.mode)
-
-    , ended(in.ended)
-    , timer(in.timer)
-    , pos(in.pos)
-    , dir(in.dir)
-{}
-
-AnimatedSprite::AnimatedSprite(AnimatedSprite&& in)
-    : flipX(in.flipX)
-    , flipY(in.flipY)
-    , rot(in.rot)
-
-    , sheet(move(in.sheet))
-    , sprites(move(in.sprites))
-    , sequence(move(in.sequence))
-    , mode(in.mode)
-
-    , ended(in.ended)
-    , timer(in.timer)
-    , pos(in.pos)
-    , dir(in.dir)
-{}
-
-AnimatedSprite::~AnimatedSprite()
-{}
-
 void AnimatedSprite::setSpritesheet(const Spritesheet& in)
 {
     sheet = in;

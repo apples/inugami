@@ -43,9 +43,8 @@ namespace Inugami {
 class Mesh
 {
     friend class MeshException;
-public:
     Mesh() = delete;
-
+public:
     /*! @brief Primary constructor.
      *
      *  Uploads a Geometry to the GPU. The Geometry can be safely deleted after
@@ -54,26 +53,6 @@ public:
      *  @param in Geometry to upload.
      */
     Mesh(const Geometry& in);
-
-    /*! @brief Copy constructor.
-     */
-    Mesh(const Mesh& in);
-
-    /*! @brief Move constructor.
-     */
-    Mesh(Mesh&& in);
-
-    /*! @brief Destructor.
-     */
-    virtual ~Mesh();
-
-    /*! @brief Copy assignment.
-     */
-    Mesh& operator=(const Mesh& in);
-
-    /*! @brief Move assignment.
-     */
-    Mesh& operator=(Mesh&& in);
 
     /*! @brief Draws the Mesh.
      */

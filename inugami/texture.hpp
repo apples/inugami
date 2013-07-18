@@ -47,7 +47,9 @@ class Texture
 {
     friend class TextureException;
 public:
-    Texture() = delete;
+    /*! @brief Default constructor.
+     */
+    Texture() = default;
 
     /*! @brief Primary constructor.
      *
@@ -58,26 +60,6 @@ public:
      *  @param clamp Clamps texture coordinates to the image.
      */
     Texture(const Image& img, bool smooth=false, bool clamp=false);
-
-    /*! @brief Copy constructor.
-     */
-    Texture(const Texture &in);
-
-    /*! @brief Move constructor.
-     */
-    Texture(Texture&& in);
-
-    /*! @brief Destructor.
-     */
-    ~Texture();
-
-    /*! @brief Copy assignment.
-     */
-    Texture &operator=(const Texture &in);
-
-    /*! @brief Move assignment.
-     */
-    Texture &operator=(Texture&& in);
 
     /*! @brief Binds the texture.
      *

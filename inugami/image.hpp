@@ -79,10 +79,6 @@ public:
      */
     static Image fromNoise(int w, int h);
 
-    /*! @brief Default constructor.
-     */
-    Image();
-
     /*! @brief Solid color constructor.
      *
      *  Constructs the Image such that all pixels are the given color.
@@ -93,21 +89,9 @@ public:
      */
     Image(int w, int h, const Pixel& color = Pixel{{255,255,255,255}});
 
-    /*! @brief Copy constructor.
+    /*! @brief Default contructor.
      */
-    Image(const Image& in);
-
-    /*! @brief Move constructor.
-     */
-    Image(Image&& in);
-
-    /*! @brief Copy assignment operator.
-     */
-    Image& operator=(const Image& in);
-
-    /*! @brief Move assignment operator.
-     */
-    Image& operator=(Image&& in);
+    Image() = default;
 
     /*! @brief Access the pixel at the given location.
      *

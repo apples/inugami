@@ -80,45 +80,11 @@ Image Image::fromNoise(int w, int h) //static
     return rval;
 }
 
-Image::Image()
-    : width(0)
-    , height(0)
-    , pixels(0)
-{}
-
 Image::Image(int w, int h, const Pixel& color)
     : width(w)
     , height(h)
     , pixels(w*h, color)
 {}
-
-Image::Image(const Image& in)
-    : width(in.width)
-    , height(in.height)
-    , pixels(in.pixels)
-{}
-
-Image::Image(Image&& in)
-    : width(in.width)
-    , height(in.height)
-    , pixels(move(in.pixels))
-{}
-
-Image& Image::operator=(const Image& in)
-{
-    width = in.width;
-    height = in.height;
-    pixels = in.pixels;
-    return *this;
-}
-
-Image& Image::operator=(Image&& in)
-{
-    width = in.width;
-    height = in.height;
-    pixels = move(in.pixels);
-    return *this;
-}
 
 Image::Pixel& Image::pixelAt(int x, int y)
 {

@@ -61,10 +61,8 @@ class Shader
 {
 public:
     /*! @brief Default constructor.
-     *
-     *  Constructs an undefined shader.
      */
-    Shader();
+    Shader() = default;
 
     /*! @brief Primary constructor.
      *
@@ -75,26 +73,6 @@ public:
      *  @param in ShaderProgram to upload.
      */
     Shader(const ShaderProgram &in);
-
-    /*! @brief Copy constructor.
-     */
-    Shader(const Shader& in);
-
-    /*! @brief Move constructor.
-     */
-    Shader(Shader&& in);
-
-    /*! @brief Destructor.
-     */
-    virtual ~Shader();
-
-    /*! @brief Copy assignment.
-     */
-    Shader& operator=(const Shader& in);
-
-    /*! @brief Move assignment.
-     */
-    Shader& operator=(Shader&& in);
 
     /*! @brief Binds the shader.
      */

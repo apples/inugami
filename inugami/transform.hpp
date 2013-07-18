@@ -45,56 +45,44 @@ public:
     /*! @brief Default constructor.
      */
     Transform();
-    
-    /*! @brief Copy constructor.
-     */
-    Transform(const Transform& in);
-    
-    /*! @brief Move constructor.
-     */
-    Transform(Transform&& in);
-    
-    /*! @brief Destructor.
-     */
-    virtual ~Transform();
 
     /*! @brief Mat4 cast.
      */
     operator Mat4() const;
 
     /*! @brief Translate.
-     * 
+     *
      *  @param pos Vector to translate along.
      */
     Transform& translate(const Vec3& pos);
-    
+
     /*! @brief Scale.
-     * 
+     *
      *  @param vec Vector to scale along.
      */
     Transform& scale(const Vec3& vec);
-    
+
     /*! @brief Rotate.
-     * 
+     *
      *  @param deg Degrees to rotate.
      *  @param axis Axis to rotate along.
      */
     Transform& rotate(float deg, const Vec3& axis);
 
     /*! @brief Push the stack.
-     * 
+     *
      *  Pushes a copy of the current matrix on the stack.
      */
     Transform& push();
-    
+
     /*! @brief Pop the stack.
-     * 
+     *
      *  Pops the current matrix off the stack.
      */
     Transform& pop();
-    
+
     /*! @brief Resets the stack.
-     * 
+     *
      *  Restores the stack to a single identity matrix.
      */
     Transform& reset();

@@ -125,7 +125,6 @@ void CustomCore::tick()
     auto keyF1    = iface->getProxy(1_ivkFunc);
     auto keyF2    = iface->getProxy(2_ivkFunc);
     auto keyF5    = iface->getProxy(5_ivkFunc);
-    auto keyF12   = iface->getProxy(12_ivkFunc);
 
     //Poll must be called every frame
     iface->poll();

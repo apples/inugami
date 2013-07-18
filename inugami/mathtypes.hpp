@@ -386,18 +386,6 @@ public:
         w(s)
     {}
 
-    Quaternion<T>(const Quaternion<T> &in) :
-        v(in.v),
-        w(in.w)
-    {}
-
-    Quaternion<T> &operator=(const Quaternion<T> &in)
-    {
-        w = in.w;
-        v = in.v;
-        return *this;
-    }
-
     Quaternion<T> &normalize()
     {
         T s = std::sqrt(w*w+v.x()*v.x()+v.y()*v.y()+v.z()*v.z());

@@ -136,29 +136,6 @@ Mesh::Mesh(const Geometry& in)
     share->triangleCount = in.triangles.size()*3;
 }
 
-Mesh::Mesh(const Mesh& in)
-    : share(in.share)
-{}
-
-Mesh::Mesh(Mesh&& in)
-    : share(std::move(in.share))
-{}
-
-Mesh& Mesh::operator=(const Mesh& in)
-{
-    share = in.share;
-    return *this;
-}
-
-Mesh& Mesh::operator=(Mesh&& in)
-{
-    share = std::move(in.share);
-    return *this;
-}
-
-Mesh::~Mesh()
-{}
-
 void Mesh::draw() const
 {
     drawVertexArray(share->triangleArray, GL_TRIANGLES, share->triangleCount);
