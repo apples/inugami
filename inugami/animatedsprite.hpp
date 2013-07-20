@@ -126,16 +126,21 @@ public:
 
     /*! @brief Draws the current frame.
      *
-     *  Draws the current frame and increments the timer, advancing the frame
-     *  if necessary. If the animation reaches it's end, it will reset
-     *  according the the @ref Mode.
+     *  Draws the current frame using the given @ref Transform.
      *
      *  @note The core's model matrix will be set.
      *
      *  @param core The @ref Core to use for drawing.
      *  @param in The @ref Transform to use as the origin.
      */
-    void draw(Core& core, Transform in);
+    void draw(Core& core, Transform in) const;
+
+    /*! @brief Advances the sprite's frame.
+     *
+     *  Increments the timer, advancing the frame if necessary. If the animation
+     *  reaches it's end, it will reset according to the @ref Mode.
+     */
+    void tick();
 
     /*! @brief Check if the animation is done.
      *

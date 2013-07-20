@@ -158,6 +158,7 @@ void CustomCore::tick()
         highDef = !highDef;
     }
 
+    fontRoll.tick();
     if (keySpace) fontRoll.reset();
 
     if (!keyW) rotation+=1.0;

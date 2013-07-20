@@ -82,42 +82,57 @@ void AnimatedSprite::setSequence(const FrameList &in)
     timer = sequence[0].second;
 }
 
-void AnimatedSprite::draw(Core& core, Transform in)
+void AnimatedSprite::draw(Core& core, Transform in) const
 {
     if (sequence.empty()) throw std::logic_error("Animation is empty!");
 
-    if (!ended)
-    {
-        auto& sprite = sprites[sequence[pos].first];
-        in.scale(Vec3{(flipX)?-1.f:1.f, (flipY)?-1.f:1.f, 1.f});
-        in.rotate(rot, Vec3{0.f, 0.f, 1.f});
-        core.modelMatrix(in);
-        sheet.draw(sprite.first, sprite.second);
+    if (ended) return;
 
-        if (--timer == 0)
+    auto& sprite = sprites[sequence[pos].first];
+    in.scale(Vec3{(flipX)?-1.f:1.f, (flipY)?-1.f:1.f, 1.f});
+    in.rotate(rot, Vec3{0.f, 0.f, 1.f});
+    core.modelMatrix(in);
+    sheet.draw(sprite.first, sprite.second);
+}
+
+void AnimatedSprite::tick()
+{
+    if (sequence.empty()) throw std::logic_error("Animation is empty!");
+
+    if (ended) return;
+
+    if (--timer == 0)
+    {
+        pos += dir;
+        if (pos < 0 || pos >= int(sequence.size()))
         {
-            pos += dir;
-            if (pos < 0 || pos >= int(sequence.size()))
+            switch (mode)
             {
-                switch (mode)
-                {
                 case Mode::NORMAL:
+                {
                     ended = true;
-                    break;
+                    return;
+                break;}
+
                 case Mode::LOOP:
+                {
                     pos = 0;
-                    break;
+                break;}
+
                 case Mode::BOUNCE:
+                {
                     dir = -dir;
                     if (dir == 1) pos = 1;
                     else pos = sequence.size()-2;
-                    break;
+                break;}
+
                 default:
+                {
                     throw std::logic_error("Unknown mode!");
-                }
+                break;}
             }
-            if (!ended) timer = sequence[pos].second;
         }
+        timer = sequence[pos].second;
     }
 }
 
