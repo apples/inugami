@@ -66,26 +66,18 @@ CustomCore::CustomCore(const RenderParams &params)
     logger->log<5>("Initting spritesheet...");
 
     //Generate sprites using list comprehension
-    auto sprites = comprehend<AnimatedSprite::SpriteList>(
-        1,27,
-        std::function<void(int&)>(), std::function<bool(const int&)>(),
-        std::function<AnimatedSprite::Sprite(const int&)>(
-            [](const int& i)
-            {return std::make_pair(4+i/16, i%16);}
-        )
-    );
-    fontRoll.setSprites(sprites);
+    fontRoll.setSprites(comprehend<AnimatedSprite::SpriteList>(
+          1
+        , 27
+        , [](const int& i){return std::make_pair(4+i/16, i%16);}
+    ));
 
     //Generate frames
-    auto frames = comprehend<AnimatedSprite::FrameList>(
-        0,26,
-        std::function<void(int&)>(), std::function<bool(const int&)>(),
-        std::function<AnimatedSprite::Frame(const int&)>(
-            [](const int& i)
-            {return std::make_pair(i,10);}
-        )
-    );
-    fontRoll.setSequence(frames);
+    fontRoll.setSequence(comprehend<AnimatedSprite::FrameList>(
+          0
+        , 26
+        , [](const int& i){return std::make_pair(i,10);}
+    ));
 
     //Mode::NORMAL causes the animation to stop when done
     fontRoll.setMode(AnimatedSprite::Mode::NORMAL);

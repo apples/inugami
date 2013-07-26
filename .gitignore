@@ -1,6 +1,7 @@
 game
 game_d
 *.cbp.cbTemp
+*.cscope_file_list
 *.db
 *.depend
 *.dll

@@ -244,36 +244,107 @@ private:
     const T& data;
 };
 
-/*! @todo Fix and document comprehend().
+/*! @todo Document comprehend().
  */
-//Abandon all hope, ye who enter here.
+
 template <
-    typename R = std::vector<int>,
-    typename L = int,
-    typename V = typename R::value_type
-//    typename I = std::function< void(V&)       >,
-//    typename F = std::function< bool(const V&) >,
-//    typename T = std::function<    V(const V&) >
+      typename R = std::vector<int>
+    , typename L
     >
 R comprehend(
-    const L& start, const L& stop,
-    std::function< void(L&)       > advance,// =   [](V& i)      {++i;},
-    std::function< bool(const L&) > condition,// = [](const V&)  {return true;},
-    std::function<    V(const L&) > transform// = [](const V& i){return i;}
+      const L& start
+    , const L& stop
     )
 {
-    //NOTE This is a workaround for a g++ bug as of g++ 4.7.1 (tdm64-1)
-    if (!advance)     advance = [](L& i)      {++i;}         ;
-    if (!condition) condition = [](const L&)  {return true;} ;
-    //if (!transform) transform = [](const L& i){return V(i);} ;
-
     R rval;
-    for (L i=start; i!=stop; advance(i))
+    for (L i=start; i!=stop; ++i)
     {
-        if (condition(i))
-        {
-            rval.push_back(transform(i));
-        }
+        rval.push_back(i);
+    }
+    return rval;
+}
+
+template <
+      typename R = std::vector<int>
+    , typename L
+    , typename F
+    >
+typename std::enable_if<std::is_same<typename std::result_of<F(L)>::type,bool>::value,R>::type
+comprehend(
+      const L& start
+    , const L& stop
+    , const F& filter
+    )
+{
+    R rval;
+    for (L i=start; i!=stop; ++i)
+    {
+        if (filter(i)) rval.push_back(i);
+    }
+    return rval;
+}
+
+template <
+      typename R = std::vector<int>
+    , typename L
+    , typename T
+    >
+typename std::enable_if<!std::is_same<typename std::result_of<T(L)>::type,bool>::value,R>::type
+comprehend(
+      const L& start
+    , const L& stop
+    , const T& transform
+    )
+{
+    R rval;
+    for (L i=start; i!=stop; ++i)
+    {
+        rval.push_back(transform(i));
+    }
+    return rval;
+}
+
+template <
+      typename R = std::vector<int>
+    , typename L
+    , typename F
+    , typename T
+    >
+typename std::enable_if<std::is_same<typename std::result_of<F(L)>::type,bool>::value,R>::type
+comprehend(
+      const L& start
+    , const L& stop
+    , const F& filter
+    , const T& transform
+    )
+{
+    R rval;
+    for (L i=start; i!=stop; ++i)
+    {
+        if (filter(i)) rval.push_back(transform(i));
+    }
+    return rval;
+}
+
+template <
+      typename R = std::vector<int>
+    , typename L
+    , typename T
+    , typename F
+    >
+typename std::enable_if<std::is_same<typename std::result_of<F(L)>::type,bool>::value,R>::type
+comprehend(
+      const L& start
+    , const L& stop
+    , const T& transform
+    , const F& filter
+    )
+{
+    R rval;
+    for (L i=start; i!=stop; ++i)
+    {
+        auto trans = transform(i);
+        if (filter(trans)) rval.push_back(trans);
     }
     return rval;
 }
