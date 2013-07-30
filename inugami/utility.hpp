@@ -269,7 +269,12 @@ template <
     , typename L
     , typename F
     >
-typename std::enable_if<std::is_same<typename std::result_of<F(L)>::type,bool>::value,R>::type
+typename std::enable_if<
+    std::is_same<
+          typename std::result_of<F(L)>::type
+        , bool
+    >::value
+,R>::type
 comprehend(
       const L& start
     , const L& stop
@@ -289,7 +294,12 @@ template <
     , typename L
     , typename T
     >
-typename std::enable_if<!std::is_same<typename std::result_of<T(L)>::type,bool>::value,R>::type
+typename std::enable_if<
+    ! std::is_same<
+          typename std::result_of<T(L)>::type
+        , bool
+    >::value
+,R>::type
 comprehend(
       const L& start
     , const L& stop
@@ -310,7 +320,12 @@ template <
     , typename F
     , typename T
     >
-typename std::enable_if<std::is_same<typename std::result_of<F(L)>::type,bool>::value,R>::type
+typename std::enable_if<
+    std::is_same<
+          typename std::result_of<F(L)>::type
+        , bool
+    >::value
+,R>::type
 comprehend(
       const L& start
     , const L& stop
@@ -332,7 +347,12 @@ template <
     , typename T
     , typename F
     >
-typename std::enable_if<std::is_same<typename std::result_of<F(L)>::type,bool>::value,R>::type
+typename std::enable_if<
+    std::is_same<
+          typename std::result_of<F(L)>::type
+        , bool
+    >::value
+,R>::type
 comprehend(
       const L& start
     , const L& stop
