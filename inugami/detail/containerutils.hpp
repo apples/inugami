@@ -25,13 +25,19 @@
  *
  ******************************************************************************/
 
-#ifndef UTILITY_HPP_INCLUDED
-#define UTILITY_HPP_INCLUDED
+#ifndef INUGAMI_DETAIL_CONTAINERUTILS_HPP
+#define INUGAMI_DETAIL_CONTAINERUTILS_HPP
 
-#include "detail/addonce.hpp"
-#include "detail/containerutils.hpp"
-#include "detail/constattr.hpp"
-#include "detail/constmap.hpp"
-#include "detail/range.hpp"
+#include <utility>
 
-#endif // UTILITY_HPP_INCLUDED
+namespace Inugami {
+
+template <class R, typename C>
+R container_cast(C&& from)
+{
+    return R(begin(std::forward<C>(from)), end(std::forward<C>(from)));
+}
+
+} // namespace Inugami
+
+#endif // INUGAMI_DETAIL_CONTAINERUTILS_HPP

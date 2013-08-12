@@ -5,7 +5,7 @@
 		<Option title="Inugami" />
 		<Option pch_mode="2" />
 		<Option compiler="gcc" />
-		<Option virtualFolders="OpenGL\;Resource Data\;Resource Handles\;Utilities\;Core\;Shaders\;" />
+		<Option virtualFolders="OpenGL\;Resource Data\;Resource Handles\;Utilities\;Core\;Shaders\;Utilities\Detail\;" />
 		<Build>
 			<Target title="Debug - Linux">
 				<Option platforms="Unix;" />
@@ -149,6 +149,19 @@
 		<Unit filename="inugami/core.hpp">
 			<Option virtualFolder="Core/" />
 		</Unit>
+		<Unit filename="inugami/detail/addonce.hpp">
+			<Option virtualFolder="Utilities/Detail/" />
+		</Unit>
+		<Unit filename="inugami/detail/constattr.hpp">
+			<Option virtualFolder="Utilities/Detail/" />
+		</Unit>
+		<Unit filename="inugami/detail/constmap.hpp">
+			<Option virtualFolder="Utilities/Detail/" />
+		</Unit>
+		<Unit filename="inugami/detail/containerutils.hpp" />
+		<Unit filename="inugami/detail/range.hpp">
+			<Option virtualFolder="Utilities/Detail/" />
+		</Unit>
 		<Unit filename="inugami/exception.cpp">
 			<Option virtualFolder="Utilities/" />
 		</Unit>
@@ -254,13 +267,13 @@
 			<debugger />
 			<lib_finder disable_auto="1" />
 			<DoxyBlocks>
-				<comment_style block="3" line="1" />
+				<comment_style block="0" line="0" />
 				<doxyfile_project />
 				<doxyfile_build />
-				<doxyfile_warnings warn_if_undocumented="1" />
+				<doxyfile_warnings />
 				<doxyfile_output />
-				<doxyfile_dot class_diagrams="1" have_dot="1" />
-				<general use_at_in_tags="1" />
+				<doxyfile_dot />
+				<general />
 			</DoxyBlocks>
 			<AutoVersioning>
 				<Scheme minor_max="10" build_max="0" rev_max="0" rev_rand_max="10" build_times_to_increment_minor="100" />

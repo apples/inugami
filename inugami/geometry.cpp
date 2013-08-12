@@ -56,21 +56,21 @@ Geometry Geometry::fromRect(float w, float h, float cx, float cy) //static
 
     vert.pos = Vec3{-w+w*cx, -h+h*cy, 0.f};
     vert.tex = Vec2{0.f, 0.f};
-    tri[0] = addOnce(geo.vertices, vert);
+    tri[0] = addOnceVec(geo.vertices, vert);
 
     vert.pos = Vec3{-w+w*cx, h*cy, 0.f};
     vert.tex = Vec2{0.f, 1.f};
-    tri[1] = addOnce(geo.vertices, vert);
+    tri[1] = addOnceVec(geo.vertices, vert);
 
     vert.pos = Vec3{w*cx, h*cy, 0.f};
     vert.tex = Vec2{1.f, 1.f};
-    tri[2] = addOnce(geo.vertices, vert);
+    tri[2] = addOnceVec(geo.vertices, vert);
 
     geo.triangles.push_back(tri);
 
     vert.pos = Vec3{w*cx, -h+h*cy, 0.f};
     vert.tex = Vec2{1.f, 0.f};
-    tri[1] = addOnce(geo.vertices, vert);
+    tri[1] = addOnceVec(geo.vertices, vert);
 
     geo.triangles.push_back(tri);
 
@@ -164,7 +164,7 @@ Geometry Geometry::fromOBJ(const string& filename) //static
                     if (tmptri[i].p>=0) vert.pos  = positions[tmptri[i].p];
                     if (tmptri[i].n>=0) vert.norm =   normals[tmptri[i].n];
                     if (tmptri[i].t>=0) vert.tex  = texcoords[tmptri[i].t];
-                    tri[i] = addOnce(rval.vertices, vert);
+                    tri[i] = addOnceVec(rval.vertices, vert);
                 }
 
                 rval.triangles.push_back(tri);

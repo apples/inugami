@@ -83,18 +83,18 @@ void Spritesheet::generateMeshes(int tw, int th, float cx, float cy)
             Geometry geo;
 
             vert[0].tex = Geometry::Vec2{float(c)/float(tilesX)+E, float(tilesY-r-1)/float(tilesY)+E};
-            tri[0] = addOnce(geo.vertices, vert[0]);
+            tri[0] = addOnceVec(geo.vertices, vert[0]);
 
             vert[1].tex = Geometry::Vec2{float(c)/float(tilesX)+E, float(tilesY-r)/float(tilesY)-E};
-            tri[1] = addOnce(geo.vertices, vert[1]);
+            tri[1] = addOnceVec(geo.vertices, vert[1]);
 
             vert[2].tex = Geometry::Vec2{float(c+1)/float(tilesX)-E, float(tilesY-r)/float(tilesY)-E};
-            tri[2] = addOnce(geo.vertices, vert[2]);
+            tri[2] = addOnceVec(geo.vertices, vert[2]);
 
             geo.triangles.push_back(tri);
 
             vert[3].tex = Geometry::Vec2{float(c+1)/float(tilesX)-E, float(tilesY-r-1)/float(tilesY)+E};
-            tri[1] = addOnce(geo.vertices, vert[3]);
+            tri[1] = addOnceVec(geo.vertices, vert[3]);
 
             geo.triangles.push_back(tri);
 
