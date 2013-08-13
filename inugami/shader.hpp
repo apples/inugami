@@ -32,6 +32,7 @@
 
 #include "exception.hpp"
 #include "opengl.hpp"
+#include "utility.hpp"
 
 #include <list>
 #include <memory>
@@ -44,13 +45,33 @@ namespace Inugami {
  *
  *  This exception is throw upon compile errors or uniform errors.
  */
-class ShaderException : public Exception
+class ShaderException
+    : public Exception
 {
 public:
-    ShaderException(const std::string &codeStr, const std::string &errStr);
     virtual const char* what() const noexcept override;
-    std::string code;
     std::string err;
+};
+
+class ShaderCompileException
+    : public ShaderException
+{
+public:
+    ShaderCompileException(const std::string &codeStr, const std::string &errStr);
+};
+
+class ShaderLinkException
+    : public ShaderException
+{
+public:
+    ShaderLinkException(const std::string &errStr);
+};
+
+class ShaderUniformException
+    : public ShaderException
+{
+public:
+    ShaderUniformException(const std::string &name);
 };
 
 /*! @brief Shader handle.
@@ -59,6 +80,7 @@ public:
  */
 class Shader
 {
+
 public:
     /*! @brief Default constructor.
      */
@@ -83,63 +105,8 @@ public:
      *  @param name Name of uniform.
      *  @param val Value to upload.
      */
-    void setUniform(const std::string& name, const bool val) const;
-
-    /*! @brief Sets a uniform variable in the shader.
-     *
-     *  @param name Name of uniform.
-     *  @param val Value to upload.
-     */
-    void setUniform(const std::string& name, const float val) const;
-
-    /*! @brief Sets a uniform variable in the shader.
-     *
-     *  @param name Name of uniform.
-     *  @param val Value to upload.
-     */
-    void setUniform(const std::string& name, const double val) const;
-
-    /*! @brief Sets a uniform variable in the shader.
-     *
-     *  @param name Name of uniform.
-     *  @param val Value to upload.
-     */
-    void setUniform(const std::string& name, const int val) const;
-
-    /*! @brief Sets a uniform variable in the shader.
-     *
-     *  @param name Name of uniform.
-     *  @param val Value to upload.
-     */
-    void setUniform(const std::string& name, const ::glm::vec2 &val) const;
-
-    /*! @brief Sets a uniform variable in the shader.
-     *
-     *  @param name Name of uniform.
-     *  @param val Value to upload.
-     */
-    void setUniform(const std::string& name, const ::glm::vec3 &val) const;
-
-    /*! @brief Sets a uniform variable in the shader.
-     *
-     *  @param name Name of uniform.
-     *  @param val Value to upload.
-     */
-    void setUniform(const std::string& name, const ::glm::vec4 &val) const;
-
-    /*! @brief Sets a uniform variable in the shader.
-     *
-     *  @param name Name of uniform.
-     *  @param val Value to upload.
-     */
-    void setUniform(const std::string& name, const ::glm::mat3 &val) const;
-
-    /*! @brief Sets a uniform variable in the shader.
-     *
-     *  @param name Name of uniform.
-     *  @param val Value to upload.
-     */
-    void setUniform(const std::string& name, const ::glm::mat4 &val) const;
+    template <typename T>
+    bool setUniform(const std::string& name, T&& val) const;
 
 private:
     struct Uniform
@@ -159,10 +126,39 @@ private:
     };
 
     void initUniforms();
-    const Uniform& getUniform(const std::string& name) const;
+    const Uniform* getUniform(const std::string& name) const;
 
     std::shared_ptr<Shared> share;
 };
+
+template <typename T>
+inline bool Shader::setUniform(const std::string& name, T&& val) const
+{
+    using GT = GLType<typename std::decay<T>::type>;
+    const Uniform* uni = getUniform(name);
+    if (!uni) return false;
+    if (uni->type != GT::value) throw ShaderUniformException(name);
+    GT::uniformFunc(uni->location, val);
+    return true;
+}
+
+template <>
+inline bool Shader::setUniform<int>(const std::string& name, int&& val) const
+{
+    using GT = GLType<int>;
+    const Uniform* uni = getUniform(name);
+    if (!uni) return false;
+    if (    uni->type != GT::value
+        &&  uni->type != GL_SAMPLER_1D
+        &&  uni->type != GL_SAMPLER_2D
+        &&  uni->type != GL_SAMPLER_3D
+        &&  uni->type != GL_SAMPLER_CUBE
+        &&  uni->type != GL_SAMPLER_1D_SHADOW
+        &&  uni->type != GL_SAMPLER_2D_SHADOW
+    ) throw ShaderUniformException(name);
+    GT::uniformFunc(uni->location, val);
+    return true;
+}
 
 } // namespace Inugami
 

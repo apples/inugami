@@ -31,26 +31,45 @@
 #include "shaderprogram.hpp"
 
 #include <array>
+#include <sstream>
+#include <string>
 #include <vector>
 
 namespace Inugami {
 
-ShaderException::ShaderException(const std::string &codeStr, const std::string &errStr)
-    : code(codeStr)
-    , err("")
-{
-    err += "Shader error:";
-    err += errStr;
-    if (code != "")
-    {
-        err += "\n    -- SHADER CODE --\n";
-        err += code;
-    }
-}
-
 const char* ShaderException::what() const noexcept
 {
     return err.c_str();
+}
+
+ShaderCompileException::ShaderCompileException(const std::string &codeStr, const std::string &errStr)
+{
+    std::stringstream ss;
+    ss << "Shader compile error:\n";
+    ss << errStr;
+    if (codeStr != "")
+    {
+        ss << "\n    -- SHADER CODE --\n";
+        ss << codeStr;
+    }
+    err = ss.str();
+}
+
+ShaderLinkException::ShaderLinkException(const std::string &errStr)
+{
+    std::stringstream ss;
+    ss << "Shader link error:\n";
+    ss << errStr;
+    err = ss.str();
+}
+
+ShaderUniformException::ShaderUniformException(const std::string &name)
+{
+    std::stringstream ss;
+    ss << "Shader uniform error: Uniform ";
+    ss << name;
+    ss << " not of correct type!";
+    err = ss.str();
 }
 
 Shader::Shared::Shared()
@@ -80,7 +99,7 @@ Shader::Shader(const ShaderProgram &source)
             glGetShaderiv(id, GL_INFO_LOG_LENGTH, &len);
             std::vector<GLchar> log(len);
             glGetShaderInfoLog(id, 1024, &len, &log[0]);
-            throw ShaderException(codeStr, &log[0]);
+            throw ShaderCompileException(codeStr, &log[0]);
         }
     };
 
@@ -118,7 +137,7 @@ Shader::Shader(const ShaderProgram &source)
         {
             std::vector<GLchar> log(len);
             glGetProgramInfoLog(share->program, len, &len, &log[0]);
-            throw ShaderException("\n", &log[0]);
+            throw ShaderLinkException(&log[0]);
         }
     }
 
@@ -134,74 +153,6 @@ Shader::Shader(const ShaderProgram &source)
 void Shader::bind() const
 {
     glUseProgram(share->program);
-}
-
-void Shader::setUniform(const std::string& name, const float val) const
-{
-    const Uniform& uni = getUniform(name);
-    if (uni.type != GL_FLOAT) throw ShaderException("", "Uniform "+name+" is of incorrect type.");
-    glUniform1f(uni.location, val);
-}
-
-void Shader::setUniform(const std::string& name, const double val) const
-{
-    const Uniform& uni = getUniform(name);
-    if (uni.type != GL_DOUBLE) throw ShaderException("", "Uniform "+name+" is of incorrect type.");
-    glUniform1d(uni.location, val);
-}
-
-void Shader::setUniform(const std::string& name, const int val) const
-{
-    const Uniform& uni = getUniform(name);
-    if (uni.type == GL_INT
-    ||  uni.type == GL_SAMPLER_1D
-    ||  uni.type == GL_SAMPLER_2D
-    ||  uni.type == GL_SAMPLER_3D
-    ||  uni.type == GL_SAMPLER_CUBE
-    ||  uni.type == GL_SAMPLER_1D_SHADOW
-    ||  uni.type == GL_SAMPLER_2D_SHADOW)
-    {
-        glUniform1i(uni.location, val);
-    }
-    else
-    {
-        throw ShaderException("", "Uniform "+name+" is of incorrect type.");
-    }
-}
-
-void Shader::setUniform(const std::string& name, const ::glm::vec2 &val) const
-{
-    const Uniform& uni = getUniform(name);
-    if (uni.type != GL_FLOAT_VEC2) throw ShaderException("", "Uniform "+name+" is of incorrect type.");
-    glUniform2fv(uni.location, 1, &val[0]);
-}
-
-void Shader::setUniform(const std::string& name, const ::glm::vec3 &val) const
-{
-    const Uniform& uni = getUniform(name);
-    if (uni.type != GL_FLOAT_VEC3) throw ShaderException("", "Uniform "+name+" is of incorrect type.");
-    glUniform3fv(uni.location, 1, &val[0]);
-}
-
-void Shader::setUniform(const std::string& name, const ::glm::vec4 &val) const
-{
-    const Uniform& uni = getUniform(name);
-    if (uni.type != GL_FLOAT_VEC4) throw ShaderException("", "Uniform "+name+" is of incorrect type.");
-    glUniform4fv(uni.location, 1, &val[0]);
-}
-
-void Shader::setUniform(const std::string& name, const ::glm::mat3 &val) const
-{
-    const Uniform& uni = getUniform(name);
-    if (uni.type != GL_FLOAT_MAT3) throw ShaderException("", "Uniform "+name+" is of incorrect type.");
-    glUniformMatrix3fv(uni.location, 1, GL_FALSE, &val[0][0]);
-}
-
-void Shader::setUniform(const std::string& name, const ::glm::mat4 &val) const
-{
-    const Uniform& uni = getUniform(name);
-    if (uni.type != GL_FLOAT_MAT4) throw ShaderException("", "Uniform "+name+" is of incorrect type.");
-    glUniformMatrix4fv(uni.location, 1, GL_FALSE, &val[0][0]);
 }
 
 void Shader::initUniforms()
@@ -221,14 +172,11 @@ void Shader::initUniforms()
     }
 }
 
-const Shader::Uniform& Shader::getUniform(const std::string& name) const
+const Shader::Uniform* Shader::getUniform(const std::string& name) const
 {
     auto iter = share->uniforms.find(name);
-    if (iter == share->uniforms.end())
-    {
-        throw ShaderException("", "Could not find uniform "+name);
-    }
-    return iter->second;
+    if (iter == share->uniforms.end()) return nullptr;
+    return &iter->second;
 }
 
 } // namespace Inugami

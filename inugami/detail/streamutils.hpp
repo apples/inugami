@@ -25,14 +25,39 @@
  *
  ******************************************************************************/
 
-#ifndef UTILITY_HPP_INCLUDED
-#define UTILITY_HPP_INCLUDED
+#ifndef INUGAMI_DETAIL_STREAMUTILS_HPP
+#define INUGAMI_DETAIL_STREAMUTILS_HPP
 
-#include "detail/addonce.hpp"
-#include "detail/containerutils.hpp"
-#include "detail/constattr.hpp"
-#include "detail/constmap.hpp"
-#include "detail/range.hpp"
-#include "detail/streamutils.hpp"
+#include <sstream>
+#include <string>
 
-#endif // UTILITY_HPP_INCLUDED
+namespace Inugami {
+
+namespace stringifyDetail {
+
+template <typename S, typename T>
+void append(S&& ss, T&& first)
+{
+    ss << first;
+}
+
+template <typename S, typename T, typename... P>
+void append(S&& ss, T&& first, P&&... vals)
+{
+    ss << first << ' ';
+    return append(ss, vals...);
+}
+
+} // namespace stringifyDetail
+
+template <typename T, typename... P>
+std::string stringify(T&& first, P&&... vals)
+{
+    std::stringstream ss;
+    stringifyDetail::append(ss, std::forward<T>(first), std::forward<P>(vals)...);
+    return ss.str();
+}
+
+} // namespace Inugami
+
+#endif // INUGAMI_DETAIL_STREAMUTILS_HPP

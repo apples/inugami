@@ -236,12 +236,9 @@ void Core::applyCam(const Camera& in)
         glDisable(GL_DEPTH_TEST);
     }
 
-    try { getShader().setUniform("projectionMatrix", in.getProjection()); }
-    catch (ShaderException& e) {}
-    try { getShader().setUniform("viewMatrix", in.getView()); }
-    catch (ShaderException& e) {}
-    try { getShader().setUniform("modelMatrix", ::glm::mat4(1.f)); }
-    catch (ShaderException& e) {}
+    getShader().setUniform("projectionMatrix", in.getProjection());
+    getShader().setUniform("viewMatrix"      , in.getView()      );
+    getShader().setUniform("modelMatrix"     , glm::mat4(1.f)    );
 
     viewProjection = in.getProjection()*in.getView();
 }
@@ -250,10 +247,8 @@ void Core::modelMatrix(const Mat4& in)
 {
     activate();
 
-    try { getShader().setUniform("modelMatrix", in); }
-    catch (ShaderException& e) {}
-
-    getShader().setUniform("MVP", viewProjection*in);
+    getShader().setUniform("modelMatrix", in               );
+    getShader().setUniform("MVP"        , viewProjection*in);
 }
 
 void Core::setWindowTitle(const char *text, bool showFPS)
