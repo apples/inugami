@@ -28,6 +28,7 @@
 #include "interface.hpp"
 
 #include <algorithm>
+#include <utility>
 
 namespace Inugami {
 
@@ -95,19 +96,19 @@ Interface::~Interface()
 
 void Interface::poll() //static
 {
-    for (auto& p : windowMap) if (p.second) p.second->clearPresses();
+    for (auto&& p : windowMap) if (p.second) p.second->clearPresses();
     glfwPollEvents();
 }
 
 bool Interface::keyDown(int key) const
 {
-    if (key<0 || key>GLFW_KEY_LAST) return false;
+    if (key < 0 || key > GLFW_KEY_LAST) return false;
     return keyStates.states[key];
 }
 
 bool Interface::keyPressed(int key, bool clr)
 {
-    if (key<0 || key>GLFW_KEY_LAST) return false;
+    if (key < 0 || key > GLFW_KEY_LAST) return false;
     if (keyStates.presses.test(key))
     {
         if (clr) keyStates.presses.reset(key);
@@ -118,20 +119,18 @@ bool Interface::keyPressed(int key, bool clr)
 
 std::string Interface::getBuffer()
 {
-    std::string tmp = keyBuffer;
-    keyBuffer = "";
-    return tmp;
+    return std::move(keyBuffer);
 }
 
 bool Interface::mouseState(int button) const
 {
-    if (button<0 || button>GLFW_MOUSE_BUTTON_LAST) return false;
+    if (button < 0 || button > GLFW_MOUSE_BUTTON_LAST) return false;
     return mouseStates.states[button];
 }
 
 bool Interface::mousePressed(int button, bool clr)
 {
-    if (button<0 || button>GLFW_MOUSE_BUTTON_LAST) return false;
+    if (button < 0 || button > GLFW_MOUSE_BUTTON_LAST) return false;
     if (mouseStates.presses[button])
     {
         if (clr) mouseStates.presses[button] = false;
@@ -166,10 +165,10 @@ void Interface::setMouseWheel(double x, double y)
 void Interface::showMouse(bool show) const
 {
     if (show) glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-    else glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+    else      glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
 }
 
-auto Interface::getProxy(int k) -> Proxy
+Interface::Proxy Interface::getProxy(int k)
 {
     return Proxy(this, k);
 }
@@ -182,7 +181,7 @@ void Interface::clearPresses()
 
 void Interface::keyboardCallback(Window win, int key, int, int action, int) //static
 {
-    if (key<0 || key>GLFW_KEY_LAST) return;
+    if (key < 0 || key > GLFW_KEY_LAST) return;
     Interface* iface = windowMap[win];
     if (!iface) return;
     if (action == GLFW_PRESS)
@@ -198,7 +197,7 @@ void Interface::keyboardCallback(Window win, int key, int, int action, int) //st
 
 void Interface::unicodeCallback(Window win, unsigned int key) //static
 {
-    if (key>255) return;
+    if (key > 255) return;
     Interface* iface = windowMap[win];
     if (!iface) return;
     iface->keyBuffer += char(key);
@@ -208,7 +207,7 @@ void Interface::mouseButtonCallback(Window win, int button, int action, int) //s
 {
     Interface* iface = windowMap[win];
     if (!iface) return;
-    if (button<0 || button>GLFW_MOUSE_BUTTON_LAST) return;
+    if (button < 0 || button > GLFW_MOUSE_BUTTON_LAST) return;
     if (action == GLFW_PRESS)
     {
         iface->mouseStates.states[button] = true;

@@ -31,6 +31,7 @@
 #include "utility.hpp"
 
 #include <map>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -50,10 +51,11 @@ public:
     class Profile
     {
         friend class Profiler;
-        using PMap = std::map<std::string, Profile*>;
     public:
-        /*! @brief Default constructor.
-         */
+
+        using Ptr = std::shared_ptr<Profile>;
+        using PMap = std::map<std::string, Ptr>;
+
         Profile();
 
         double min;     //!< Minimum duration.
@@ -61,10 +63,6 @@ public:
         double average; //!< Average duration.
         double samples; //!< Number of durations recorded.
 
-        /*! @brief Gets the nested child profiles.
-         *
-         *  @return Child profiles.
-         */
         ConstMap<PMap> getChildren() const;
 
     private:
@@ -75,14 +73,6 @@ public:
     /*! @brief Map of names to Profile%s.
      */
     using PMap = Profile::PMap;
-
-    /*! @brief Default constructor.
-     */
-    Profiler();
-
-    /*! @brief Destructor.
-     */
-    ~Profiler();
 
     /*! @brief Start the specified Profile.
      *
@@ -108,7 +98,7 @@ public:
 
 private:
     PMap profiles;
-    std::vector<Profile*> current;
+    std::vector<Profile::Ptr> current;
 };
 
 /*! @brief Automatic profile manager.

@@ -18,9 +18,9 @@ vec3 shiftColor(vec3 cin) {
     float s = sin(hue);
     vec3 a = normalize(vec3(1.0,1.0,1.0));
     mat3 rot = mat3(
-        c+a.x*a.x*(1.0-c), a.x*a.y*(1.0-c)+a.z*s, a.x*a.z*(1.0-c)-a.y*s,
-        a.x*a.y*(1.0-c)-a.z*s, c+a.y*a.y*(1.0-c), a.y*a.z*(1.0-c)+a.x*s,
-        a.x*a.z*(1.0-c)+a.y*s, a.y*a.z*(1.0-c)-a.x*s, c+a.z*a.z*(1.0-c)
+        c+a.x*a.x*(1.0-c)      ,   a.x*a.y*(1.0-c)+a.z*s,   a.x*a.z*(1.0-c)-a.y*s
+        , a.x*a.y*(1.0-c)-a.z*s, c+a.y*a.y*(1.0-c)      ,   a.y*a.z*(1.0-c)+a.x*s
+        , a.x*a.z*(1.0-c)+a.y*s,   a.y*a.z*(1.0-c)-a.x*s, c+a.z*a.z*(1.0-c)
     );
     return clamp(rot*cin, vec3(0.0,0.0,0.0), vec3(1.0,1.0,1.0));
 }

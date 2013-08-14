@@ -73,7 +73,10 @@ Image Image::fromNoise(int w, int h) //static
     {
         for (int j=0; j<h; ++j)
         {
-            for (int k=0; k<4; ++k) rval.pixelAt(j,i)[k] = roll(rng);
+            for (int k=0; k<4; ++k)
+            {
+                rval.pixelAt(j,i)[k] = roll(rng);
+            }
         }
     }
 
@@ -98,7 +101,7 @@ const Image::Pixel& Image::pixelAt(int x, int y) const
 
 void Image::resize(int w, int h)
 {
-    width = w;
+    width  = w;
     height = h;
     pixels.resize(width*height);
 }

@@ -38,6 +38,7 @@
 #include <map>
 
 namespace Inugami {
+
 /*! @brief Human input device interface.
  *
  *  This is where all the events from mouse and keyboard are aggregated. Every

@@ -32,6 +32,7 @@
 #include <fstream>
 #include <sstream>
 #include <utility>
+#include <tuple>
 
 using namespace std;
 
@@ -40,9 +41,8 @@ namespace Inugami {
 bool Geometry::Vertex::operator==(const Vertex& in) const
 {
     return (
-        pos == in.pos
-        && norm == in.norm
-        && tex == in.tex
+           std::tie(   pos,    norm,    tex)
+        == std::tie(in.pos, in.norm, in.tex)
     );
 }
 
@@ -56,21 +56,25 @@ Geometry Geometry::fromRect(float w, float h, float cx, float cy) //static
 
     vert.pos = Vec3{-w+w*cx, -h+h*cy, 0.f};
     vert.tex = Vec2{0.f, 0.f};
-    tri[0] = addOnceVec(geo.vertices, vert);
+    geo.vertices.push_back(vert);
+    tri[0] = 0;
 
     vert.pos = Vec3{-w+w*cx, h*cy, 0.f};
     vert.tex = Vec2{0.f, 1.f};
-    tri[1] = addOnceVec(geo.vertices, vert);
+    geo.vertices.push_back(vert);
+    tri[1] = 1;
 
     vert.pos = Vec3{w*cx, h*cy, 0.f};
     vert.tex = Vec2{1.f, 1.f};
-    tri[2] = addOnceVec(geo.vertices, vert);
+    geo.vertices.push_back(vert);
+    tri[2] = 2;
 
     geo.triangles.push_back(tri);
 
     vert.pos = Vec3{w*cx, -h+h*cy, 0.f};
     vert.tex = Vec2{1.f, 0.f};
-    tri[1] = addOnceVec(geo.vertices, vert);
+    geo.vertices.push_back(vert);
+    tri[1] = 3;
 
     geo.triangles.push_back(tri);
 
@@ -179,10 +183,10 @@ Geometry Geometry::fromOBJ(const string& filename) //static
 
 Geometry& Geometry::operator+=(const Geometry& in)
 {
-    vertices.insert (vertices.end() , in.vertices.begin() , in.vertices.end());
-    points.insert   (points.end()   , in.points.begin()   , in.points.end());
-    lines.insert    (lines.end()    , in.lines.begin()    , in.lines.end());
-    triangles.insert(triangles.end(), in.triangles.begin(), in.triangles.end());
+    vertices .insert(end( vertices), begin(in. vertices), end(in. vertices));
+    points   .insert(end(   points), begin(in.   points), end(in.   points));
+    lines    .insert(end(    lines), begin(in.    lines), end(in.    lines));
+    triangles.insert(end(triangles), begin(in.triangles), end(in.triangles));
     return *this;
 }
 

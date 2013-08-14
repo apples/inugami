@@ -28,12 +28,11 @@
 #include "spritesheet.hpp"
 
 #include "geometry.hpp"
+#include "mathtypes.hpp"
 #include "utility.hpp"
 
 #include <limits>
 #include <utility>
-
-using namespace std;
 
 namespace Inugami {
 
@@ -58,8 +57,7 @@ void Spritesheet::draw(int r, int c) const
 
 void Spritesheet::generateMeshes(int tw, int th, float cx, float cy)
 {
-    //TODO Spritesheet epsilon
-    constexpr float E = numeric_limits<float>::epsilon() * 1.0e3;
+    constexpr float E = 0.0f; // std::numeric_limits<float>::epsilon() * 1.0e4;
 
     tilesX = tex.width/tw;
     tilesY = tex.height/th;
@@ -67,14 +65,14 @@ void Spritesheet::generateMeshes(int tw, int th, float cx, float cy)
     Geometry::Vertex vert[4];
     Geometry::Triangle tri;
 
-    vert[0].pos = Geometry::Vec3{-cx*tw,    -cy*th,    0.f};
-    vert[1].pos = Geometry::Vec3{-cx*tw,    -cy*th+th, 0.f};
-    vert[2].pos = Geometry::Vec3{-cx*tw+tw, -cy*th+th, 0.f};
-    vert[3].pos = Geometry::Vec3{-cx*tw+tw, -cy*th,    0.f};
-    vert[0].norm = Geometry::Vec3{0.f, 0.f, 1.f};
-    vert[1].norm = Geometry::Vec3{0.f, 0.f, 1.f};
-    vert[2].norm = Geometry::Vec3{0.f, 0.f, 1.f};
-    vert[3].norm = Geometry::Vec3{0.f, 0.f, 1.f};
+    vert[0].pos = Vec3{-cx*tw   , -cy*th   , 0.f};
+    vert[1].pos = Vec3{-cx*tw   , -cy*th+th, 0.f};
+    vert[2].pos = Vec3{-cx*tw+tw, -cy*th+th, 0.f};
+    vert[3].pos = Vec3{-cx*tw+tw, -cy*th   , 0.f};
+    vert[0].norm = Vec3{0.f, 0.f, 1.f};
+    vert[1].norm = Vec3{0.f, 0.f, 1.f};
+    vert[2].norm = Vec3{0.f, 0.f, 1.f};
+    vert[3].norm = Vec3{0.f, 0.f, 1.f};
 
     for (int r = 0; r<tilesY; ++r)
     {
@@ -82,23 +80,28 @@ void Spritesheet::generateMeshes(int tw, int th, float cx, float cy)
         {
             Geometry geo;
 
-            vert[0].tex = Geometry::Vec2{float(c)/float(tilesX)+E, float(tilesY-r-1)/float(tilesY)+E};
+            float x1 = float(c  )/float(tilesX)+E;
+            float x2 = float(c+1)/float(tilesX)-E;
+
+            float y1 = float(tilesY-r-1)/float(tilesY)+E;
+            float y2 = float(tilesY-r  )/float(tilesY)-E;
+
+            vert[0].tex = Vec2{x1, y1};
+            vert[1].tex = Vec2{x1, y2};
+            vert[2].tex = Vec2{x2, y2};
+            vert[3].tex = Vec2{x2, y1};
+
             tri[0] = addOnceVec(geo.vertices, vert[0]);
-
-            vert[1].tex = Geometry::Vec2{float(c)/float(tilesX)+E, float(tilesY-r)/float(tilesY)-E};
             tri[1] = addOnceVec(geo.vertices, vert[1]);
-
-            vert[2].tex = Geometry::Vec2{float(c+1)/float(tilesX)-E, float(tilesY-r)/float(tilesY)-E};
             tri[2] = addOnceVec(geo.vertices, vert[2]);
 
             geo.triangles.push_back(tri);
 
-            vert[3].tex = Geometry::Vec2{float(c+1)/float(tilesX)-E, float(tilesY-r-1)/float(tilesY)+E};
             tri[1] = addOnceVec(geo.vertices, vert[3]);
 
             geo.triangles.push_back(tri);
 
-            meshes.emplace_back(geo);
+            meshes.emplace_back(std::move(geo));
         }
     }
 }

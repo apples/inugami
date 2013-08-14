@@ -28,6 +28,8 @@
 #ifndef INUGAMI_LOGGER_H
 #define INUGAMI_LOGGER_H
 
+#include "utility.hpp"
+
 #include <ostream>
 #include <fstream>
 #include <string>
@@ -54,12 +56,11 @@ public:
      *  @param logIn The Logger to manage.
      *  @param str The prefix to apply.
      */
-    StackLog(Log& logIn, const std::string& str)
+    StackLog(Log& logIn, std::string str)
         : logger(logIn)
         , before(logIn.prefix)
     {
-        logger.prefix += str;
-        logger.prefix += ": ";
+        logger.prefix = stringify(str, ": ");
     }
 
     /*! @brief Pointer constructor.
@@ -74,8 +75,7 @@ public:
         : logger(*logIn)
         , before(logger.prefix)
     {
-        logger.prefix += str;
-        logger.prefix += ": ";
+        logger.prefix = stringify(str, ": ");
     }
 
     /*! @brief Destructor.

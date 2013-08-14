@@ -90,13 +90,25 @@ public:
     const typename T::mapped_type& operator[](const typename T::key_type& in) const
     {
         auto i = data.find(in);
-        if (i == data.end()) throw std::logic_error("Key not found!");
+        if (i == end(data)) throw std::logic_error("Key not found!");
         return i->second;
     }
 
 private:
     const T& data;
 };
+
+template <typename T>
+typename ConstMap<T>::Iterator begin(const ConstMap<T>& cmap)
+{
+    return cmap.begin();
+}
+
+template <typename T>
+typename ConstMap<T>::Iterator end(const ConstMap<T>& cmap)
+{
+    return cmap.end();
+}
 
 } // namespace Inugami
 

@@ -68,12 +68,6 @@ private:
         : data(std::forward<A>(in)...)
     {}
 
-    ConstAttr() = default;
-    ConstAttr(const ConstAttr&) = default;
-    ConstAttr(ConstAttr&&) = default;
-    ConstAttr& operator=(const ConstAttr&) = default;
-    ConstAttr& operator=(ConstAttr&&) = default;
-
     /*! @brief Template assignment.
      */
     template <typename A>

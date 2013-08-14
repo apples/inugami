@@ -74,7 +74,7 @@ public:
      */
     Core(const RenderParams &params);
 
-    Core(const Core& in) = delete; //TODO Resource sharing between cores
+    Core(const Core& in) = delete; //! @todo Resource sharing between cores
     Core(Core&& in) = delete;
 
     /*! @brief Destructor.
@@ -123,7 +123,7 @@ public:
      *
      *  @param in The camera to apply.
      */
-    virtual void applyCam(const Camera& in);
+    void applyCam(const Camera& in);
 
     /*! @brief Applies a model matrix to the scene.
      *
@@ -131,7 +131,7 @@ public:
      *
      *  @param in The model matrix to apply.
      */
-    virtual void modelMatrix(const Mat4& in);
+    void modelMatrix(const Mat4& in);
 
     /*! @brief Sets the window title.
      *

@@ -39,12 +39,12 @@ using namespace std;
 
 namespace Inugami {
 
-AnimatedSprite::AnimatedSprite(const Spritesheet& in)
+AnimatedSprite::AnimatedSprite(Spritesheet in)
     : flipX(false)
     , flipY(false)
     , rot(0.f)
 
-    , sheet(in)
+    , sheet(std::move(in))
     , sprites()
     , sequence()
     , mode(Mode::NORMAL)
@@ -55,9 +55,9 @@ AnimatedSprite::AnimatedSprite(const Spritesheet& in)
     , dir(1)
 {}
 
-void AnimatedSprite::setSpritesheet(const Spritesheet& in)
+void AnimatedSprite::setSpritesheet(Spritesheet in)
 {
-    sheet = in;
+    sheet = std::move(in);
     sprites.clear();
     sequence.clear();
 }
@@ -67,18 +67,15 @@ void AnimatedSprite::setMode(Mode in)
     mode = in;
 }
 
-void AnimatedSprite::setSprites(const SpriteList &in)
+void AnimatedSprite::setSprites(SpriteList in)
 {
-    sprites.clear();
-    sprites = in;
-
+    sprites = std::move(in);
     sequence.clear();
 }
 
-void AnimatedSprite::setSequence(const FrameList &in)
+void AnimatedSprite::setSequence(FrameList in)
 {
-    sequence.clear();
-    sequence = in;
+    sequence = std::move(in);
     timer = sequence[0].second;
 }
 

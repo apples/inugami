@@ -28,7 +28,7 @@
 #ifndef INUGAMI_GEOMETRY_H
 #define INUGAMI_GEOMETRY_H
 
-#include <glm/glm.hpp>
+#include "mathtypes.hpp"
 
 #include <array>
 #include <string>
@@ -44,32 +44,22 @@ namespace Inugami {
 class Geometry
 {
 public:
-    using Vec3 = ::glm::vec3;
-    using Vec2 = ::glm::vec2;
+
+    //! @todo Epsilon-based merging.
 
     /*! @brief Vertex.
-     *
-     *  Contains all information about a vertex.
      */
     class Vertex
     {
     public:
-        bool operator==(const Vertex& in) const;    //!< Equality operator.
-        Vec3 pos;                                   //!< Position.
-        Vec3 norm;                                  //!< Normal.
-        Vec2 tex;                                   //!< Texture coordinate.
+        bool operator==(const Vertex& in) const;
+        Vec3 pos;
+        Vec3 norm;
+        Vec2 tex;
     };
 
-    /*! @brief A single point.
-     */
     using Point    = std::array<int,1>;
-
-    /*! @brief A line segment connecting two vertices.
-     */
     using Line     = std::array<int,2>;
-
-    /*! @brief A triangle connecting three vertices.
-     */
     using Triangle = std::array<int,3>;
 
     /*! @brief Create a Geometry from a rectangle.
@@ -84,7 +74,7 @@ public:
      */
     static Geometry fromRect(float w, float h, float cx=0.5f, float cy=0.5f);
 
-    //TODO static Geometry::fromCuboid(float w, float h, float d);
+    //! @todo static Geometry::fromCuboid(float w, float h, float d);
 
     /*! @brief Create a Geometry from an OBJ file.
      *
@@ -100,6 +90,8 @@ public:
     static Geometry fromOBJ(const std::string& filename);
 
     /*! @brief Combination operator.
+     *
+     *  Combines two geometries, merging vertices when possible.
      */
     Geometry& operator+=(const Geometry& in);
 

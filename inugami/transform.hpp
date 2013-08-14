@@ -28,14 +28,11 @@
 #ifndef INUGAMI_TRANSFORM_H
 #define INUGAMI_TRANSFORM_H
 
-#include "opengl.hpp"
+#include "mathtypes.hpp"
 
 #include <vector>
 
 namespace Inugami {
-
-using Vec3 = ::glm::vec3;
-using Mat4 = ::glm::mat4;
 
 class Transform
 {

@@ -67,12 +67,6 @@ int main()
         std::ofstream("error.txt") << e.what();
         return -1;
     }
-    catch (const std::exception* e)
-    {
-        std::cout << e->what() << std::endl;
-        std::ofstream("error.txt") << e->what();
-        return -1;
-    }
     catch (...)
     {
         std::cout << "Unknown exception." << std::endl;
@@ -93,11 +87,11 @@ void dumpProfiles()
 
     auto all = profiler->getAll();
 
-    std::function<void(const Prof*const&, std::string)> dumProf;
-    dumProf = [&pfile, &dumProf](const Prof*const& in, std::string indent)
+    std::function<void(const Prof::Ptr&, std::string)> dumProf;
+    dumProf = [&pfile, &dumProf](const Prof::Ptr& in, std::string indent)
     {
-        pfile << indent << "Min: " << in->min << "\n";
-        pfile << indent << "Max: " << in->max << "\n";
+        pfile << indent << "Min: " << in->min     << "\n";
+        pfile << indent << "Max: " << in->max     << "\n";
         pfile << indent << "Avg: " << in->average << "\n";
         pfile << indent << "Num: " << in->samples << "\n\n";
         for (auto& p : in->getChildren())

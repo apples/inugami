@@ -43,32 +43,9 @@ Profiler::Profile::Profile()
     , children()
 {}
 
-auto Profiler::Profile::getChildren() const -> ConstMap<PMap>
+ConstMap<Profiler::Profile::PMap> Profiler::Profile::getChildren() const
 {
     return children;
-}
-
-Profiler::Profiler()
-    : profiles()
-    , current()
-{}
-
-Profiler::~Profiler()
-{
-    std::function<void(Profile*&)> delChildren;
-    delChildren = [&delChildren](Profile*& prof){
-        for (auto& p : prof->children)
-        {
-            delChildren(p.second);
-            delete p.second;
-        }
-    };
-
-    for (auto& p : profiles)
-    {
-        delChildren(p.second);
-        delete p.second;
-    }
 }
 
 void Profiler::start(const std::string& in)
@@ -76,15 +53,15 @@ void Profiler::start(const std::string& in)
     if (current.begin() != current.end())
     {
         auto p = current.back();
-        auto& c = p->children[in];
-        if (!c) c = new Profile;
+        auto&& c = p->children[in];
+        if (!c) c.reset(new Profile);
         current.push_back(c);
         c->start = glfwGetTime();
     }
     else
     {
-        auto& p = profiles[in];
-        if (!p) p = new Profile;
+        auto&& p = profiles[in];
+        if (!p) p.reset(new Profile);
         current.push_back(p);
         p->start = glfwGetTime();
     }

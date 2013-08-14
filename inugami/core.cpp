@@ -96,12 +96,12 @@ Core::Core(const RenderParams &params)
 
     glfwWindowHint(GLFW_SAMPLES, rparams.fsaaSamples);
 
-    window = glfwCreateWindow
-    (
-        rparams.width, rparams.height,
-        windowTitle.c_str(),
-        (rparams.fullscreen)? nullptr : nullptr, //TODO detect monitors
-        nullptr
+    window = glfwCreateWindow(
+          rparams.width
+        , rparams.height
+        , windowTitle.c_str()
+        , (rparams.fullscreen)? nullptr : nullptr //! @todo detect monitors
+        , nullptr
     );
 
     if (!window)
@@ -111,7 +111,7 @@ Core::Core(const RenderParams &params)
 
     activate();
 
-    if (numCores == 0) if (glewInit() != GLEW_OK)
+    if (numCores == 0 && glewInit() != GLEW_OK)
     {
         throw CoreException(this, "Failed to initialize GLEW.");
     }
@@ -141,7 +141,7 @@ Core::Core(const RenderParams &params)
 
     shader = Shader(ShaderProgram::fromDefault());
 
-    iface = std::unique_ptr<Interface>(new Interface(window));
+    iface = std::unique_ptr<Interface>(new Interface(window)); //! @todo make_unique
 
     ++numCores;
 }
@@ -174,10 +174,12 @@ void Core::beginFrame()
 
     *frStackIterator = getInstantFrameRate();
     ++frStackIterator;
-    if (frStackIterator == frameRateStack.end())
+
+    if (frStackIterator == end(frameRateStack))
     {
-        frStackIterator = frameRateStack.begin();
+        frStackIterator = begin(frameRateStack);
     }
+
     frameStartTime = glfwGetTime();
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -206,10 +208,7 @@ double Core::getInstantFrameRate() const
 double Core::getAverageFrameRate() const
 {
     double sum = 0;
-    for (auto& i : frameRateStack)
-    {
-        sum += i;
-    }
+    for (auto&& i : frameRateStack) sum += i;
     return sum/10.0;
 }
 
@@ -218,23 +217,11 @@ void Core::applyCam(const Camera& in)
     activate();
 
     //Cull faces
-    if (in.cullFaces)
-    {
-        glEnable(GL_CULL_FACE);
-    }
-    else
-    {
-        glDisable(GL_CULL_FACE);
-    }
+    if (in.cullFaces) glEnable (GL_CULL_FACE);
+    else              glDisable(GL_CULL_FACE);
 
-    if (in.depthTest)
-    {
-        glEnable(GL_DEPTH_TEST);
-    }
-    else
-    {
-        glDisable(GL_DEPTH_TEST);
-    }
+    if (in.depthTest) glEnable (GL_DEPTH_TEST);
+    else              glDisable(GL_DEPTH_TEST);
 
     getShader().setUniform("projectionMatrix", in.getProjection());
     getShader().setUniform("viewMatrix"      , in.getView()      );

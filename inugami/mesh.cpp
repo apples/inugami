@@ -29,11 +29,11 @@
 
 #include "exception.hpp"
 #include "geometry.hpp"
+#include "mathtypes.hpp"
 #include "utility.hpp"
 
+#include <sstream>
 #include <string>
-
-using namespace std;
 
 namespace Inugami {
 
@@ -45,9 +45,9 @@ static void initVertexArray(GLuint vertexArray, GLuint elementArray, const Conta
     glEnableVertexAttribArray(1);
     glEnableVertexAttribArray(2);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Geometry::Vertex), (GLvoid*)0);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Geometry::Vertex), (GLvoid*)(sizeof(Geometry::Vec3)));
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Geometry::Vertex), (GLvoid*)(sizeof(Geometry::Vec3)*2));
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Geometry::Vertex), reinterpret_cast<GLvoid*>(0));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Geometry::Vertex), reinterpret_cast<GLvoid*>(sizeof(Vec3)));
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Geometry::Vertex), reinterpret_cast<GLvoid*>(sizeof(Vec3)*2));
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementArray);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(typename Container::value_type)*data.size(), &data[0], GL_STATIC_DRAW);
@@ -66,27 +66,24 @@ class MeshException : public Exception
 {
 public:
     MeshException() = delete;
-    MeshException(const MeshException&) = delete;
-    MeshException(MeshException&&) = delete;
 
-    MeshException(const Mesh* source, string error)
+    MeshException(const Mesh* source, std::string error)
         : mesh(source)
         , err("")
     {
-        err += "Mesh Exception: ";
-        err += error;
+        std::stringstream ss;
+        ss << "Mesh Exception: ";
+        ss << error;
+        err = ss.str();
     }
-
-    MeshException& operator=(const MeshException&) = delete;
-    MeshException& operator=(MeshException&&) = delete;
 
     virtual const char* what() const noexcept override
     {
         return err.c_str();
     }
 
-    const Mesh* mesh;
-    string err;
+    const Mesh* const mesh;
+    std::string err;
 };
 
 Mesh::Shared::Shared()
@@ -127,12 +124,12 @@ Mesh::Mesh(const Geometry& in)
     glBindBuffer(GL_ARRAY_BUFFER, share->vertexBuffer);
     glBufferData(GL_ARRAY_BUFFER, sizeof(Geometry::Vertex)*in.vertices.size(), &in.vertices[0], GL_STATIC_DRAW);
 
-    initVertexArray(share->pointArray, share->pointElements, in.points);
-    initVertexArray(share->lineArray, share->lineElements, in.lines);
+    initVertexArray(share->pointArray   , share->pointElements   , in.points);
+    initVertexArray(share->lineArray    , share->lineElements    , in.lines);
     initVertexArray(share->triangleArray, share->triangleElements, in.triangles);
 
-    share->pointCount = in.points.size();
-    share->lineCount = in.lines.size()*2;
+    share->pointCount    = in.points   .size();
+    share->lineCount     = in.lines    .size()*2;
     share->triangleCount = in.triangles.size()*3;
 }
 

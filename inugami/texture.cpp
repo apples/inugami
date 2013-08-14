@@ -33,6 +33,9 @@
 #include "exception.hpp"
 
 #include <algorithm>
+#include <sstream>
+#include <string>
+#include <utility>
 
 namespace Inugami {
 
@@ -41,22 +44,12 @@ class TextureException : public Exception
 public:
     TextureException() = delete;
 
-    TextureException(const TextureException& in)
-        : tex(in.tex)
-        , err(in.err)
-    {}
-
-    TextureException(TextureException&& in)
-        : tex(in.tex)
-        , err(std::move(in.err))
-    {}
-
-    TextureException(const Texture *source, std::string error)
-        : tex(source)
-        , err("")
+    TextureException(const Texture* source, std::string error)
     {
-        err += "Texture Exception: ";
-        err += error;
+        std::stringstream ss;
+        ss << "Texture Exception: ";
+        ss << std::move(error);
+        err = ss.str();
     }
 
     virtual const char* what() const noexcept override
@@ -64,7 +57,6 @@ public:
         return err.c_str();
     }
 
-    const Texture *tex;
     std::string err;
 };
 
@@ -99,17 +91,24 @@ void Texture::upload(const Image& img, bool smooth, bool clamp)
     glBindTexture(GL_TEXTURE_2D, share->id);
 
     GLuint filter = (smooth)? GL_LINEAR : GL_NEAREST;
+    GLuint wrap   = (clamp )? GL_CLAMP  : GL_REPEAT;
+
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter);
 
-    GLuint wrap = (clamp)? GL_CLAMP : GL_REPEAT;
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrap);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrap);
 
     glTexImage2D(
-        GL_TEXTURE_2D, 0, GL_RGBA,
-        img.width, img.height,
-        0, GL_RGBA, GL_UNSIGNED_BYTE, &img.pixelAt(0,0)
+        GL_TEXTURE_2D
+        , 0
+        , GL_RGBA
+        , img.width
+        , img.height
+        , 0
+        , GL_RGBA
+        , GL_UNSIGNED_BYTE
+        , &img.pixelAt(0,0)
     );
 }
 

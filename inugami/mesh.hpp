@@ -64,10 +64,13 @@ private:
     public:
         Shared();
         ~Shared();
+
         GLuint vertexBuffer;
-        GLuint pointArray, pointElements;
-        GLuint lineArray, lineElements;
+
+        GLuint    pointArray,    pointElements;
+        GLuint     lineArray,     lineElements;
         GLuint triangleArray, triangleElements;
+
         int pointCount, lineCount, triangleCount;
     };
 

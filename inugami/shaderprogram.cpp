@@ -33,36 +33,10 @@
 #include <algorithm>
 #include <fstream>
 #include <map>
+#include <sstream>
+#include <string>
 
 namespace Inugami {
-
-class ShaderProgramException : public Exception
-{
-public:
-    ShaderProgramException() = delete;
-
-    ShaderProgramException(const ShaderProgramException& in)
-        : err(in.err)
-    {}
-
-    ShaderProgramException(ShaderProgramException&& in)
-        : err(move(in.err))
-    {}
-
-    ShaderProgramException(const std::string &errStr)
-        : err(errStr)
-    {
-        err += "ShaderProgram error: ";
-        err += errStr;
-    }
-
-    virtual const char* what() const noexcept override
-    {
-        return err.c_str();
-    }
-
-    std::string err;
-};
 
 ShaderProgram ShaderProgram::fromDefault() //static
 {
@@ -105,9 +79,9 @@ ShaderProgram ShaderProgram::fromName(std::string in) //static
 {
     static std::map<std::string, Type> typeStrings = {
         {"vert", VERT},
-        {"tes", TES},
-        {"tcs", TCS},
-        {"geo", GEO},
+        { "tes",  TES},
+        { "tcs",  TCS},
+        { "geo",  GEO},
         {"frag", FRAG},
     };
 
@@ -115,7 +89,7 @@ ShaderProgram ShaderProgram::fromName(std::string in) //static
 
     if (in[in.length()-1] != '.') in += '.';
 
-    for (auto i=typeStrings.begin(); i!=typeStrings.end(); ++i)
+    for (auto&& i=begin(typeStrings); i!=end(typeStrings); ++i)
     {
         try
         {

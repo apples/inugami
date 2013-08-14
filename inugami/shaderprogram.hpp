@@ -42,18 +42,14 @@ class ShaderProgram
 public:
 
     /*! @brief Type of shader.
-     *
-     *  | Type | Shader                 |
-     *  |------|------------------------|
-     *  | VERT | Vertex                 |
-     *  | TCS  | Tesselation Control    |
-     *  | TES  | Tesselation Evaluation |
-     *  | GEO  | Geometry               |
-     *  | FRAG | Fragment               |
      */
     enum Type
     {
-        VERT, TCS, TES, GEO, FRAG
+          VERT  //! Vertex
+        , TCS   //! Tesselation Control
+        , TES   //! Tesselation Evaluation
+        , GEO   //! Geometry
+        , FRAG  //! Fragment
     };
 
     /*! @brief Creates default shader.
@@ -84,7 +80,7 @@ public:
      */
     virtual ~ShaderProgram();
 
-    /*! @brief 5-element vector of.
+    /*! @brief 5-element vector of sources.
      */
     std::vector<std::string> sources;
 };

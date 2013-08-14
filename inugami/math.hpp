@@ -33,8 +33,9 @@
 #include <cmath>
 #include <type_traits>
 
-namespace Inugami
-{
+namespace Inugami {
+
+constexpr double PI = 3.141592653589793;
 
 /*! @brief Clamps a value within a range.
  *
@@ -47,7 +48,7 @@ namespace Inugami
 template <typename T>
 T clamp(T x, T low, T high)
 {
-    if (x < low) return low;
+    if (x <  low)  return low;
     if (x >= high) return high;
     return x;
 }
@@ -64,7 +65,7 @@ template <typename T>
 T wrap(T x, T low, T high)
 {
     T d = high-low;
-    while (x < low) x+=d;
+    while (x <  low) x+=d;
     while (x > high) x-=d;
     return x;
 }
@@ -94,7 +95,7 @@ template <typename T, typename U>
 typename std::common_type<T, U>::type
 high(T x, U y)
 {
-    return (x>y)?x:y;
+    return (x > y)? x : y;
 }
 
 /*! @brief Choose highest.
@@ -123,7 +124,7 @@ template <typename T, typename U>
 typename std::common_type<T, U>::type
 low(T x, U y)
 {
-    return (x>y)?y:x;
+    return (x > y)? y : x;
 }
 
 /*! @brief Choose lowest.
@@ -150,7 +151,7 @@ low(T a, U b, VT... args)
 template <typename T>
 int sgn(T x)
 {
-    return ((T(0) < x)?1:0) - ((x < T(0))?1:0);
+    return ((T{} < x)? 1 : 0) - ((x < T{})? 1 : 0);
 }
 
 /*! @brief Converts degrees to radians.
@@ -162,7 +163,7 @@ int sgn(T x)
 template <typename T>
 T toRadians(T x)
 {
-    constexpr double r = 1.74532925199433e-2; // pi/180
+    constexpr double r = PI/180.0;
     return x*r;
 }
 
@@ -175,7 +176,7 @@ T toRadians(T x)
 template <typename T>
 T toDegrees(T x)
 {
-    constexpr double r = 5.72957795130823e1; // 180/pi
+    constexpr double r = 180.0/PI;
     return x*r;
 }
 
@@ -188,7 +189,7 @@ T toDegrees(T x)
 template <typename T>
 T sin(T x)
 {
-    return std::sin(float(x));
+    return std::sin(x);
 }
 
 /*! @brief Cosine.
@@ -200,7 +201,7 @@ T sin(T x)
 template <typename T>
 T cos(T x)
 {
-    return std::cos(float(x));
+    return std::cos(x);
 }
 
 /*! @brief Arcsine.
@@ -212,7 +213,7 @@ T cos(T x)
 template <typename T>
 T asin(T x)
 {
-    return std::asin(float(x));
+    return std::asin(x);
 }
 
 /*! @brief Arccosine.
@@ -224,7 +225,7 @@ T asin(T x)
 template <typename T>
 T acos(T x)
 {
-    return std::acos(float(x));
+    return std::acos(x);
 }
 
 /*! @brief Sine of degrees.

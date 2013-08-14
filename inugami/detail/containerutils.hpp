@@ -35,7 +35,7 @@ namespace Inugami {
 template <class R, typename C>
 R container_cast(C&& from)
 {
-    return R(begin(std::forward<C>(from)), end(std::forward<C>(from)));
+    return R(begin(from), end(from));
 }
 
 } // namespace Inugami

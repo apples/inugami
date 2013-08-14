@@ -53,9 +53,9 @@ public:
      */
     enum class Mode
     {
-        NORMAL,     //! Stop at end.
-        LOOP,       //! Loop back to start.
-        BOUNCE      //! Reverse back and forth.
+          NORMAL    //! Stop at end.
+        , LOOP      //! Loop back to start.
+        , BOUNCE    //! Reverse back and forth.
     };
 
     /*! @brief Sprite coordinates
@@ -87,7 +87,7 @@ public:
      *
      *  @param in The @ref Spritesheet to use for drawing.
      */
-    AnimatedSprite(const Spritesheet& in);
+    AnimatedSprite(Spritesheet in);
 
     /*! @brief Sets the @ref Spritesheet to use for drawing.
      *
@@ -97,7 +97,7 @@ public:
      *
      *  @param in The @ref Spritesheet to use for drawing.
      */
-    void setSpritesheet(const Spritesheet& in);
+    void setSpritesheet(Spritesheet in);
 
     /*! @brief Sets the @ref Mode to use.
      *
@@ -114,7 +114,7 @@ public:
      *
      *  @param in The @ref SpriteList to use for drawing.
      */
-    void setSprites(const SpriteList &in);
+    void setSprites(SpriteList in);
 
     /*! @brief Sets the @ref FrameList to use for drawing.
      *
@@ -122,7 +122,7 @@ public:
      *
      *  @param in The @ref Spritesheet to use for drawing.
      */
-    void setSequence(const FrameList &in);
+    void setSequence(FrameList in);
 
     /*! @brief Draws the current frame.
      *

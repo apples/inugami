@@ -78,12 +78,12 @@ Camera& Camera::roll(float deg)
     return *this;
 }
 
-auto Camera::getProjection() const -> const Mat4&
+const Camera::Mat4& Camera::getProjection() const
 {
     return projection;
 }
 
-auto Camera::getView() const -> const Mat4&
+const Camera::Mat4& Camera::getView() const
 {
     return view;
 }
