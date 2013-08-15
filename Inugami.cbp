@@ -158,8 +158,13 @@
 		<Unit filename="inugami/detail/constmap.hpp">
 			<Option virtualFolder="Utilities/Detail/" />
 		</Unit>
-		<Unit filename="inugami/detail/containerutils.hpp" />
+		<Unit filename="inugami/detail/containerutils.hpp">
+			<Option virtualFolder="Utilities/Detail/" />
+		</Unit>
 		<Unit filename="inugami/detail/range.hpp">
+			<Option virtualFolder="Utilities/Detail/" />
+		</Unit>
+		<Unit filename="inugami/detail/streamutils.hpp">
 			<Option virtualFolder="Utilities/Detail/" />
 		</Unit>
 		<Unit filename="inugami/exception.cpp">
