@@ -278,7 +278,7 @@
 				<doxyfile_warnings />
 				<doxyfile_output />
 				<doxyfile_dot />
-				<general />
+				<general use_at_in_tags="1" />
 			</DoxyBlocks>
 			<AutoVersioning>
 				<Scheme minor_max="10" build_max="0" rev_max="0" rev_rand_max="10" build_times_to_increment_minor="100" />

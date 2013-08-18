@@ -44,7 +44,7 @@ class TextureException : public Exception
 public:
     TextureException() = delete;
 
-    TextureException(const Texture* source, std::string error)
+    TextureException(std::string error)
     {
         std::stringstream ss;
         ss << "Texture Exception: ";
@@ -81,7 +81,7 @@ Texture::Texture(const Image& img, bool smooth, bool clamp)
 
 void Texture::bind(unsigned int slot) const
 {
-    if (slot > 31) throw TextureException(this, "Invalid texture slot!");
+    if (slot > 31) throw TextureException("Invalid texture slot!");
     glActiveTexture(GL_TEXTURE0+slot);
     glBindTexture(GL_TEXTURE_2D, share->id);
 }
