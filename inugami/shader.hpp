@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Inugami - An OpenGL framework designed for rapid game development
- * Version: 0.2.0
+ * Version: 0.3.0
  * https://github.com/DBRalir/Inugami
  *
  * Copyright (c) 2012 Jeramy Harrison <dbralir@gmail.com>

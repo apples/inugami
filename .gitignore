@@ -11,6 +11,7 @@ game_d
 *.out
 *.txt
 *.xml
+*.cbTemp
 obj/*
 bin/*
 docs/*
