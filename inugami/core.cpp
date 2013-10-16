@@ -245,7 +245,7 @@ void Core::modelMatrix(const Mat4& in)
 #endif // INU_NO_SHADERS
 }
 
-void Core::setWindowTitle(const char *text, bool showFPS)
+void Core::setWindowTitle(const char* text, bool showFPS)
 {
     windowTitle = text;
     windowTitleShowFPS = showFPS;

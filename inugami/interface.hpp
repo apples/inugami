@@ -94,7 +94,7 @@ public:
          *
          *  @sa ivk_literals
          */
-        Proxy(Interface *const inIface, int k);
+        Proxy(Interface* const inIface, int k);
 
         /*! @brief Evaluates to @a true if key is down.
          */
@@ -121,7 +121,7 @@ public:
         void reassign(int k);
 
     private:
-        Interface *iface;
+        Interface* iface;
         int key;
     };
 

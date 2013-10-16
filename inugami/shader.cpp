@@ -89,8 +89,8 @@ Shader::Shader(const ShaderProgram &source)
 {
     auto compile = [](const GLuint id, const std::string &codeStr)
     {
-        const GLchar *code = codeStr.c_str();
-        const GLchar *codeVec[] = {code};
+        const GLchar* code = codeStr.c_str();
+        const GLchar* codeVec[] = {code};
         glShaderSource(id, 1, codeVec, nullptr);
         glCompileShader(id);
         GLint status;

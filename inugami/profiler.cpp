@@ -43,7 +43,7 @@ Profiler::Profile::Profile()
     , children()
 {}
 
-Profiler::Profile::PMap const& Profiler::Profile::getChildren() const
+const Profiler::Profile::PMap& Profiler::Profile::getChildren() const
 {
     return children;
 }
@@ -85,7 +85,7 @@ void Profiler::stop()
     }
 }
 
-Profiler::PMap const& Profiler::getAll() const
+const Profiler::PMap& Profiler::getAll() const
 {
     return profiles;
 }

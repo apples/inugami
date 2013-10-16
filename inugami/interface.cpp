@@ -40,7 +40,7 @@ Interface::Proxy::Proxy()
     , key(0)
 {}
 
-Interface::Proxy::Proxy(Interface *const inIface, int k)
+Interface::Proxy::Proxy(Interface* const inIface, int k)
     : iface(inIface)
     , key(k)
 {}

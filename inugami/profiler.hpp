@@ -63,7 +63,7 @@ public:
         double average; //!< Average duration.
         double samples; //!< Number of durations recorded.
 
-        PMap const& getChildren() const;
+        const PMap& getChildren() const;
 
     private:
         double start;
@@ -94,7 +94,7 @@ public:
      *
      *  @return Top-level profiles.
      */
-    PMap const& getAll() const;
+    const PMap& getAll() const;
 
 private:
     PMap profiles;

@@ -141,7 +141,7 @@ public:
      *  @param text Title.
      *  @param showFPS Append framerate.
      */
-    void setWindowTitle(const char *text, bool showFPS = false);
+    void setWindowTitle(const char* text, bool showFPS = false);
 
     /*! @brief Gets the current render paramters.
      *

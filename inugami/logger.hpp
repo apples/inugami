@@ -71,7 +71,7 @@ public:
      *  @param logIn The Logger to manage.
      *  @param str The prefix to apply.
      */
-    StackLog(Log *const logIn, const std::string& str)
+    StackLog(Log* const logIn, const std::string& str)
         : logger(*logIn)
         , before(logger.prefix)
     {
@@ -198,8 +198,8 @@ public:
     }
 
 private:
-    std::ostream *stream1;
-    std::ostream *stream2;
+    std::ostream* stream1;
+    std::ostream* stream2;
 
     bool delStreams;
 

@@ -315,8 +315,8 @@ public:
         using iterator_category = std::forward_iterator_tag;
         using difference_type = std::ptrdiff_t;
 
-        using const_reference = T const&;
-        using const_pointer = T const*;
+        using const_reference = const T&;
+        using const_pointer = const T*;
 
         const_iterator(const T& v)
             : pos(v)
