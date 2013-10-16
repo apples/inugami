@@ -43,7 +43,7 @@ Profiler::Profile::Profile()
     , children()
 {}
 
-ConstMap<Profiler::Profile::PMap> Profiler::Profile::getChildren() const
+Profiler::Profile::PMap const& Profiler::Profile::getChildren() const
 {
     return children;
 }
@@ -85,9 +85,9 @@ void Profiler::stop()
     }
 }
 
-auto Profiler::getAll() -> ConstMap<PMap>
+Profiler::PMap const& Profiler::getAll() const
 {
-    return ConstMap<PMap>(profiles);
+    return profiles;
 }
 
 ScopedProfile::ScopedProfile(Profiler& in, const std::string& str)

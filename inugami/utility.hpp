@@ -31,7 +31,6 @@
 #include "detail/addonce.hpp"
 #include "detail/containerutils.hpp"
 #include "detail/constattr.hpp"
-#include "detail/constmap.hpp"
 #include "detail/range.hpp"
 #include "detail/streamutils.hpp"
 

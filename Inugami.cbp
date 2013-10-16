@@ -178,9 +178,6 @@
 		<Unit filename="inugami/detail/constattr.hpp">
 			<Option virtualFolder="Utilities/Detail/" />
 		</Unit>
-		<Unit filename="inugami/detail/constmap.hpp">
-			<Option virtualFolder="Utilities/Detail/" />
-		</Unit>
 		<Unit filename="inugami/detail/containerutils.hpp">
 			<Option virtualFolder="Utilities/Detail/" />
 		</Unit>
