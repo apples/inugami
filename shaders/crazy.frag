@@ -1,4 +1,4 @@
-#version 400
+#version 330
 
 in vec3 Position;
 in vec3 Normal;

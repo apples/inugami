@@ -1,4 +1,4 @@
-#version 400
+#version 330
 
 layout (location = 0) in vec3 VertexPosition;
 layout (location = 1) in vec3 VertexNormal;
@@ -15,9 +15,9 @@ out vec2 TexCoord;
 void main()
 {
     TexCoord = VertexTexCoord;
-    Normal = viewMatrix * modelMatrix*vec4(VertexNormal,0.0);
+    Normal = (viewMatrix * modelMatrix*vec4(VertexNormal,0.0)).xyz;
     Normal = normalize(Normal);
-    Position = viewMatrix * modelMatrix*vec4(VertexPosition,1.0);
+    Position = (viewMatrix * modelMatrix*vec4(VertexPosition,1.0)).xyz;
     vec4 result = MVP * vec4(VertexPosition,1.0);
     gl_Position = result;
 }
