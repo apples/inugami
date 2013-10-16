@@ -131,6 +131,8 @@
 					<Add option="-DGLEW_STATIC" />
 					<Add option="-DPNG_STATIC" />
 					<Add option="-DZLIB_STATIC" />
+					<Add option="-DINU_NO_SHADERS" />
+					<Add option="-DINU_MESH_FALLBACK" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
