@@ -72,6 +72,8 @@ ShaderUniformException::ShaderUniformException(const std::string &name)
     err = ss.str();
 }
 
+#ifndef INU_NO_SHADERS
+
 Shader::Shared::Shared()
     : program(glCreateProgram())
     , uniforms()
@@ -178,5 +180,34 @@ const Shader::Uniform* Shader::getUniform(const std::string& name) const
     if (iter == share->uniforms.end()) return nullptr;
     return &iter->second;
 }
+
+#else
+
+Shader::Shared::Shared()
+    : program()
+    , uniforms()
+{}
+
+Shader::Shared::~Shared()
+{}
+
+Shader::Shader(const ShaderProgram &source)
+    : share()
+{
+    initUniforms();
+}
+
+void Shader::bind() const
+{}
+
+void Shader::initUniforms()
+{}
+
+const Shader::Uniform* Shader::getUniform(const std::string& name) const
+{
+    return nullptr;
+}
+
+#endif // INU_NO_SHADERS
 
 } // namespace Inugami

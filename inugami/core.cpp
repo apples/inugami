@@ -223,9 +223,11 @@ void Core::applyCam(const Camera& in)
     if (in.depthTest) glEnable (GL_DEPTH_TEST);
     else              glDisable(GL_DEPTH_TEST);
 
+#ifndef INU_NO_SHADERS
     getShader().setUniform("projectionMatrix", in.getProjection());
     getShader().setUniform("viewMatrix"      , in.getView()      );
     getShader().setUniform("modelMatrix"     , glm::mat4(1.f)    );
+#endif // INU_NO_SHADERS
 
     viewProjection = in.getProjection()*in.getView();
 }
@@ -234,8 +236,13 @@ void Core::modelMatrix(const Mat4& in)
 {
     activate();
 
+#ifndef INU_NO_SHADERS
     getShader().setUniform("modelMatrix", in               );
     getShader().setUniform("MVP"        , viewProjection*in);
+#else
+    auto modelmat = viewProjection * in;
+    glLoadMatrixf(&modelmat[0][0]);
+#endif // INU_NO_SHADERS
 }
 
 void Core::setWindowTitle(const char *text, bool showFPS)

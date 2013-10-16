@@ -76,6 +76,10 @@
 					<Add option="-std=c++11" />
 					<Add option="-Wextra" />
 					<Add option="-Wall" />
+					<Add option="-static" />
+					<Add option="-DGLEW_STATIC" />
+					<Add option="-DPNG_STATIC" />
+					<Add option="-DZLIB_STATIC" />
 				</Compiler>
 				<Linker>
 					<Add option="-static" />
@@ -92,6 +96,32 @@
 				<Option platforms="Windows;" />
 				<Option output="game" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/release/" />
+				<Option type="0" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-fexpensive-optimizations" />
+					<Add option="-O3" />
+					<Add option="-static" />
+					<Add option="-DGLEW_STATIC" />
+					<Add option="-DPNG_STATIC" />
+					<Add option="-DZLIB_STATIC" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+					<Add option="-static" />
+					<Add library="z" />
+					<Add library="glew32" />
+					<Add library="opengl32" />
+					<Add library="glu32" />
+					<Add library="gdi32" />
+					<Add library="user32" />
+					<Add library="kernel32" />
+				</Linker>
+			</Target>
+			<Target title="Fallback - Windows">
+				<Option platforms="Windows;" />
+				<Option output="game_fallback" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/fallback/" />
 				<Option type="0" />
 				<Option compiler="gcc" />
 				<Compiler>

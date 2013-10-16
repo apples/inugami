@@ -37,6 +37,8 @@
 
 namespace Inugami {
 
+#ifndef INU_MESH_FALLBACK
+
 template <class Container>
 static void initVertexArray(GLuint vertexArray, GLuint elementArray, const Container& data)
 {
@@ -61,30 +63,6 @@ static void drawVertexArray(GLuint vertexArray, GLuint mode, GLuint elementCount
         glDrawElements(mode, elementCount, GL_UNSIGNED_INT, nullptr);
     }
 }
-
-class MeshException : public Exception
-{
-public:
-    MeshException() = delete;
-
-    MeshException(const Mesh* source, std::string error)
-        : mesh(source)
-        , err("")
-    {
-        std::stringstream ss;
-        ss << "Mesh Exception: ";
-        ss << error;
-        err = ss.str();
-    }
-
-    virtual const char* what() const noexcept override
-    {
-        return err.c_str();
-    }
-
-    const Mesh* const mesh;
-    std::string err;
-};
 
 Mesh::Shared::Shared()
     : vertexBuffer(0)
@@ -139,5 +117,28 @@ void Mesh::draw() const
     drawVertexArray(share->lineArray, GL_LINES, share->lineCount);
     drawVertexArray(share->pointArray, GL_POINTS, share->pointCount);
 }
+
+#else
+
+Mesh::Mesh(const Geometry& in)
+    : geo(in)
+{}
+
+void Mesh::draw() const
+{
+    glBegin(GL_TRIANGLES);
+    for (auto&& tri : geo.triangles)
+    {
+        for (auto&& p : tri)
+        {
+            glTexCoord2f(geo.vertices[p].tex.x, geo.vertices[p].tex.y);
+            glNormal3f(geo.vertices[p].norm.x, geo.vertices[p].norm.y, geo.vertices[p].norm.z);
+            glVertex3f(geo.vertices[p].pos.x, geo.vertices[p].pos.y, geo.vertices[p].pos.z);
+        }
+    }
+    glEnd();
+}
+
+#endif // INU_MESH_FALLBACK
 
 } // namespace Inugami

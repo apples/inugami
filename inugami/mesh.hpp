@@ -29,6 +29,7 @@
 #define INUGAMI_MESH_H
 
 #include "inugami.hpp"
+#include "geometry.hpp"
 
 #include "opengl.hpp"
 
@@ -42,7 +43,6 @@ namespace Inugami {
  */
 class Mesh
 {
-    friend class MeshException;
     Mesh() = delete;
 public:
     /*! @brief Primary constructor.
@@ -59,6 +59,7 @@ public:
     void draw() const;
 
 private:
+#ifndef INU_MESH_FALLBACK
     class Shared
     {
     public:
@@ -75,6 +76,9 @@ private:
     };
 
     std::shared_ptr<Shared> share;
+#else
+    Geometry geo;
+#endif // INU_MESH_FALLBACK
 };
 
 } // namespace Inugami

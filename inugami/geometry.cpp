@@ -27,6 +27,7 @@
 
 #include "geometry.hpp"
 
+#include "math.hpp"
 #include "utility.hpp"
 
 #include <fstream>
@@ -76,6 +77,53 @@ Geometry Geometry::fromRect(float w, float h, float cx, float cy) //static
     geo.vertices.push_back(vert);
     tri[1] = 3;
 
+    geo.triangles.push_back(tri);
+
+    return geo;
+}
+
+Geometry Geometry::fromDisc(float w, float h, int e) //static
+{
+    if (e<3) throw GeometryError("fromDisc: Must have at least 3 edges!");
+
+    Geometry geo;
+    Geometry::Triangle tri;
+    Geometry::Vertex vert;
+
+    const float dDeg = 360.f/float(e);
+
+    w *= 0.5;
+    h *= 0.5;
+
+    vert.pos  = Vec3{0.f, 0.f, 0.f};
+    vert.norm = Vec3{0.f, 0.f, 1.f};
+    vert.tex  = Vec2{0.5f, 0.5f};
+
+    geo.vertices.push_back(vert);
+    tri[0] = 0;
+    tri[1] = 0;
+    tri[2] = 0;
+
+    float deg = -dDeg;
+    vert.pos = Vec3{cosd(deg)*w, sind(deg)*h, 0.f};
+    vert.tex = Vec2{cosd(deg),   sind(deg)};
+
+    tri[1] = 1;
+    geo.vertices.push_back(vert);
+
+    for (int i=0; i<e-1; ++i)
+    {
+        deg = dDeg*i;
+        vert.pos = Vec3{cosd(deg)*w, sind(deg)*h, 0.f};
+        vert.tex = Vec2{cosd(deg),   sind(deg)};
+
+        tri[2] = geo.vertices.size();
+        geo.vertices.push_back(vert);
+        geo.triangles.push_back(tri);
+        tri[1] = tri[2];
+    }
+
+    tri[2] = 1;
     geo.triangles.push_back(tri);
 
     return geo;
@@ -188,6 +236,15 @@ Geometry& Geometry::operator+=(const Geometry& in)
     lines    .insert(end(    lines), begin(in.    lines), end(in.    lines));
     triangles.insert(end(triangles), begin(in.triangles), end(in.triangles));
     return *this;
+}
+
+GeometryError::GeometryError(std::string in)
+    : err("Geometry Error: "+in)
+{}
+
+const char* GeometryError::what() const noexcept
+{
+    return err.c_str();
 }
 
 } // namespace Inugami

@@ -29,6 +29,7 @@
 #define INUGAMI_GEOMETRY_H
 
 #include "mathtypes.hpp"
+#include "exception.hpp"
 
 #include <array>
 #include <string>
@@ -74,6 +75,19 @@ public:
      */
     static Geometry fromRect(float w, float h, float cx=0.5f, float cy=0.5f);
 
+    /*! @brief Create a Geometry from a disc.
+     *
+     *  Creates a Geometry in a fan-type disc shape, using the specified
+     *  number of edges.
+     *
+     *  @param w Width (X axis).
+     *  @param h Height (Y axis).
+     *  @param e Edges.
+     *
+     *  @return Geometry containing a disc.
+     */
+    static Geometry fromDisc(float w, float h, int e);
+
     //! @todo static Geometry::fromCuboid(float w, float h, float d);
 
     /*! @brief Create a Geometry from an OBJ file.
@@ -100,6 +114,16 @@ public:
     std::vector<Point>    points;
     std::vector<Line>     lines;
     std::vector<Triangle> triangles;
+};
+
+class GeometryError
+    : public Exception
+{
+public:
+    GeometryError(std::string in);
+    virtual const char* what() const noexcept override;
+
+    std::string err;
 };
 
 } // namespace Inugami
