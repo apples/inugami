@@ -35,8 +35,6 @@
 #include <stdexcept>
 #include <utility>
 
-using namespace std;
-
 namespace Inugami {
 
 AnimatedSprite::AnimatedSprite(Spritesheet in)

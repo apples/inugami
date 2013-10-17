@@ -36,11 +36,9 @@
 #include <utility>
 #include <random>
 
-using namespace std;
-
 namespace Inugami {
 
-Image Image::fromPNG(const string& filename) //static
+Image Image::fromPNG(const std::string& filename) //static
 {
     Image rval;
 

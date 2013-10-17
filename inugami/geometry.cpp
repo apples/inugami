@@ -35,8 +35,6 @@
 #include <utility>
 #include <tuple>
 
-using namespace std;
-
 namespace Inugami {
 
 bool Geometry::Vertex::operator==(const Vertex& in) const
@@ -129,17 +127,17 @@ Geometry Geometry::fromDisc(float w, float h, int e) //static
     return geo;
 }
 
-Geometry Geometry::fromOBJ(const string& filename) //static
+Geometry Geometry::fromOBJ(const std::string& filename) //static
 {
     Geometry rval;
 
-    ifstream inFile(filename.c_str());
-    string inString, command, pointstr[8];
-    stringstream ss, ss2;
+    std::ifstream inFile(filename.c_str());
+    std::string inString, command, pointstr[8];
+    std::stringstream ss, ss2;
 
-    vector<Vec3> positions;
-    vector<Vec3> normals;
-    vector<Vec2> texcoords;
+    std::vector<Vec3> positions;
+    std::vector<Vec3> normals;
+    std::vector<Vec2> texcoords;
 
     struct VDATA {VDATA():p(-1),n(-1),t(-1){} int p, n, t;};
 
@@ -191,13 +189,13 @@ Geometry Geometry::fromOBJ(const string& filename) //static
 
             if (np == 3)
             {
-                array<VDATA, 3> tmptri;
+                std::array<VDATA, 3> tmptri;
                 Triangle tri;
 
                 for (int i=0; i<3; ++i)
                 {
                     auto pos = pointstr[i].find('/');
-                    while (pos != string::npos)
+                    while (pos != std::string::npos)
                     {
                         pointstr[i][pos] = ' ';
                         pointstr[i].insert(pos+1, "0");

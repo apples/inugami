@@ -87,6 +87,7 @@
 					<Add library="glew32" />
 					<Add library="opengl32" />
 					<Add library="glu32" />
+					<Add library="gdi32" />
 				</Linker>
 			</Target>
 			<Target title="Release - Windows">
@@ -110,6 +111,7 @@
 					<Add library="glew32" />
 					<Add library="opengl32" />
 					<Add library="glu32" />
+					<Add library="gdi32" />
 				</Linker>
 			</Target>
 			<Target title="Fallback - Windows">
@@ -135,6 +137,7 @@
 					<Add library="glew32" />
 					<Add library="opengl32" />
 					<Add library="glu32" />
+					<Add library="gdi32" />
 				</Linker>
 			</Target>
 		</Build>
