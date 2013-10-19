@@ -54,7 +54,7 @@ CustomCore::CustomCore(const RenderParams &params)
     , shaderOn(true)
 
     , shieldTex       (Image::fromPNG("data/shield.png"), true, false)
-    , noiseTex        (Image::fromNoise(16,16), false, false)
+    , noiseTex        (Image::fromNoise(64,64), false, false)
     , fontRoll        (Spritesheet(Image::fromPNG("data/font.png"), 8, 8))
     , shield          (Geometry::fromOBJ("data/shield.obj"))
     , shieldHD        (Geometry::fromOBJ("data/shieldHD.obj"))

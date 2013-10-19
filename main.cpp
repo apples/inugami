@@ -48,10 +48,7 @@ int main()
     logger = new Logger<5>(logfile);
 
     CustomCore::RenderParams renparams;
-    renparams.width = 1024;
-    renparams.height = 768;
-    renparams.fullscreen = false;
-    renparams.vsync = false;
+    renparams.fullscreen = true;
     renparams.fsaaSamples = 4;
 
     try
@@ -88,7 +85,7 @@ void dumpProfiles()
     auto all = profiler->getAll();
 
     std::function<void(const Prof::Ptr&, std::string)> dumProf;
-    dumProf = [&pfile, &dumProf](const Prof::Ptr& in, std::string indent)
+    dumProf = [&](const Prof::Ptr& in, std::string indent)
     {
         pfile << indent << "Min: " << in->min     << "\n";
         pfile << indent << "Max: " << in->max     << "\n";

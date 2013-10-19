@@ -64,10 +64,10 @@ public:
 };
 
 Core::RenderParams::RenderParams()
-    : width(800)
-    , height(600)
+    : width(-1)
+    , height(-1)
     , fullscreen(false)
-    , vsync(false)
+    , vsync(true)
     , fsaaSamples(0)
 {}
 
@@ -94,13 +94,31 @@ Core::Core(const RenderParams &params)
 {
     if (numCores == 0) glfwInit();
 
+    GLFWmonitor* monitor = nullptr;
+
+    if (rparams.width == -1 || rparams.height == -1)
+    {
+        if (rparams.fullscreen)
+        {
+            monitor = glfwGetPrimaryMonitor();
+            auto vidmode = glfwGetVideoMode(monitor);
+            rparams.width = vidmode->width;
+            rparams.height = vidmode->height;
+        }
+        else
+        {
+            rparams.width = 800;
+            rparams.height = 600;
+        }
+    }
+
     glfwWindowHint(GLFW_SAMPLES, rparams.fsaaSamples);
 
     window = glfwCreateWindow(
           rparams.width
         , rparams.height
         , windowTitle.c_str()
-        , (rparams.fullscreen)? nullptr : nullptr //! @todo detect monitors
+        , monitor
         , nullptr
     );
 
