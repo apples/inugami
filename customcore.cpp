@@ -63,7 +63,7 @@ CustomCore::CustomCore(const RenderParams &params)
 {
     ScopedProfile prof(profiler, "CustomCore: Constructor");
 
-    logger->log<5>("Initting spritesheet...");
+    logger->log("Initting spritesheet...");
 
     //Generate sprites using list comprehension
     fontRoll.setSprites(container_cast<AnimatedSprite::SpriteList>(
@@ -78,7 +78,7 @@ CustomCore::CustomCore(const RenderParams &params)
     //Mode::NORMAL causes the animation to stop when done
     fontRoll.setMode(AnimatedSprite::Mode::NORMAL);
 
-    logger->log<5>("Adding callbacks...");
+    logger->log("Adding callbacks...");
     addCallback(std::bind(&CustomCore::tick, this), 60.0);
     addCallback(std::bind(&CustomCore::draw, this), 60.0);
 
@@ -177,8 +177,8 @@ void CustomCore::tick()
         crazyShader.setUniform("hue", float(ticks/67.0) );
 
         Vec3 light(0.f,0.f,-1.5f);
-        light.x = 4.0*(iface->getMousePos().x/1024.0-0.5)*4.0/3.0;
-        light.y = 4.0*(0.5-iface->getMousePos().y/768.0);
+        light.x = 4.0*(iface->getMousePos().x/double(getParams().width)-0.5)*4.0/3.0;
+        light.y = 4.0*(0.5-iface->getMousePos().y/double(getParams().height));
         crazyShader.setUniform( "lightPos", light );
     }
 }
@@ -197,7 +197,8 @@ void CustomCore::draw()
 
         //Cameras have view setters based on GLUT
         Camera cam;
-        cam.perspective(90.f, 4.f/3.f, 0.1f, 100.f);
+        float aspect = float(getParams().width)/float(getParams().height);
+        cam.perspective(90.f, aspect, 0.1f, 100.f);
         cam.depthTest = true;
 
         applyCam(cam);

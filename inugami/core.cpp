@@ -82,7 +82,6 @@ Core::Core(const RenderParams &params)
     , frStackIterator(frameRateStack.begin())
 
     , rparams(params)
-    , aspectRatio(double(rparams.width)/double(rparams.height))
 
     , windowTitle("Inugami")
     , windowTitleShowFPS(false)

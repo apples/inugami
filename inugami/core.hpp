@@ -239,7 +239,6 @@ private:
     std::list<double>::iterator frStackIterator;
 
     RenderParams rparams;
-    float aspectRatio;
 
     std::string windowTitle;
     bool windowTitleShowFPS;

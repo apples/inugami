@@ -27,5 +27,5 @@
 
 #include "meta.hpp"
 
-Inugami::Logger<5>* logger;
+Inugami::Logger<>* logger;
 Inugami::Profiler* profiler;

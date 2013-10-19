@@ -44,8 +44,8 @@ int main()
     profiler = new Profiler();
     ScopedProfile prof(profiler, "Main");
 
-    std::ofstream logfile("log.txt");
-    logger = new Logger<5>(logfile);
+    std::ofstream logfile("log2.txt");
+    logger = new Logger<>(logfile);
 
     CustomCore::RenderParams renparams;
     renparams.fullscreen = true;
@@ -53,9 +53,9 @@ int main()
 
     try
     {
-        logger->log<5>("Creating Core...");
+        logger->log("Creating Core...");
         CustomCore base(renparams);
-        logger->log<5>("Go!");
+        logger->log("Go!");
         base.go();
     }
     catch (const std::exception& e)

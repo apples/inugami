@@ -107,7 +107,7 @@ private:
  *  @tparam MAXPRIORITY The maximum priority allowed for logging.
  *  @tparam SECONDARY The minimum priority required for secondary logging.
  */
-template <unsigned int MAXPRIORITY, unsigned int SECONDARY = MAXPRIORITY+1>
+template <unsigned int MAXPRIORITY = 0, unsigned int SECONDARY = MAXPRIORITY+1>
 class Logger
 {
     friend class StackLog<Logger>;
@@ -183,17 +183,36 @@ public:
      *
      *  @return *this
      */
-    template <unsigned int PRIORITY, typename... T>
-    Logger& log(const T&... args)
+    template <unsigned int PRIORITY = 0, typename... T>
+    typename std::enable_if<
+           (PRIORITY <= MAXPRIORITY)
+        && (PRIORITY >= SECONDARY)
+    ,
+    Logger&>::type log(const T&... args)
     {
-        if (PRIORITY <= MAXPRIORITY)
-        {
-            if (PRIORITY >= SECONDARY)
-            {
-                if (stream2) print2("[", PRIORITY, "] ", prefix, args...);
-            }
-            if (stream1) print1("[", PRIORITY, "] ", prefix, args...);
-        }
+        if (stream2) print2("[", PRIORITY, "] ", prefix, args...);
+        if (stream1) print1("[", PRIORITY, "] ", prefix, args...);
+        return *this;
+    }
+
+    template <unsigned int PRIORITY = 0, typename... T>
+    typename std::enable_if<
+           (PRIORITY <= MAXPRIORITY)
+        &&!(PRIORITY >= SECONDARY)
+    ,
+    Logger&>::type log(const T&... args)
+    {
+        if (stream1) print1("[", PRIORITY, "] ", prefix, args...);
+        return *this;
+    }
+
+    template <unsigned int PRIORITY = 0, typename... T>
+    typename std::enable_if<
+          !(PRIORITY <= MAXPRIORITY)
+        &&!(PRIORITY >= SECONDARY)
+    ,
+    Logger&>::type log(const T&... args)
+    {
         return *this;
     }
 
@@ -209,7 +228,7 @@ private:
     void print1(const T& a)
     {
         *stream1 << a;
-        std::endl(*stream1);
+        *stream1 << std::endl;
     }
 
     template <typename T, typename... VT>
@@ -223,7 +242,7 @@ private:
     void print2(const T& a)
     {
         *stream2 << a;
-        std::endl(*stream2);
+        *stream2 << std::endl;
     }
 
     template <typename T, typename... VT>
