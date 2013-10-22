@@ -28,11 +28,11 @@
 #ifndef INUGAMI_IMAGE_H
 #define INUGAMI_IMAGE_H
 
+#include "pixel.hpp"
 #include "utility.hpp"
 
 #include <png++/png.hpp>
 
-#include <array>
 #include <string>
 #include <vector>
 
@@ -44,19 +44,13 @@ namespace Inugami {
  */
 class Image
 {
-public:
-    /*! @brief An 8-bit subpixel
-     *
-     *  Represents one of either red, green, blue, or alpha. Ranges from 0
-     *  (black/transparent) to 255 (full/opaque).
-     */
-    using SubPixel = unsigned char;
+    template <typename A>
+    using Const = ConstAttr<A,Image>;
 
-    /*! @brief An RGBA8 pixel.
-     *
-     *  An array of 8-bit SubPixel%s: red, green, blue, and alpha.
+public:
+    /*! @brief A row of pixels.
      */
-    using Pixel = std::array<SubPixel,4>;
+    using Row = Pixel*;
 
     /*! @brief Creates an Image from a PNG file.
      *
@@ -79,6 +73,19 @@ public:
      */
     static Image fromNoise(int w, int h);
 
+    /*! @brief Default contructor.
+     */
+    Image() = default;
+
+    /*! @brief Canvas constructor.
+     *
+     *  Constructs the Image such that all pixels are a default color.
+     *
+     *  @param w Width.
+     *  @param h Height.
+     */
+    Image(int w, int h);
+
     /*! @brief Solid color constructor.
      *
      *  Constructs the Image such that all pixels are the given color.
@@ -87,11 +94,7 @@ public:
      *  @param h Height.
      *  @param color Pixel to fill the Image with.
      */
-    Image(int w, int h, const Pixel& color = Pixel{{255,255,255,255}});
-
-    /*! @brief Default contructor.
-     */
-    Image() = default;
+    Image(int w, int h, const Pixel& color);
 
     /*! @brief Access the pixel at the given location.
      *
@@ -100,7 +103,7 @@ public:
      *
      *  @return Reference to the Pixel.
      */
-    Pixel& pixelAt(int x, int y);
+    Pixel& at(int x, int y) &;
 
     /*! @brief Access the pixel at the given location.
      *
@@ -109,7 +112,23 @@ public:
      *
      *  @return Reference to the Pixel.
      */
-    const Pixel& pixelAt(int x, int y) const;
+    const Pixel& at(int x, int y) const&;
+
+    /*! @brief Access the row at the given location.
+     *
+     *  @param y Y coordinate.
+     *
+     *  @return Row of pixels.
+     */
+    Pixel* operator[](int y) &;
+
+    /*! @brief Access the row at the given location.
+     *
+     *  @param y Y coordinate.
+     *
+     *  @return Row of pixels.
+     */
+    const Pixel* operator[](int y) const&;
 
     /*! @brief Changes the dimensions of the Image.
      *
@@ -120,11 +139,37 @@ public:
      */
     void resize(int w, int h);
 
-    ConstAttr<int,Image> width, height;
+    /*! @brief Width of the image, in pixels.
+     */
+    Const<int> width;
+
+    /*! @brief Height of the image, in pixels.
+     */
+    Const<int> height;
 
 private:
     std::vector<Pixel> pixels;
 };
+
+/*! @brief Blurs the image using a simple method.
+ *
+ *  @param img Source image.
+ *
+ *  @return Blurred image.
+ */
+Image blur(Image img);
+
+/*! @brief Amplifies the image's colors.
+ *
+ *  Scales the image's color values so that the minimum value is 0, and the
+ *  maximum value is 1. Colors are scaled independently. If a color has only one
+ *  value throughout the image, it will be unaffected.
+ *
+ *  @param img Source image.
+ *
+ *  @return Blurred image.
+ */
+Image amplify(Image img);
 
 } // namespace Inugami
 

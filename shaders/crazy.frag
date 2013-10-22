@@ -13,9 +13,9 @@ uniform vec3 lightPos;
 
 out vec4 FragColor;
 
-vec3 shiftColor(vec3 cin) {
-    float c = cos(hue);
-    float s = sin(hue);
+vec3 shiftColor(vec3 cin, float h) {
+    float c = cos(h);
+    float s = sin(h);
     vec3 a = normalize(vec3(1.0,1.0,1.0));
     mat3 rot = mat3(
         c+a.x*a.x*(1.0-c)      ,   a.x*a.y*(1.0-c)+a.z*s,   a.x*a.z*(1.0-c)-a.y*s
@@ -33,14 +33,15 @@ void main() {
 
     vec4 texColor;
     //burn = 0.0;
+    texColor = texture(Tex0, TexCoord);
     if (burn > 0.0)
     {
-        texColor = mix(vec4(1.0,0.0,0.0,1.0),vec4(0.0,0.0,0.0,1.0),burn);
+        texColor = mix(vec4(1.0,0.0,0.0,1.0)*texColor,vec4(0.0,0.0,0.0,1.0)*texColor,burn);
+        texColor.xyz = shiftColor(texColor.xyz, hue*2.0);
     }
     else
     {
-        texColor = texture(Tex0, TexCoord);
-        texColor.xyz = shiftColor(texColor.xyz);
+        texColor.xyz = shiftColor(texColor.xyz, hue);
         texColor.xyz = texColor.xyz*clamp(dot(Normal, normalize(lightPos-Position)), 0.1,1.0);
     }
     FragColor = texColor;

@@ -38,6 +38,7 @@ class Geometry;
 class Image;
 class Interface;
 class Mesh;
+class Pixel;
 class Profiler;
 class Shader;
 class ShaderProgram;

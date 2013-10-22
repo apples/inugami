@@ -52,6 +52,9 @@ private:
     bool highDef;
     bool shaderOn;
 
+    Inugami::Image          noise;
+    Inugami::Image          noiseDir;
+
     Inugami::Texture        shieldTex;
     Inugami::Texture        noiseTex;
     Inugami::AnimatedSprite fontRoll;

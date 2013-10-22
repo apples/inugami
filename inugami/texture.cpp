@@ -108,7 +108,7 @@ void Texture::upload(const Image& img, bool smooth, bool clamp)
         , 0
         , GL_RGBA
         , GL_UNSIGNED_BYTE
-        , &img.pixelAt(0,0)
+        , &img[0][0]
     );
 }
 

@@ -48,13 +48,17 @@ using namespace Inugami;
 CustomCore::CustomCore(const RenderParams &params)
     : Core(params)
     , rotation(0.f)
-    , dissolveMin(0.25f), dissolveMax(0.75f)
+    , dissolveMin(0.45f)
+    , dissolveMax(0.55f)
     , ticks(0)
     , highDef(true)
     , shaderOn(true)
 
+    , noise    (Image::fromNoise(64, 64))
+    , noiseDir (64, 64, {1,1,1,1})
+
     , shieldTex       (Image::fromPNG("data/shield.png"), true, false)
-    , noiseTex        (Image::fromNoise(64,64), false, false)
+    , noiseTex        (noise, true, false)
     , fontRoll        (Spritesheet(Image::fromPNG("data/font.png"), 8, 8))
     , shield          (Geometry::fromOBJ("data/shield.obj"))
     , shieldHD        (Geometry::fromOBJ("data/shieldHD.obj"))
@@ -79,8 +83,7 @@ CustomCore::CustomCore(const RenderParams &params)
     fontRoll.setMode(AnimatedSprite::Mode::NORMAL);
 
     logger->log("Adding callbacks...");
-    addCallback(std::bind(&CustomCore::tick, this), 60.0);
-    addCallback(std::bind(&CustomCore::draw, this), 60.0);
+    addCallback([&]{ tick(); draw(); }, 60.0);
 
     setWindowTitle("Inugami Demo", true);
 
@@ -149,7 +152,7 @@ void CustomCore::tick()
     fontRoll.tick();
     if (keySpace) fontRoll.reset();
 
-    if (!keyW) rotation+=1.0;
+    if (!keyW) rotation+=0.5;
 
     //Inugami has several math functions, including wrap()
     rotation = wrap(rotation, 0.0f, 360.0f);
@@ -170,8 +173,6 @@ void CustomCore::tick()
     if (shaderOn)
     {
         crazyShader.bind();
-        //crazyShader.setUniform("wobbleX", float(1.0+0.25*std::sin(ticks/27.0)));
-        //crazyShader.setUniform("wobbleY", float(1.0+0.25*std::cos(ticks/43.0)));
         crazyShader.setUniform("dissolveMin", float(dissolveMin) );
         crazyShader.setUniform("dissolveMax", float(dissolveMax) );
         crazyShader.setUniform("hue", float(ticks/67.0) );
@@ -180,6 +181,45 @@ void CustomCore::tick()
         light.x = 4.0*(iface->getMousePos().x/double(getParams().width)-0.5)*4.0/3.0;
         light.y = 4.0*(0.5-iface->getMousePos().y/double(getParams().height));
         crazyShader.setUniform( "lightPos", light );
+
+        for (int r=0; r<noise.height; ++r)
+        {
+            for (int c=0; c<noise.width; ++c)
+            {
+                auto&& pix = noise   .at(c, r);
+                auto&& dir = noiseDir.at(c, r);
+                for (int i=0; i<4; ++i)
+                {
+                    if (dir[i] == 1)
+                    {
+                        if (pix[i] > 250)
+                        {
+                            pix[i] = (255)-(255-pix[i]);
+                            dir[i] = 2;
+                        }
+                        else
+                        {
+                            pix[i] += 5;
+                        }
+                    }
+                    else
+                    {
+                        if (pix[i] < 5)
+                        {
+                            pix[i] = (5-pix[i]);
+                            dir[i] = 1;
+                        }
+                        else
+                        {
+                            pix[i] -= 5;
+                        }
+                    }
+                }
+            }
+        }
+
+        noiseTex = Texture(noise, true, false);
+        noiseTex.bind(1);
     }
 }
 
@@ -198,7 +238,7 @@ void CustomCore::draw()
         //Cameras have view setters based on GLUT
         Camera cam;
         float aspect = float(getParams().width)/float(getParams().height);
-        cam.perspective(90.f, aspect, 0.1f, 100.f);
+        cam.perspective(70.f, aspect, 0.1f, 100.f);
         cam.depthTest = true;
 
         applyCam(cam);
