@@ -48,7 +48,8 @@ int main()
     logger = new Logger<>(logfile);
 
     CustomCore::RenderParams renparams;
-    renparams.fullscreen = false;
+    renparams.fullscreen = true;
+    renparams.vsync = true;
     renparams.fsaaSamples = 4;
 
     try

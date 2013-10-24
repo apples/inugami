@@ -149,6 +149,7 @@ inline bool Shader::setUniform<int>(const std::string& name, int&& val) const
     const Uniform* uni = getUniform(name);
     if (!uni) return false;
     if (    uni->type != GT::value
+        &&  uni->type != GL_BOOL
         &&  uni->type != GL_SAMPLER_1D
         &&  uni->type != GL_SAMPLER_2D
         &&  uni->type != GL_SAMPLER_3D

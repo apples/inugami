@@ -27,6 +27,8 @@
 
 #include "pixel.hpp"
 
+#include "math.hpp"
+
 namespace Inugami {
 
 Pixel::Pixel(int h)
@@ -91,7 +93,7 @@ Pixel& Pixel::operator+=(const Pixel& a)
 {
     auto op = [&](int i)
     {
-        data[i] += a[i];
+        data[i] = std::max(data[i]+a[i], 255);
     };
     for (int i=0; i<4; ++i) op(i);
     return *this;
@@ -101,7 +103,7 @@ Pixel& Pixel::operator-=(const Pixel& a)
 {
     auto op = [&](int i)
     {
-        data[i] -= a[i];
+        data[i] = std::min(data[i]-a[i], 0);
     };
     for (int i=0; i<4; ++i) op(i);
     return *this;
@@ -121,7 +123,8 @@ Pixel& Pixel::operator/=(const Pixel& a)
 {
     auto op = [&](int i)
     {
-        data[i] = (data[i]*255)/a[i];
+        if (a[i] == 0) data[i] = 255;
+        else data[i] = clamp((data[i]*255)/a[i], 0, 255);
     };
     for (int i=0; i<4; ++i) op(i);
     return *this;
@@ -131,7 +134,7 @@ Pixel& Pixel::operator*=(float f)
 {
     auto op = [&](int i)
     {
-        data[i] *= f;
+        data[i] = clamp(int(data[i]*f), 0, 255);
     };
     for (int i=0; i<4; ++i) op(i);
     return *this;

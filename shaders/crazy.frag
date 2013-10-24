@@ -10,6 +10,7 @@ uniform float hue;
 uniform float dissolveMin;
 uniform float dissolveMax;
 uniform vec3 lightPos;
+uniform bool useDissolve;
 
 out vec4 FragColor;
 
@@ -25,24 +26,41 @@ vec3 shiftColor(vec3 cin, float h) {
     return clamp(rot*cin, vec3(0.0,0.0,0.0), vec3(1.0,1.0,1.0));
 }
 
-void main() {
+vec4 applyLight(vec4 c)
+{
+    c.xyz = c.xyz*clamp(dot(normalize(Normal), normalize(lightPos-Position)), 0.1, 1.0);
+    return c;
+}
+
+vec4 applyShift(vec4 c, float f)
+{
+    c.xyz = shiftColor(c.xyz, hue*f);
+    return c;
+}
+
+vec4 applyDissolve(vec4 c)
+{
     float noise = texture( noiseTex, TexCoord ).a;
 
     float burn = max(max(dissolveMin-noise, noise-dissolveMax)*20.0, 0.0);
     if (burn > 1.0) discard;
 
-    vec4 texColor;
-    //burn = 0.0;
-    texColor = texture(Tex0, TexCoord);
     if (burn > 0.0)
     {
-        texColor = mix(vec4(1.0,0.0,0.0,1.0)*texColor,vec4(0.0,0.0,0.0,1.0)*texColor,burn);
-        texColor.xyz = shiftColor(texColor.xyz, hue*2.0);
+        c = mix(vec4(1.0,0.0,0.0,1.0)*c,vec4(0.0,0.0,0.0,1.0)*c,burn);
+        c = applyShift(c, 2.0);
     }
     else
     {
-        texColor.xyz = shiftColor(texColor.xyz, hue);
-        texColor.xyz = texColor.xyz*clamp(dot(Normal, normalize(lightPos-Position)), 0.1,1.0);
+        c = applyLight(applyShift(c, 1.0));
     }
-    FragColor = texColor;
+
+    return c;
+}
+
+void main() {
+    vec4 texcolor = texture(Tex0, TexCoord);
+    if (useDissolve) texcolor = applyDissolve(texcolor);
+    else texcolor = applyLight(applyShift(texcolor, 1.0));
+    FragColor = texcolor;
 }

@@ -241,8 +241,12 @@
 		<Unit filename="inugami/opengl.hpp">
 			<Option virtualFolder="OpenGL/" />
 		</Unit>
-		<Unit filename="inugami/pixel.cpp" />
-		<Unit filename="inugami/pixel.hpp" />
+		<Unit filename="inugami/pixel.cpp">
+			<Option virtualFolder="Resource Data/" />
+		</Unit>
+		<Unit filename="inugami/pixel.hpp">
+			<Option virtualFolder="Resource Data/" />
+		</Unit>
 		<Unit filename="inugami/profiler.cpp">
 			<Option virtualFolder="Utilities/" />
 		</Unit>

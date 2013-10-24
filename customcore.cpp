@@ -48,17 +48,18 @@ using namespace Inugami;
 CustomCore::CustomCore(const RenderParams &params)
     : Core(params)
     , rotation(0.f)
-    , dissolveMin(0.45f)
-    , dissolveMax(0.55f)
+    , dissolveMin(0.25f)
+    , dissolveMax(0.75f)
     , ticks(0)
     , highDef(true)
     , shaderOn(true)
 
-    , noise    (Image::fromNoise(64, 64))
+    , noise    (64, 64)
     , noiseDir (64, 64, {1,1,1,1})
 
     , shieldTex       (Image::fromPNG("data/shield.png"), true, false)
-    , noiseTex        (noise, true, false)
+    , noiseTex        ()
+    , glassTex        (Image(32,32,{32,32,255,128}), false, false)
     , fontRoll        (Spritesheet(Image::fromPNG("data/font.png"), 8, 8))
     , shield          (Geometry::fromOBJ("data/shield.obj"))
     , shieldHD        (Geometry::fromOBJ("data/shieldHD.obj"))
@@ -91,7 +92,24 @@ CustomCore::CustomCore(const RenderParams &params)
     crazyShader.setUniform("Tex0", 0);
     crazyShader.setUniform("noiseTex", 1);
 
-    noiseTex.bind(1);
+    Image tmp = Image::fromNoise(64, 64);
+    //tmp = blur(tmp);
+    //tmp = blur(tmp);
+
+    for (int r=0; r<noise.height; ++r)
+    {
+        for (int c=0; c<noise.width; ++c)
+        {
+            double f = float(c)/(noise.width/2.0);
+            if (f>1.0) f = 2.0-f;
+            SubPixel sp = 255*f;
+            noise[r][c] = {sp, sp, sp, sp};
+            for (int i=0; i<4; ++i)
+            {
+                noise[r][c][i] = clamp(noise[r][c][i]+(128-tmp[r][c][i])/8, 0, 255);
+            }
+        }
+    }
 }
 
 CustomCore::~CustomCore()
@@ -152,13 +170,11 @@ void CustomCore::tick()
     fontRoll.tick();
     if (keySpace) fontRoll.reset();
 
-    if (!keyW) rotation+=0.5;
+    if (keyQ) rotation = wrap(rotation-=2.0, 0.0f, 360.0f);
+    if (keyE) rotation = wrap(rotation+=2.0, 0.0f, 360.0f);
 
     //Inugami has several math functions, including wrap()
     rotation = wrap(rotation, 0.0f, 360.0f);
-
-    if (keyQ) rotation = wrap(rotation-=3.0, 0.0f, 360.0f);
-    if (keyE) rotation = wrap(rotation+=1.0, 0.0f, 360.0f);
 
     if (keyO || keyMinus) dissolveMin = clamp(dissolveMin-=0.005f, -0.25f, 1.25f);
     if (keyP || keyEqual) dissolveMin = clamp(dissolveMin+=0.005f, -0.25f, 1.25f);
@@ -177,9 +193,10 @@ void CustomCore::tick()
         crazyShader.setUniform("dissolveMax", float(dissolveMax) );
         crazyShader.setUniform("hue", float(ticks/67.0) );
 
-        Vec3 light(0.f,0.f,-1.5f);
+        Vec3 light(0.f,0.f,2.5f);
         light.x = 4.0*(iface->getMousePos().x/double(getParams().width)-0.5)*4.0/3.0;
         light.y = 4.0*(0.5-iface->getMousePos().y/double(getParams().height));
+        light.z = light.z+(light.x*light.x/16.f)*(light.y*light.y/16.f)*light.x*2;
         crazyShader.setUniform( "lightPos", light );
 
         for (int r=0; r<noise.height; ++r)
@@ -192,27 +209,13 @@ void CustomCore::tick()
                 {
                     if (dir[i] == 1)
                     {
-                        if (pix[i] > 250)
-                        {
-                            pix[i] = (255)-(255-pix[i]);
-                            dir[i] = 2;
-                        }
-                        else
-                        {
-                            pix[i] += 5;
-                        }
+                        pix[i] += 1;
+                        if (pix[i] == 255) dir[i] = 2;
                     }
                     else
                     {
-                        if (pix[i] < 5)
-                        {
-                            pix[i] = (5-pix[i]);
-                            dir[i] = 1;
-                        }
-                        else
-                        {
-                            pix[i] -= 5;
-                        }
+                        pix[i] -= 1;
+                        if (pix[i] == 0) dir[i] = 1;
                     }
                 }
             }
@@ -239,24 +242,51 @@ void CustomCore::draw()
         Camera cam;
         float aspect = float(getParams().width)/float(getParams().height);
         cam.perspective(70.f, aspect, 0.1f, 100.f);
-        cam.depthTest = true;
-
-        applyCam(cam);
 
         //Transforms are matrix stacks
         Transform mat;
         mat.translate(Vec3{0.f, -1.5f, -3.f});
         mat.rotate(rotation, Vec3{0.f, 1.f, 0.f});
 
-        modelMatrix(mat);
+        {
+            cam.depthTest = true;
+            cam.cullFaces = false;
+            applyCam(cam);
 
-        //Textures are set using bind()
-        shieldTex.bind(0);
-        noiseTex.bind(1);
+            modelMatrix(mat);
 
-        //Models use the currently bound texture
-        if (highDef) shieldHD.draw();
-        else         shield  .draw();
+            //Textures are set using bind()
+            shieldTex.bind(0);
+            noiseTex.bind(1);
+
+            if (shaderOn) crazyShader.setUniform("useDissolve", 1);
+
+            //Models use the currently bound texture
+            if (highDef) shieldHD.draw();
+            else         shield  .draw();
+        }
+        {
+            cam.depthTest = true;
+            cam.cullFaces = true;
+            applyCam(cam);
+
+            mat.push();
+            mat.scale(Vec3{0.999f, 0.999f, 0.999f});
+            mat.translate(Vec3{0.f, 0.001f, -0.001f});
+            modelMatrix(mat);
+            mat.pop();
+
+            //Textures are set using bind()
+            glassTex.bind(0);
+            noiseTex.bind(1);
+
+            if (shaderOn) crazyShader.setUniform("useDissolve", 0);
+
+            //Models use the currently bound texture
+            if (highDef) shieldHD.draw();
+            else         shield  .draw();
+        }
+
     }
 
     {

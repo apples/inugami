@@ -57,6 +57,7 @@ private:
 
     Inugami::Texture        shieldTex;
     Inugami::Texture        noiseTex;
+    Inugami::Texture        glassTex;
     Inugami::AnimatedSprite fontRoll;
     Inugami::Mesh           shield;
     Inugami::Mesh           shieldHD;
