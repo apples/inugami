@@ -184,6 +184,9 @@
 		<Unit filename="inugami/detail/containerutils.hpp">
 			<Option virtualFolder="Utilities/Detail/" />
 		</Unit>
+		<Unit filename="inugami/detail/edgedetector.hpp">
+			<Option virtualFolder="Utilities/Detail/" />
+		</Unit>
 		<Unit filename="inugami/detail/range.hpp">
 			<Option virtualFolder="Utilities/Detail/" />
 		</Unit>

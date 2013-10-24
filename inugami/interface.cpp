@@ -27,51 +27,92 @@
 
 #include "interface.hpp"
 
+#include "exception.hpp"
+
 #include <algorithm>
+#include <sstream>
+#include <string>
 #include <utility>
 
 namespace Inugami {
 
 bool Interface::callbacksRegistered = false;
-std::map<Interface::Window, Interface*> Interface::windowMap;
+std::unordered_map<Interface::Window, Interface*> Interface::windowMap;
 
-Interface::Proxy::Proxy()
-    : iface(nullptr)
-    , key(0)
-{}
+class InterfaceE_InvalidKey
+    : public Exception
+{
+    std::string err;
+public:
+    InterfaceE_InvalidKey(int k)
+        : err()
+    {
+        std::stringstream ss;
+        ss << "Inugami::Interface Exception: Invalid key code: " << k;
+        err = ss.str();
+    }
 
-Interface::Proxy::Proxy(Interface* const inIface, int k)
-    : iface(inIface)
-    , key(k)
+    virtual const char* what() const noexcept override
+    {
+        return err.c_str();
+    }
+};
+
+class InterfaceE_InvalidMB
+    : public Exception
+{
+    std::string err;
+public:
+    InterfaceE_InvalidMB(int k)
+        : err()
+    {
+        std::stringstream ss;
+        ss << "Inugami::Interface Exception: Invalid mouse button: " << k;
+        err = ss.str();
+    }
+
+    virtual const char* what() const noexcept override
+    {
+        return err.c_str();
+    }
+};
+
+void Interface::ProxyData::update(bool s)
+{
+    edge = int(s)-int(state);
+    state = s;
+}
+
+Interface::Proxy::Proxy(const ProxyData* d)
+    : data(d)
 {}
 
 Interface::Proxy::operator bool() const
 {
-    return down();
-}
-
-bool Interface::Proxy::down() const
-{
-    if (!iface) return false;
-    return iface->keyDown(key);
+    return data->state;
 }
 
 bool Interface::Proxy::pressed() const
 {
-    if (!iface) return false;
-    return iface->keyPressed(key);
+    return (data->edge == 1);
 }
 
-void Interface::Proxy::reassign(int k)
+bool Interface::Proxy::released() const
 {
-    key = k;
+    return (data->edge == -1);
+}
+
+int Interface::Proxy::edge() const
+{
+    return data->edge;
 }
 
 Interface::Interface(Window windowIN)
     : window(windowIN)
     , keyBuffer("")
-    , keyStates(), mouseStates()
-    , mousePos{0,0}
+    , keyStates()
+    , mouseStates()
+    , mousePos{0.0,0.0}
     , mouseWheel{0.0,0.0}
 {
     windowMap[window] = this;
@@ -96,47 +137,33 @@ Interface::~Interface()
 
 void Interface::poll() //static
 {
-    for (auto&& p : windowMap) if (p.second) p.second->clearPresses();
+    for (auto&& p : windowMap)
+    {
+        for (auto&& d : p.second->  keyStates) d.edge = 0;
+        for (auto&& d : p.second->mouseStates) d.edge = 0;
+    }
+
     glfwPollEvents();
 }
 
-bool Interface::keyDown(int key) const
+Interface::Proxy Interface::key(int key) const
 {
-    if (key < 0 || key > GLFW_KEY_LAST) return false;
-    return keyStates.states[key];
-}
-
-bool Interface::keyPressed(int key, bool clr)
-{
-    if (key < 0 || key > GLFW_KEY_LAST) return false;
-    if (keyStates.presses.test(key))
+    if (key < 0 || key > GLFW_KEY_LAST)
     {
-        if (clr) keyStates.presses.reset(key);
-        return true;
+        throw InterfaceE_InvalidKey(key);
     }
-    return false;
+
+    return {&keyStates[key]};
 }
 
-std::string Interface::getBuffer()
+Interface::Proxy Interface::mouse(int button) const
 {
-    return std::move(keyBuffer);
-}
-
-bool Interface::mouseState(int button) const
-{
-    if (button < 0 || button > GLFW_MOUSE_BUTTON_LAST) return false;
-    return mouseStates.states[button];
-}
-
-bool Interface::mousePressed(int button, bool clr)
-{
-    if (button < 0 || button > GLFW_MOUSE_BUTTON_LAST) return false;
-    if (mouseStates.presses[button])
+    if (button < 0 || button > GLFW_MOUSE_BUTTON_LAST)
     {
-        if (clr) mouseStates.presses[button] = false;
-        return true;
+        throw InterfaceE_InvalidMB(button);
     }
-    return false;
+
+    return {&mouseStates[button]};
 }
 
 auto Interface::getMousePos() const -> Coord<double>
@@ -168,61 +195,58 @@ void Interface::showMouse(bool show) const
     else      glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
 }
 
-Interface::Proxy Interface::getProxy(int k)
+bool Interface::getRawKeyState(int key) const
 {
-    return Proxy(this, k);
+    return keyStates[key].state;
 }
 
-void Interface::clearPresses()
+void Interface::setRawKeyState(int key, bool s)
 {
-    keyStates.presses.reset();
-    mouseStates.presses.reset();
+    keyStates[key].update(s);
+}
+
+bool Interface::getRawMouseState(int key) const
+{
+    return mouseStates[key].state;
+}
+
+void Interface::setRawMouseState(int key, bool s)
+{
+    mouseStates[key].update(s);
 }
 
 void Interface::keyboardCallback(Window win, int key, int, int action, int) //static
 {
-    if (key < 0 || key > GLFW_KEY_LAST) return;
     Interface* iface = windowMap[win];
-    if (!iface) return;
-    if (action == GLFW_PRESS)
-    {
-        iface->keyStates.states.set(key);
-        iface->keyStates.presses.set(key);
-    }
-    else if (action == GLFW_RELEASE)
-    {
-        iface->keyStates.states.reset(key);
-    }
+
+    if (!iface) return; //! @todo Properly check this.
+
+    iface->keyStates[key].update(action != GLFW_RELEASE);
 }
 
 void Interface::unicodeCallback(Window win, unsigned int key) //static
 {
-    if (key > 255) return;
+    if (key > 255) return; //! @todo Unicode support.
+
     Interface* iface = windowMap[win];
-    if (!iface) return;
+    if (!iface) return; //! @todo Properly check this.
+
     iface->keyBuffer += char(key);
 }
 
 void Interface::mouseButtonCallback(Window win, int button, int action, int) //static
 {
     Interface* iface = windowMap[win];
-    if (!iface) return;
-    if (button < 0 || button > GLFW_MOUSE_BUTTON_LAST) return;
-    if (action == GLFW_PRESS)
-    {
-        iface->mouseStates.states[button] = true;
-        iface->mouseStates.presses[button] = true;
-    }
-    else if (action == GLFW_RELEASE)
-    {
-        iface->mouseStates.states[button] = false;
-    }
+    if (!iface) return; //! @todo Properly check this.
+
+    iface->mouseStates[button].update(action != GLFW_RELEASE);
 }
 
 void Interface::mousePositionCallback(Window win, double x, double y) //static
 {
     Interface* iface = windowMap[win];
-    if (!iface) return;
+    if (!iface) return; //! @todo Properly check this.
+
     iface->mousePos.x = x;
     iface->mousePos.y = y;
 }
@@ -230,7 +254,8 @@ void Interface::mousePositionCallback(Window win, double x, double y) //static
 void Interface::mouseWheelCallback(Window win, double x, double y) //static
 {
     Interface* iface = windowMap[win];
-    if (!iface) return;
+    if (!iface) return; //! @todo Properly check this.
+
     iface->mouseWheel.x = x;
     iface->mouseWheel.y = y;
 }

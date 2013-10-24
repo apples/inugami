@@ -120,20 +120,20 @@ void CustomCore::tick()
     ScopedProfile prof(profiler, "CustomCore: Tick");
 
     //Keybinds can be stored in proxies
-    auto keyQ     = iface->getProxy('Q');
-    auto keyE     = iface->getProxy('E');
-    auto keyO     = iface->getProxy('O');
-    auto keyP     = iface->getProxy('P');
-    auto keyMinus = iface->getProxy('-');
-    auto keyEqual = iface->getProxy('=');
-    auto keyLSB   = iface->getProxy('[');
-    auto keyRSB   = iface->getProxy(']');
-    auto keyW     = iface->getProxy('W');
-    auto keySpace = iface->getProxy(' ');
-    auto keyESC   = iface->getProxy(0_ivkFunc);
-    auto keyF1    = iface->getProxy(1_ivkFunc);
-    auto keyF2    = iface->getProxy(2_ivkFunc);
-    auto keyF5    = iface->getProxy(5_ivkFunc);
+    auto keyQ     = iface->key('Q');
+    auto keyE     = iface->key('E');
+    auto keyO     = iface->key('O');
+    auto keyP     = iface->key('P');
+    auto keyMinus = iface->key('-');
+    auto keyEqual = iface->key('=');
+    auto keyLSB   = iface->key('[');
+    auto keyRSB   = iface->key(']');
+    auto keyW     = iface->key('W');
+    auto keySpace = iface->key(' ');
+    auto keyESC   = iface->key(0_ivkFunc);
+    auto keyF1    = iface->key(1_ivkFunc);
+    auto keyF2    = iface->key(2_ivkFunc);
+    auto keyF5    = iface->key(5_ivkFunc);
 
     //Poll must be called every frame
     iface->poll();
@@ -265,14 +265,15 @@ void CustomCore::draw()
             if (highDef) shieldHD.draw();
             else         shield  .draw();
         }
+
         {
             cam.depthTest = true;
             cam.cullFaces = true;
             applyCam(cam);
 
             mat.push();
-            mat.scale(Vec3{0.999f, 0.999f, 0.999f});
-            mat.translate(Vec3{0.f, 0.001f, -0.001f});
+            mat.scale(Vec3{0.995f, 0.995f, 0.995f});
+            mat.translate(Vec3{0.f, 0.005f, 0.f});
             modelMatrix(mat);
             mat.pop();
 
@@ -286,7 +287,6 @@ void CustomCore::draw()
             if (highDef) shieldHD.draw();
             else         shield  .draw();
         }
-
     }
 
     {

@@ -25,14 +25,41 @@
  *
  ******************************************************************************/
 
-#ifndef UTILITY_HPP_INCLUDED
-#define UTILITY_HPP_INCLUDED
+#ifndef INUGAMI_DETAIL_EDGEDETECTOR_HPP
+#define INUGAMI_DETAIL_EDGEDETECTOR_HPP
 
-#include "detail/addonce.hpp"
-#include "detail/containerutils.hpp"
-#include "detail/constattr.hpp"
-#include "detail/edgedetector.hpp"
-#include "detail/range.hpp"
-#include "detail/streamutils.hpp"
+#include <functional>
 
-#endif // UTILITY_HPP_INCLUDED
+class EdgeDetector
+{
+public:
+    EdgeDetector() = default;
+    EdgeDetector(const EdgeDetector&) = default;
+    EdgeDetector(EdgeDetector&&) = default;
+
+    template <typename F>
+    EdgeDetector(F&& f)
+        : func(std::forward<F>(f))
+        , prev(false)
+    {}
+
+    explicit operator bool() const
+    {
+        return func();
+    }
+
+    int edge()
+    {
+        int rval;
+        bool next = func();
+        rval = int(next)-int(prev);
+        prev = next;
+        return rval;
+    }
+
+private:
+    std::function<bool()> func;
+    bool prev;
+};
+
+#endif // INUGAMI_DETAIL_EDGEDETECTOR_HPP

@@ -32,10 +32,10 @@
 
 #include "core.hpp"
 
-#include <bitset>
+#include <array>
 #include <list>
 #include <vector>
-#include <map>
+#include <unordered_map>
 
 namespace Inugami {
 
@@ -47,8 +47,63 @@ namespace Inugami {
 class Interface
 {
     friend class Core;
+
+    class ProxyData
+    {
+    public:
+        void update(bool s);
+
+        unsigned char edge;
+        bool state;
+    };
+
 public:
     using Window = Core::Window;
+
+    /*! @brief Key proxy.
+     */
+    class Proxy
+    {
+        friend Interface;
+        Proxy(const ProxyData* d);
+    public:
+        Proxy(const Proxy&) = default;
+        Proxy(Proxy&&) = default;
+
+        /*! @brief Evaluate state.
+         *
+         *  @return @a True if the key is down, @a false otherwise.
+         */
+        explicit operator bool() const;
+
+        /*! @brief Down edge detection.
+         *
+         *  @return @a True if the key was just pressed, @a false otherwise.
+         */
+        bool pressed() const;
+
+        /*! @brief Up edge detection.
+         *
+         *  @return @a True if the key was just released, @a false otherwise.
+         */
+        bool released() const;
+
+        /*! @brief Edge detection.
+         *
+         *  @return 1 if the key was just pressed, -1 if released, 0 otherwise.
+         */
+        int edge() const;
+
+    private:
+        const ProxyData* data;
+    };
+
+    /*! @brief Coordinate template.
+     */
+    template <typename T> struct Coord
+    {
+        T x, y;
+    };
 
     Interface() = delete;
     Interface(const Interface&) = delete;
@@ -64,67 +119,6 @@ public:
      */
     virtual ~Interface();
 
-    /*! @brief Coordinate template.
-     */
-    template <typename T> struct Coord
-    {
-        T x, y;
-    };
-
-    /*! @brief Keyboard proxy.
-     *
-     *  A Proxy can be thought of as a handle to a specific key on the keyboard.
-     */
-    class Proxy
-    {
-        friend class Interface;
-    public:
-
-        /*! @brief Default constructor.
-         */
-        Proxy();
-
-        /*! @brief Primary constructor.
-         *
-         *  Constructs the Proxy to connect to the given Interface and monitor
-         *  the given key.
-         *
-         *  @param inIface Interface to connect.
-         *  @param k Key to monitor.
-         *
-         *  @sa ivk_literals
-         */
-        Proxy(Interface* const inIface, int k);
-
-        /*! @brief Evaluates to @a true if key is down.
-         */
-        operator bool() const;
-
-        /*! @brief Returns @a true if key is down.
-         *
-         *  @return @a True if key is down, else @a false.
-         */
-        bool down() const;
-
-        /*! @brief Returns @a true if key was just pressed.
-         *
-         *  @return @a True if key was just pressed, else @a false.
-         */
-        bool pressed() const;
-
-        /*! @brief Changes the key that is monitored.
-         *
-         *  @param k New key to monitor.
-         *
-         *  @sa ivk_literals
-         */
-        void reassign(int k);
-
-    private:
-        Interface* iface;
-        int key;
-    };
-
     /*! @brief Checks for new input events.
      *
      *  It is recommended to call this once every frame.
@@ -135,22 +129,11 @@ public:
      *
      *  @param key Keycode.
      *
-     *  @return @a True if the key is down, else @a false.
+     *  @return A Proxy to the key.
      *
      *  @sa ivk_literals
      */
-    bool keyDown(int key) const;
-
-    /*! @brief Get the key's edge state.
-     *
-     *  @param key Keycode.
-     *  @param clr If @a true, resets edge state.
-     *
-     *  @return @a True if the key was just pressed, else @a false.
-     *
-     *  @sa ivk_literals
-     */
-    bool keyPressed(int key, bool clr = false);
+    Proxy key(int key) const;
 
     /*! @brief Gets the string buffer of printable keys.
      *
@@ -165,23 +148,11 @@ public:
      *
      *  @param button Mouse button.
      *
-     *  @return @a True if the button is down, else @a false.
+     *  @return A Proxy to the mouse button.
      *
      *  @sa ivk_literals
      */
-    bool mouseState(int button) const;
-
-    /*! @brief Get the mouse button's edge state.
-     *
-     *  @param button Mouse button.
-     *  @param clr If @a true, resets edge state.
-     *
-     *
-     *  @return @a True if the button is down, else @a false.
-     *
-     *  @sa ivk_literals
-     */
-    bool mousePressed(int button, bool clr = false);
+    Proxy mouse(int button) const;
 
     /*! @brief Get the mouse cursor's position.
      *
@@ -219,24 +190,51 @@ public:
      */
     void showMouse(bool show) const;
 
-    /*! @brief Creates a Proxy for the given key.
+    /*! @brief Get key state directly.
      *
-     *  @param k Keycode to monitor.
+     *  @param key Keycode.
      *
-     *  @return a Proxy for the given keycode.
+     *  @return @a True if the key is down, @a false otherwise.
      *
      *  @sa ivk_literals
      */
-    Proxy getProxy(int k);
+    bool getRawKeyState(int key) const;
+
+    /*! @brief Set key state directly.
+     *
+     *  Simulates a key press or release.
+     *
+     *  @param key Key code.
+     *  @param s New key state.
+     *
+     *  @sa ivk_literals
+     */
+    void setRawKeyState(int key, bool s);
+
+    /*! @brief Get mouse button state directly.
+     *
+     *  @param button Mouse button.
+     *
+     *  @return @a True if the button is down, @a false otherwise.
+     *
+     *  @sa ivk_literals
+     */
+    bool getRawMouseState(int button) const;
+
+    /*! @brief Set mouse button state directly.
+     *
+     *  Simulates a mouse button press or release.
+     *
+     *  @param button Mouse button.
+     *  @param s New button state.
+     *
+     *  @sa ivk_literals
+     */
+    void setRawMouseState(int button, bool s);
 
 private:
-    template <int m> struct State
-    {
-        std::bitset<m> states, presses;
-    };
-
     static bool callbacksRegistered;
-    static std::map<Window, Interface*> windowMap;
+    static std::unordered_map<Window, Interface*> windowMap;
 
     static void keyboardCallback(Window win, int key, int, int action, int);
     static void unicodeCallback(Window win, unsigned int key);
@@ -249,8 +247,8 @@ private:
     Window window;
 
     std::string keyBuffer;
-    State<GLFW_KEY_LAST+1> keyStates;
-    State<GLFW_MOUSE_BUTTON_LAST+1> mouseStates;
+    std::array<ProxyData, GLFW_KEY_LAST+1>            keyStates;
+    std::array<ProxyData, GLFW_MOUSE_BUTTON_LAST+1> mouseStates;
 
     Coord<double> mousePos;
     Coord<double> mouseWheel;
