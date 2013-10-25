@@ -34,23 +34,37 @@
 #include <iostream>
 #include <exception>
 #include <functional>
+#include <unordered_map>
 
 using namespace Inugami;
 
 void dumpProfiles();
 
-int main()
+int main(int argc, char* argv[])
 {
     profiler = new Profiler();
     ScopedProfile prof(profiler, "Main");
 
-    std::ofstream logfile("log2.txt");
+    std::ofstream logfile("log.txt");
     logger = new Logger<>(logfile);
 
     CustomCore::RenderParams renparams;
-    renparams.fullscreen = true;
-    renparams.vsync = true;
     renparams.fsaaSamples = 4;
+
+    {
+        std::unordered_map<std::string, std::function<void()>> argf = {
+              {"--fullscreen", [&]{renparams.fullscreen=true;}}
+            , {"--windowed",   [&]{renparams.fullscreen=false;}}
+            , {"--vsync",      [&]{renparams.vsync=true;}}
+            , {"--no-vsync",   [&]{renparams.vsync=false;}}
+        };
+
+        while (*++argv)
+        {
+            auto iter = argf.find(*argv);
+            if (iter != end(argf)) iter->second();
+        }
+    }
 
     try
     {
