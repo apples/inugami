@@ -36,9 +36,14 @@
 #include <functional>
 #include <unordered_map>
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 using namespace Inugami;
 
 void dumpProfiles();
+void errorMessage(const char*);
 
 int main(int argc, char* argv[])
 {
@@ -75,14 +80,12 @@ int main(int argc, char* argv[])
     }
     catch (const std::exception& e)
     {
-        std::cout << e.what() << std::endl;
-        std::ofstream("error.txt") << e.what();
+        errorMessage(e.what());
         return -1;
     }
     catch (...)
     {
-        std::cout << "Unknown exception." << std::endl;
-        std::ofstream("error.txt") << "Unknown exception.";
+        errorMessage("Unknown error!");
         return -1;
     }
 
@@ -118,4 +121,12 @@ void dumpProfiles()
         pfile << p.first << ":\n";
         dumProf(p.second, "\t");
     }
+}
+
+void errorMessage(const char* str)
+{
+#ifdef _WIN32
+    MessageBoxA(nullptr, str, "Exception", MB_OK);
+#endif
+    logger->log(str);
 }
