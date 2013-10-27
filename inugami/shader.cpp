@@ -85,7 +85,7 @@ Shader::Shared::~Shared()
 }
 
 Shader::Shader(const ShaderProgram &source)
-    : share(new Shared)
+    : share(std::make_shared<Shared>())
 {
     auto compile = [](const GLuint id, const std::string &codeStr)
     {

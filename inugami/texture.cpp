@@ -74,7 +74,7 @@ Texture::Shared::~Shared()
 Texture::Texture(const Image& img, bool smooth, bool clamp)
     : width (img.width)
     , height(img.height)
-    , share (new Shared)
+    , share (std::make_shared<Shared>())
 {
     upload(img, smooth, clamp);
 }

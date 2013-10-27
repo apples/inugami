@@ -32,7 +32,6 @@
 
 #include <png++/png.hpp>
 
-#include <map>
 #include <cmath>
 #include <random>
 #include <sstream>

@@ -32,7 +32,7 @@
 
 #include <algorithm>
 #include <fstream>
-#include <map>
+#include <unordered_map>
 #include <sstream>
 #include <string>
 
@@ -77,7 +77,7 @@ ShaderProgram ShaderProgram::fromDefault() //static
 
 ShaderProgram ShaderProgram::fromName(std::string in) //static
 {
-    static std::map<std::string, Type> typeStrings = {
+    static std::unordered_map<std::string, Type> typeStrings = {
         {"vert", VERT},
         { "tes",  TES},
         { "tcs",  TCS},

@@ -37,7 +37,7 @@
 #include <list>
 #include <memory>
 #include <string>
-#include <map>
+#include <unordered_map>
 
 namespace Inugami {
 
@@ -122,7 +122,7 @@ private:
         Shared();
         ~Shared();
         GLuint program;
-        std::map<std::string,Uniform> uniforms;
+        std::unordered_map<std::string,Uniform> uniforms;
     };
 
     void initUniforms();
