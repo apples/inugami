@@ -89,8 +89,8 @@ CustomCore::CustomCore(const RenderParams &params)
     setWindowTitle("Inugami Demo", true);
 
     crazyShader.bind();
-    crazyShader.setUniform("Tex0", 0);
-    crazyShader.setUniform("noiseTex", 1);
+    crazyShader.uniform("Tex0"    ).set(0);
+    crazyShader.uniform("noiseTex").set(1);
 
     Image tmp = Image::fromNoise(64, 64);
     //tmp = blur(tmp);
@@ -189,15 +189,15 @@ void CustomCore::tick()
     if (shaderOn)
     {
         crazyShader.bind();
-        crazyShader.setUniform("dissolveMin", float(dissolveMin) );
-        crazyShader.setUniform("dissolveMax", float(dissolveMax) );
-        crazyShader.setUniform("hue", float(ticks/67.0) );
+        crazyShader.uniform("dissolveMin").set( float(dissolveMin) );
+        crazyShader.uniform("dissolveMax").set( float(dissolveMax) );
+        crazyShader.uniform("hue").set( float(ticks/67.0) );
 
         Vec3 light(0.f,0.f,2.5f);
         light.x = 4.0*(iface->getMousePos().x/double(getParams().width)-0.5)*4.0/3.0;
         light.y = 4.0*(0.5-iface->getMousePos().y/double(getParams().height));
         light.z = light.z+(light.x*light.x/16.f)*(light.y*light.y/16.f)*light.x*2;
-        crazyShader.setUniform( "lightPos", light );
+        crazyShader.uniform( "lightPos").set( light );
 
         for (int r=0; r<noise.height; ++r)
         {
@@ -259,7 +259,7 @@ void CustomCore::draw()
             shieldTex.bind(0);
             noiseTex.bind(1);
 
-            if (shaderOn) crazyShader.setUniform("useDissolve", 1);
+            if (shaderOn) crazyShader.uniform("useDissolve").set(1);
 
             //Models use the currently bound texture
             if (highDef) shieldHD.draw();
@@ -281,7 +281,7 @@ void CustomCore::draw()
             glassTex.bind(0);
             noiseTex.bind(1);
 
-            if (shaderOn) crazyShader.setUniform("useDissolve", 0);
+            if (shaderOn) crazyShader.uniform("useDissolve").set(0);
 
             //Models use the currently bound texture
             if (highDef) shieldHD.draw();

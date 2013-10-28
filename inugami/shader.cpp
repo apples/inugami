@@ -37,12 +37,18 @@
 
 namespace Inugami {
 
+thread_local GLuint Shader::boundProgram = 0;
+
 const char* ShaderException::what() const noexcept
 {
     return err.c_str();
 }
 
-ShaderCompileException::ShaderCompileException(const std::string &codeStr, const std::string &errStr)
+ShaderE_CompileError::ShaderE_CompileError
+(
+      const std::string &codeStr
+    , const std::string &errStr
+)
 {
     std::stringstream ss;
     ss << "Shader compile error:\n";
@@ -55,7 +61,7 @@ ShaderCompileException::ShaderCompileException(const std::string &codeStr, const
     err = ss.str();
 }
 
-ShaderLinkException::ShaderLinkException(const std::string &errStr)
+ShaderE_LinkError::ShaderE_LinkError(const std::string &errStr)
 {
     std::stringstream ss;
     ss << "Shader link error:\n";
@@ -63,16 +69,38 @@ ShaderLinkException::ShaderLinkException(const std::string &errStr)
     err = ss.str();
 }
 
-ShaderUniformException::ShaderUniformException(const std::string &name)
+ShaderE_UniformTypeError::ShaderE_UniformTypeError()
 {
     std::stringstream ss;
-    ss << "Shader uniform error: Uniform ";
-    ss << name;
-    ss << " not of correct type!";
+    ss << "Shader uniform error: Uniform not of correct type!";
+    err = ss.str();
+}
+
+ShaderE_UniformBindError::ShaderE_UniformBindError()
+{
+    std::stringstream ss;
+    ss << "Shader uniform error: Shader must be bound!";
+    err = ss.str();
+}
+
+ShaderE_UniformShaderError::ShaderE_UniformShaderError()
+{
+    std::stringstream ss;
+    ss << "Shader uniform error: Uniform handle is invalid!";
     err = ss.str();
 }
 
 #ifndef INU_NO_SHADERS
+
+Shader::Uniform::Uniform()
+    : shader(nullptr)
+    , data(nullptr)
+{}
+
+Shader::Uniform::Uniform(const Shader* s, const UniformData* u)
+    : shader(s)
+    , data(u)
+{}
 
 Shader::Shared::Shared()
     : program(glCreateProgram())
@@ -101,7 +129,7 @@ Shader::Shader(const ShaderProgram &source)
             glGetShaderiv(id, GL_INFO_LOG_LENGTH, &len);
             std::vector<GLchar> log(len);
             glGetShaderInfoLog(id, 1024, &len, &log[0]);
-            throw ShaderCompileException(codeStr, &log[0]);
+            throw ShaderE_CompileError(codeStr, &log[0]);
         }
     };
 
@@ -139,7 +167,7 @@ Shader::Shader(const ShaderProgram &source)
         {
             std::vector<GLchar> log(len);
             glGetProgramInfoLog(share->program, len, &len, &log[0]);
-            throw ShaderLinkException(&log[0]);
+            throw ShaderE_LinkError(&log[0]);
         }
     }
 
@@ -154,7 +182,21 @@ Shader::Shader(const ShaderProgram &source)
 
 void Shader::bind() const
 {
+    if (isBound()) return;
     glUseProgram(share->program);
+    boundProgram = share->program;
+}
+
+bool Shader::isBound() const
+{
+    return (boundProgram == share->program);
+}
+
+Shader::Uniform Shader::uniform(const std::string& name) const
+{
+    auto iter = share->uniforms.find(name);
+    if (iter == share->uniforms.end()) return Uniform(this, nullptr);
+    return Uniform(this, &iter->second);
 }
 
 void Shader::initUniforms()
@@ -165,20 +207,13 @@ void Shader::initUniforms()
     glGetProgramiv(share->program, GL_ACTIVE_UNIFORM_MAX_LENGTH, &maxLength);
 
     GLchar* name = new GLchar[maxLength];
-    Uniform tmpUniform;
+    UniformData tmpUniform;
     for (int i=0; i<numUniforms; ++i)
     {
         glGetActiveUniform(share->program, i, maxLength, nullptr, &tmpUniform.size, &tmpUniform.type, name);
         tmpUniform.location = glGetUniformLocation(share->program, name);
         share->uniforms[name] = tmpUniform;
     }
-}
-
-const Shader::Uniform* Shader::getUniform(const std::string& name) const
-{
-    auto iter = share->uniforms.find(name);
-    if (iter == share->uniforms.end()) return nullptr;
-    return &iter->second;
 }
 
 #else
@@ -200,13 +235,18 @@ Shader::Shader(const ShaderProgram &source)
 void Shader::bind() const
 {}
 
+bool Shader::isBound() const
+{
+    return false;
+}
+
+Shader::Uniform Shader::uniform(const std::string&) const
+{
+    return Uniform(this, nullptr);
+}
+
 void Shader::initUniforms()
 {}
-
-const Shader::Uniform* Shader::getUniform(const std::string& name) const
-{
-    return nullptr;
-}
 
 #endif // INU_NO_SHADERS
 

@@ -53,25 +53,39 @@ public:
     std::string err;
 };
 
-class ShaderCompileException
+class ShaderE_CompileError
     : public ShaderException
 {
 public:
-    ShaderCompileException(const std::string &codeStr, const std::string &errStr);
+    ShaderE_CompileError(const std::string &codeStr, const std::string &errStr);
 };
 
-class ShaderLinkException
+class ShaderE_LinkError
     : public ShaderException
 {
 public:
-    ShaderLinkException(const std::string &errStr);
+    ShaderE_LinkError(const std::string &errStr);
 };
 
-class ShaderUniformException
+class ShaderE_UniformTypeError
     : public ShaderException
 {
 public:
-    ShaderUniformException(const std::string &name);
+    ShaderE_UniformTypeError();
+};
+
+class ShaderE_UniformBindError
+    : public ShaderException
+{
+public:
+    ShaderE_UniformBindError();
+};
+
+class ShaderE_UniformShaderError
+    : public ShaderException
+{
+public:
+    ShaderE_UniformShaderError();
 };
 
 /*! @brief Shader handle.
@@ -80,8 +94,38 @@ public:
  */
 class Shader
 {
+    struct UniformData
+    {
+        GLenum type;
+        GLint size;
+        GLint location;
+    };
 
 public:
+    class Uniform
+    {
+        const Shader* shader;
+        const UniformData* data;
+    public:
+        Uniform();
+        Uniform(const Shader* s, const UniformData* u);
+
+        template <typename T>
+        bool set(T&& t)
+        {
+            using GT = GLType<typename std::decay<T>::type>;
+
+            if (!shader) throw ShaderE_UniformShaderError();
+            if (!data) return false;
+
+            if (!GT::isValidType(data->type)) throw ShaderE_UniformTypeError();
+            if (!shader->isBound()          ) throw ShaderE_UniformBindError();
+
+            GT::uniformFunc(data->location, std::forward<T>(t));
+            return true;
+        }
+    };
+
     /*! @brief Default constructor.
      */
     Shader() = default;
@@ -100,21 +144,18 @@ public:
      */
     void bind() const;
 
-    /*! @brief Sets a uniform variable in the shader.
+    /*! @brief Returns @a true if the shader is currently bound.
+     */
+    bool isBound() const;
+
+    /*! @brief Creates a uniform handle.
      *
      *  @param name Name of uniform.
-     *  @param val Value to upload.
      */
-    template <typename T>
-    bool setUniform(const std::string& name, T&& val) const;
+    Uniform uniform(const std::string& name) const;
 
 private:
-    struct Uniform
-    {
-        GLenum type;
-        GLint size;
-        GLint location;
-    };
+    static thread_local GLuint boundProgram;
 
     class Shared
     {
@@ -122,44 +163,14 @@ private:
         Shared();
         ~Shared();
         GLuint program;
-        std::unordered_map<std::string,Uniform> uniforms;
+        std::unordered_map<std::string,UniformData> uniforms;
     };
 
     void initUniforms();
-    const Uniform* getUniform(const std::string& name) const;
+    const UniformData* getUniform(const std::string& name) const;
 
     std::shared_ptr<Shared> share;
 };
-
-template <typename T>
-inline bool Shader::setUniform(const std::string& name, T&& val) const
-{
-    using GT = GLType<typename std::decay<T>::type>;
-    const Uniform* uni = getUniform(name);
-    if (!uni) return false;
-    if (uni->type != GT::value) throw ShaderUniformException(name);
-    GT::uniformFunc(uni->location, val);
-    return true;
-}
-
-template <>
-inline bool Shader::setUniform<int>(const std::string& name, int&& val) const
-{
-    using GT = GLType<int>;
-    const Uniform* uni = getUniform(name);
-    if (!uni) return false;
-    if (    uni->type != GT::value
-        &&  uni->type != GL_BOOL
-        &&  uni->type != GL_SAMPLER_1D
-        &&  uni->type != GL_SAMPLER_2D
-        &&  uni->type != GL_SAMPLER_3D
-        &&  uni->type != GL_SAMPLER_CUBE
-        &&  uni->type != GL_SAMPLER_1D_SHADOW
-        &&  uni->type != GL_SAMPLER_2D_SHADOW
-    ) throw ShaderUniformException(name);
-    GT::uniformFunc(uni->location, val);
-    return true;
-}
 
 } // namespace Inugami
 

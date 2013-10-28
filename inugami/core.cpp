@@ -241,9 +241,9 @@ void Core::applyCam(const Camera& in)
     else              glDisable(GL_DEPTH_TEST);
 
 #ifndef INU_NO_SHADERS
-    getShader().setUniform("projectionMatrix", in.getProjection());
-    getShader().setUniform("viewMatrix"      , in.getView()      );
-    getShader().setUniform("modelMatrix"     , glm::mat4(1.f)    );
+    getShader().uniform("projectionMatrix").set(in.getProjection());
+    getShader().uniform("viewMatrix"      ).set(in.getView()      );
+    getShader().uniform("modelMatrix"     ).set(glm::mat4(1.f)    );
 #endif // INU_NO_SHADERS
 
     viewProjection = in.getProjection()*in.getView();
@@ -254,8 +254,8 @@ void Core::modelMatrix(const Mat4& in)
     activate();
 
 #ifndef INU_NO_SHADERS
-    getShader().setUniform("modelMatrix", in               );
-    getShader().setUniform("MVP"        , viewProjection*in);
+    getShader().uniform("modelMatrix").set(in               );
+    getShader().uniform("MVP"        ).set(viewProjection*in);
 #else
     auto modelmat = viewProjection * in;
     glLoadMatrixf(&modelmat[0][0]);
