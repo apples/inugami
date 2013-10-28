@@ -60,18 +60,18 @@ struct GLType<int>
 {
     using type = GLint;
     static constexpr auto value = GL_INT;
-    static constexpr GLenum uniformValues[] = {
-          GL_INT
-        , GL_BOOL
-        , GL_SAMPLER_1D
-        , GL_SAMPLER_2D
-        , GL_SAMPLER_3D
-        , GL_SAMPLER_CUBE
-        , GL_SAMPLER_1D_SHADOW
-        , GL_SAMPLER_2D_SHADOW
-    };
     static bool isValidType(GLenum t)
     {
+        static constexpr GLenum uniformValues[] = {
+              GL_INT
+            , GL_BOOL
+            , GL_SAMPLER_1D
+            , GL_SAMPLER_2D
+            , GL_SAMPLER_3D
+            , GL_SAMPLER_CUBE
+            , GL_SAMPLER_1D_SHADOW
+            , GL_SAMPLER_2D_SHADOW
+        };
         for (auto&& i : uniformValues) if (t==i) return true;
         return false;
     }
