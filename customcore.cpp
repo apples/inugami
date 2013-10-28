@@ -138,6 +138,8 @@ void CustomCore::tick()
     //Poll must be called every frame
     iface->poll();
 
+    auto mousePos = iface->getMousePos();
+
     //Key Proxies can be cast to bool
     if (keyESC || shouldClose())
     {
@@ -194,10 +196,9 @@ void CustomCore::tick()
         crazyShader.uniform("hue").set( float(ticks/67.0) );
 
         Vec3 light(0.f,0.f,2.5f);
-        light.x = 4.0*(iface->getMousePos().x/double(getParams().width)-0.5)*4.0/3.0;
-        light.y = 4.0*(0.5-iface->getMousePos().y/double(getParams().height));
-        light.z = light.z+(light.x*light.x/16.f)*(light.y*light.y/16.f)*light.x*2;
-        crazyShader.uniform( "lightPos").set( light );
+        light.x = mapRange(mousePos.x, 0,  getParams().width, -4.0, 4.0);
+        light.y = mapRange(mousePos.y, getParams().height, 0, -3.0, 3.0);
+        crazyShader.uniform("lightPos").set( light );
 
         for (int r=0; r<noise.height; ++r)
         {

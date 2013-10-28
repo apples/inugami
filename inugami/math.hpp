@@ -70,6 +70,22 @@ T wrap(T x, T low, T high)
     return x;
 }
 
+/*! @brief Translates a value from one range to another.
+ *
+ *  @param val Value to translate.
+ *  @param omn Old range's minimum.
+ *  @param omx Old range's maximum.
+ *  @param nmn New range's minimum.
+ *  @param nmx New range's maximum.
+ *
+ *  @return Translated value.
+ */
+template <typename T, typename U, typename V>
+V mapRange(const T& val, const U& omn, const U& omx, const V& nmn, const V& nmx)
+{
+    return (((val-omn)/(omx-omn))*(nmx-nmn)+nmn);
+}
+
 /*! @brief Linear interpolation.
  *
  *  @param a Value at @a t=0.
@@ -93,7 +109,7 @@ T lerp(T a, T b, U t)
  */
 template <typename T, typename U>
 typename std::common_type<T, U>::type
-high(T x, U y)
+high(const T& x, const U& y)
 {
     return (x > y)? x : y;
 }
@@ -108,7 +124,7 @@ high(T x, U y)
  */
 template <typename T, typename U, typename... VT>
 typename std::common_type<T, U, VT...>::type
-high(T a, U b, VT... args)
+high(const T& a, const U& b, const VT&... args)
 {
     return high(high(a, b), args...);
 }
@@ -122,7 +138,7 @@ high(T a, U b, VT... args)
  */
 template <typename T, typename U>
 typename std::common_type<T, U>::type
-low(T x, U y)
+low(const T& x, const U& y)
 {
     return (x > y)? y : x;
 }
@@ -137,7 +153,7 @@ low(T x, U y)
  */
 template <typename T, typename U, typename... VT>
 typename std::common_type<T, U, VT...>::type
-low(T a, U b, VT... args)
+low(const T& a, const U& b, const VT&... args)
 {
     return low(low(a, b), args...);
 }
