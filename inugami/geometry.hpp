@@ -116,15 +116,7 @@ public:
     std::vector<Triangle> triangles;
 };
 
-class GeometryError
-    : public Exception
-{
-public:
-    GeometryError(std::string in);
-    virtual const char* what() const noexcept override;
-
-    std::string err;
-};
+Geometry reCenter(Geometry in);
 
 } // namespace Inugami
 

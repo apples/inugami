@@ -5,7 +5,7 @@
 		<Option title="Inugami" />
 		<Option pch_mode="2" />
 		<Option compiler="gcc" />
-		<Option virtualFolders="OpenGL\;Resource Data\;Resource Handles\;Utilities\;Core\;Shaders\;Utilities\Detail\;" />
+		<Option virtualFolders="OpenGL/;Resource Data/;Resource Handles/;Utilities/;Core/;Shaders/;Utilities/Detail/;" />
 		<Build>
 			<Target title="Debug - Linux">
 				<Option platforms="Unix;" />
@@ -154,6 +154,7 @@
 		<Linker>
 			<Add library="glfw3" />
 			<Add library="png" />
+			<Add library="sixense" />
 		</Linker>
 		<Unit filename="customcore.cpp" />
 		<Unit filename="customcore.hpp" />
@@ -267,6 +268,12 @@
 		</Unit>
 		<Unit filename="inugami/shaderprogram.hpp">
 			<Option virtualFolder="Resource Data/" />
+		</Unit>
+		<Unit filename="inugami/sixense.cpp">
+			<Option virtualFolder="Core/" />
+		</Unit>
+		<Unit filename="inugami/sixense.hpp">
+			<Option virtualFolder="Core/" />
 		</Unit>
 		<Unit filename="inugami/spritesheet.cpp">
 			<Option virtualFolder="Resource Handles/" />

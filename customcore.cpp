@@ -37,6 +37,7 @@
 #include "inugami/math.hpp"
 #include "inugami/shader.hpp"
 #include "inugami/shaderprogram.hpp"
+#include "inugami/sixense.hpp"
 #include "inugami/transform.hpp"
 #include "inugami/utility.hpp"
 
@@ -50,6 +51,7 @@ CustomCore::CustomCore(const RenderParams &params)
     , rotation(0.f)
     , dissolveMin(0.25f)
     , dissolveMax(0.75f)
+    , gemScale(1.f)
     , ticks(0)
     , highDef(true)
     , shaderOn(true)
@@ -61,10 +63,12 @@ CustomCore::CustomCore(const RenderParams &params)
     , noiseTex        ()
     , glassTex        (Image(32,32,{32,32,255,128}), false, false)
     , fontRoll        (Spritesheet(Image::fromPNG("data/font.png"), 8, 8))
-    , shield          (Geometry::fromOBJ("data/shield.obj"))
-    , shieldHD        (Geometry::fromOBJ("data/shieldHD.obj"))
+    , shield          (reCenter(Geometry::fromOBJ("data/shield.obj")))
+    , shieldHD        (reCenter(Geometry::fromOBJ("data/shieldHD.obj")))
     , defaultShader   (getShader())
     , crazyShader     (ShaderProgram::fromName("shaders/crazy"))
+
+    , sixense         (Sixense::inst())
 {
     ScopedProfile prof(profiler, "CustomCore: Constructor");
 
@@ -81,12 +85,12 @@ CustomCore::CustomCore(const RenderParams &params)
     ));
 
     //Mode::NORMAL causes the animation to stop when done
-    fontRoll.setMode(AnimatedSprite::Mode::NORMAL);
+    fontRoll.setMode(AnimatedSprite::Mode::LOOP);
 
     logger->log("Adding callbacks...");
     addCallback([&]{ tick(); draw(); }, 60.0);
 
-    setWindowTitle("Inugami Demo", true);
+    setWindowTitle("Inugami Demo (Sixense)", true);
 
     crazyShader.bind();
     crazyShader.uniform("Tex0"    ).set(0);
@@ -137,6 +141,10 @@ void CustomCore::tick()
 
     //Poll must be called every frame
     iface->poll();
+    sixense.poll();
+
+    // Sixense input
+    gemScale = 1.f - sixense.getTrigger(0);
 
     auto mousePos = iface->getMousePos();
 
@@ -246,8 +254,17 @@ void CustomCore::draw()
 
         //Transforms are matrix stacks
         Transform mat;
-        mat.translate(Vec3{0.f, -1.5f, -3.f});
-        mat.rotate(rotation, Vec3{0.f, 1.f, 0.f});
+        mat.translate(Vec3{0.f, 0.f, -3.f});
+
+        // Sixense rotation
+        {
+            Vec3 pos {0.f, 0.f, 0.f};
+            Vec3 target = sixense.getForward(0);
+            Vec3 up {0.f, 1.f, 0.f};
+
+            target.x = -target.x;
+            mat.push(glm::lookAt(pos, target, up));
+        }
 
         {
             cam.depthTest = true;
@@ -273,8 +290,7 @@ void CustomCore::draw()
             applyCam(cam);
 
             mat.push();
-            mat.scale(Vec3{0.995f, 0.995f, 0.995f});
-            mat.translate(Vec3{0.f, 0.005f, 0.f});
+            mat.scale(gemScale*Vec3{0.995f, 0.995f, 0.995f});
             modelMatrix(mat);
             mat.pop();
 
@@ -300,8 +316,16 @@ void CustomCore::draw()
 
         applyCam(cam);
 
+        Vec3 target = sixense.getForward(0);
+        float pi = std::atan(1.0)*4.f;
+        float scalex = 1.f/(7.f*pi/8.f);
+        float scaley = 1.f/(7.5f*pi/8.f);
+        target.x /= scalex*target.z;
+        target.y /= scaley*target.z;
+        target *= -1.f;
+
         Transform mat;
-        mat.translate(Vec3{-4.f, 3.f, -5.f});
+        mat.translate(Vec3{target.x*4.f, target.y*3.f, -5.f});
         mat.rotate(rotation, Vec3{0.0, 0.0, 1.0});
         mat.scale(Vec3{0.125, 0.125, 1.0});
 

@@ -13,6 +13,7 @@ game_d
 *.xml
 *.cbTemp
 *.bak
+*.so
 obj/*
 bin/*
 docs/*

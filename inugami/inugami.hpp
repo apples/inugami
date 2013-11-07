@@ -42,6 +42,7 @@ class Pixel;
 class Profiler;
 class Shader;
 class ShaderProgram;
+class Sixense;
 class Spritesheet;
 class Texture;
 class Transform;

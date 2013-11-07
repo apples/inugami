@@ -48,6 +48,7 @@ public:
 private:
     float rotation;
     float dissolveMin, dissolveMax;
+    float gemScale;
     unsigned int ticks;
     bool highDef;
     bool shaderOn;
@@ -63,6 +64,8 @@ private:
     Inugami::Mesh           shieldHD;
     Inugami::Shader         defaultShader;
     Inugami::Shader         crazyShader;
+
+    Inugami::Sixense&       sixense;
 };
 
 #endif // CUSTOMCORE_H

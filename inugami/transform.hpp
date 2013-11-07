@@ -72,6 +72,15 @@ public:
      */
     Transform& push();
 
+    /*! @brief Multiply and push the stack.
+     *
+     *  Multiplies the given matrix by the current matrix and pushes the result
+     *  onto the stack.
+     *
+     *  @param mat Matrix to multiply.
+     */
+    Transform& push(const Mat4& mat);
+
     /*! @brief Pop the stack.
      *
      *  Pops the current matrix off the stack.

@@ -37,6 +37,22 @@
 
 namespace Inugami {
 
+class GeometryE
+    : public Exception
+{
+public:
+    GeometryE(std::string in)
+        : err("Geometry Error: "+in)
+    {}
+
+    virtual const char* what() const noexcept override
+    {
+        return err.c_str();
+    }
+
+    std::string err;
+};
+
 bool Geometry::Vertex::operator==(const Vertex& in) const
 {
     return (
@@ -82,7 +98,7 @@ Geometry Geometry::fromRect(float w, float h, float cx, float cy) //static
 
 Geometry Geometry::fromDisc(float w, float h, int e) //static
 {
-    if (e<3) throw GeometryError("fromDisc: Must have at least 3 edges!");
+    if (e<3) throw GeometryE("fromDisc: Must have at least 3 edges!");
 
     Geometry geo;
     Geometry::Triangle tri;
@@ -236,13 +252,22 @@ Geometry& Geometry::operator+=(const Geometry& in)
     return *this;
 }
 
-GeometryError::GeometryError(std::string in)
-    : err("Geometry Error: "+in)
-{}
-
-const char* GeometryError::what() const noexcept
+Geometry reCenter(Geometry in)
 {
-    return err.c_str();
+    Vec3 center {0.f, 0.f, 0.f};
+    float mult = 1.f/in.vertices.size();
+
+    for (auto&& v : in.vertices)
+    {
+        center += mult*v.pos;
+    }
+
+    for (auto&& v : in.vertices)
+    {
+        v.pos -= center;
+    }
+
+    return in;
 }
 
 } // namespace Inugami

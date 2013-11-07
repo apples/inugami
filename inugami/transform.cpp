@@ -65,6 +65,12 @@ Transform& Transform::push()
     return *this;
 }
 
+Transform& Transform::push(const Mat4& mat)
+{
+    stack.push_back(stack.back()*mat);
+    return *this;
+}
+
 Transform& Transform::pop()
 {
     stack.pop_back();
