@@ -59,8 +59,8 @@ void Spritesheet::generateMeshes(int tw, int th, float cx, float cy)
 {
     constexpr float E = 0.0f; // std::numeric_limits<float>::epsilon() * 1.0e4;
 
-    tilesX = tex.width/tw;
-    tilesY = tex.height/th;
+    tilesX = tex.getWidth()/tw;
+    tilesY = tex.getHeight()/th;
 
     Geometry::Vertex vert[4];
     Geometry::Triangle tri;

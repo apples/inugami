@@ -218,6 +218,16 @@ void Shader::initUniforms()
 
 #else
 
+Shader::Uniform::Uniform()
+    : shader(nullptr)
+    , data(nullptr)
+{}
+
+Shader::Uniform::Uniform(const Shader* s, const UniformData* u)
+    : shader(s)
+    , data(u)
+{}
+
 Shader::Shared::Shared()
     : program()
     , uniforms()

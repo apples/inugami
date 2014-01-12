@@ -49,6 +49,21 @@ public:
 
     /*! @brief Translate.
      *
+     *  @param x Distance to translate along X axis.
+     *  @param y Distance to translate along Y axis.
+     */
+    Transform& translate(float x, float y);
+
+    /*! @brief Translate.
+     *
+     *  @param x Distance to translate along X axis.
+     *  @param y Distance to translate along Y axis.
+     *  @param z Distance to translate along Z axis.
+     */
+    Transform& translate(float x, float y, float z);
+
+    /*! @brief Translate.
+     *
      *  @param pos Vector to translate along.
      */
     Transform& translate(const Vec3& pos);

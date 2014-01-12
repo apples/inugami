@@ -247,6 +247,8 @@ void Core::applyCam(const Camera& in)
 #endif // INU_NO_SHADERS
 
     viewProjection = in.getProjection()*in.getView();
+
+    glClear(GL_DEPTH_BUFFER_BIT);
 }
 
 void Core::modelMatrix(const Mat4& in)

@@ -62,6 +62,8 @@ public:
 
 Texture::Shared::Shared()
     : id(0)
+    , width()
+    , height()
 {
     glGenTextures(1, &id);
 }
@@ -72,9 +74,7 @@ Texture::Shared::~Shared()
 }
 
 Texture::Texture(const Image& img, bool smooth, bool clamp)
-    : width (img.width)
-    , height(img.height)
-    , share (std::make_shared<Shared>())
+    : share (std::make_shared<Shared>())
 {
     upload(img, smooth, clamp);
 }
@@ -86,8 +86,21 @@ void Texture::bind(unsigned int slot) const
     glBindTexture(GL_TEXTURE_2D, share->id);
 }
 
+int Texture::getWidth() const
+{
+    return share->width;
+}
+
+int Texture::getHeight() const
+{
+    return share->height;
+}
+
 void Texture::upload(const Image& img, bool smooth, bool clamp)
 {
+    share->width = img.width;
+    share->height = img.height;
+
     glBindTexture(GL_TEXTURE_2D, share->id);
 
     GLuint filter = (smooth)? GL_LINEAR : GL_NEAREST;

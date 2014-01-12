@@ -45,7 +45,7 @@ namespace Inugami {
 class Spritesheet
 {
 public:
-    Spritesheet() = delete;
+    Spritesheet() = default;
 
     /*! @brief Raw Image constructor.
      *

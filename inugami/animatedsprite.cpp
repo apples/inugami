@@ -37,12 +37,13 @@
 
 namespace Inugami {
 
-AnimatedSprite::AnimatedSprite(Spritesheet in)
+AnimatedSprite::AnimatedSprite()
     : flipX(false)
     , flipY(false)
     , rot(0.f)
+    , scale(1.f)
 
-    , sheet(std::move(in))
+    , sheet()
     , sprites()
     , sequence()
     , mode(Mode::NORMAL)
@@ -52,6 +53,12 @@ AnimatedSprite::AnimatedSprite(Spritesheet in)
     , pos(0)
     , dir(1)
 {}
+
+AnimatedSprite::AnimatedSprite(Spritesheet in)
+    : AnimatedSprite()
+{
+    setSpritesheet(std::move(in));
+}
 
 void AnimatedSprite::setSpritesheet(Spritesheet in)
 {
@@ -84,7 +91,7 @@ void AnimatedSprite::draw(Core& core, Transform in) const
     if (ended) return;
 
     auto& sprite = sprites[sequence[pos].first];
-    in.scale(Vec3{(flipX)?-1.f:1.f, (flipY)?-1.f:1.f, 1.f});
+    in.scale(Vec3{((flipX)?-1.f:1.f)*scale, ((flipY)?-1.f:1.f)*scale, 1.f});
     in.rotate(rot, Vec3{0.f, 0.f, 1.f});
     core.modelMatrix(in);
     sheet.draw(sprite.first, sprite.second);

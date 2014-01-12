@@ -53,6 +53,13 @@ public:
         return data;
     }
 
+    /*! @brief Cast to constant T.
+     */
+    const Data& get() const
+    {
+        return data;
+    }
+
     /*! @brief Drill to data.
      */
     const Data& operator->()

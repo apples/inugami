@@ -66,8 +66,8 @@ public:
      */
     void bind(unsigned int slot) const;
 
-    ConstAttr<int,Texture> width;   //!< Width of the texture.
-    ConstAttr<int,Texture> height;  //!< Height of the texture.
+    int getWidth() const;
+    int getHeight() const;
 
 private:
     class Shared
@@ -76,6 +76,8 @@ private:
         Shared();
         ~Shared();
         GLuint id;
+        int width;
+        int height;
     };
 
     std::shared_ptr<Shared> share;

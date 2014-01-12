@@ -33,7 +33,6 @@
 #include <png++/png.hpp>
 
 #include <cmath>
-#include <random>
 #include <sstream>
 #include <string>
 #include <utility>
@@ -85,6 +84,8 @@ Image Image::fromPNG(const std::string& filename) //static
     return rval;
 }
 
+#if 0
+
 Image Image::fromNoise(int w, int h) //static
 {
     Image rval(w, h);
@@ -105,6 +106,8 @@ Image Image::fromNoise(int w, int h) //static
 
     return rval;
 }
+
+#endif
 
 Image::Image(int w, int h)
     : width(w)

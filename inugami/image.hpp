@@ -62,6 +62,8 @@ public:
      */
     static Image fromPNG(const std::string& filename);
 
+#if 0
+
     /*! @brief Creates an Image from random noise.
      *
      *  Creates an Image from random noise.
@@ -72,6 +74,8 @@ public:
      *  @return Image created from noise.
      */
     static Image fromNoise(int w, int h);
+
+#endif
 
     /*! @brief Default contructor.
      */

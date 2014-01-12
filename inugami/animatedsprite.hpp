@@ -78,7 +78,8 @@ public:
      */
     using FrameList = std::vector<Frame>;
 
-    AnimatedSprite() = delete;
+    /// @todo Document.
+    AnimatedSprite();
 
     /*! @brief Primary constructor
      *
@@ -165,6 +166,10 @@ public:
     /*! @brief Rotates the sprite by the given degrees on the Z axis.
      */
     float rot;
+
+    /*! @brief Scales the sprite equally along X and Y.
+     */
+    float scale;
 
 private:
     Spritesheet sheet;

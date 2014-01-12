@@ -41,6 +41,16 @@ Transform::operator Mat4() const
     return stack.back();
 }
 
+Transform& Transform::translate(float x, float y)
+{
+    translate(x, y, 0.f);
+}
+
+Transform& Transform::translate(float x, float y, float z)
+{
+    translate(Vec3{x, y, z});
+}
+
 Transform& Transform::translate(const Vec3& pos)
 {
     stack.back() = ::glm::translate(stack.back(), pos);
