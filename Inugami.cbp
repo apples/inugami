@@ -140,8 +140,10 @@
 			<Add option="-std=c++11" />
 			<Add option="-Wextra" />
 			<Add option="-Wall" />
+			<Add option="-m32" />
 		</Compiler>
 		<Linker>
+			<Add option="-m32" />
 			<Add library="glfw3" />
 			<Add library="png" />
 		</Linker>
