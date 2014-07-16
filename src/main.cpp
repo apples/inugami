@@ -25,36 +25,30 @@
  *
  ******************************************************************************/
 
-#include "customcore.hpp"
-#include "meta.hpp"
+#include "inugami/inugami.hpp"
 
-#include "inugami/exception.hpp"
-
+#include <chrono>
 #include <fstream>
 #include <iostream>
 #include <exception>
 #include <functional>
 #include <unordered_map>
+#include <thread>
 
 #ifdef _WIN32
 #include <windows.h>
 #endif
 
+using namespace std;
+using namespace std::chrono;
 using namespace Inugami;
 
-void dumpProfiles();
 void errorMessage(const char*);
 
 int main(int argc, char* argv[])
 {
-    profiler = new Profiler();
-    ScopedProfile prof(profiler, "Main");
-
-    std::ofstream logfile("log.txt");
-    logger = new Logger<>(logfile);
-
-    CustomCore::RenderParams renparams;
-    renparams.fsaaSamples = 4;
+    WindowParams renparams;
+    renparams.samples = 4;
 
     {
         std::unordered_map<std::string, std::function<void()>> argf = {
@@ -73,54 +67,42 @@ int main(int argc, char* argv[])
 
     try
     {
-        logger->log("Creating Core...");
-        CustomCore base(renparams);
-        logger->log("Go!");
-        base.go();
+        auto win = makeWindow(renparams);
+
+        int i = 0;
+
+        while (true)
+        {
+            cout << "Polling" << endl;
+            pollEvents();
+
+            if (win.shouldClose())
+            {
+                cout << "Bye!" << endl;
+                break;
+            }
+
+            if (win.getKey(Key::character('A')).pressed())
+            {
+                cout << "A pressed! " << ++i << endl;
+            }
+
+            if (win.getKey(Key::character('A')).released())
+            {
+                cout << "A released! " << ++i << endl;
+            }
+
+            cout << "---" << endl;
+            this_thread::sleep_for(milliseconds(500));
+        }
     }
     catch (const std::exception& e)
     {
         errorMessage(e.what());
         return -1;
     }
-    catch (...)
-    {
-        errorMessage("Unknown error!");
-        return -1;
-    }
-
-    dumpProfiles();
 
     return 0;
-}
-
-void dumpProfiles()
-{
-    using Prof = Inugami::Profiler::Profile;
-
-    std::ofstream pfile("profile.txt");
-
-    auto all = profiler->getAll();
-
-    std::function<void(const Prof::Ptr&, std::string)> dumProf;
-    dumProf = [&](const Prof::Ptr& in, std::string indent)
-    {
-        pfile << indent << "Min: " << in->min     << "\n";
-        pfile << indent << "Max: " << in->max     << "\n";
-        pfile << indent << "Avg: " << in->average << "\n";
-        pfile << indent << "Num: " << in->samples << "\n\n";
-        for (auto& p : in->getChildren())
-        {
-            pfile << indent << p.first << ":\n";
-            dumProf(p.second, indent+"\t");
-        }
-    };
-
-    for (auto& p : all)
-    {
-        pfile << p.first << ":\n";
-        dumProf(p.second, "\t");
-    }
 }
 
 void errorMessage(const char* str)
@@ -128,5 +110,5 @@ void errorMessage(const char* str)
 #ifdef _WIN32
     MessageBoxA(nullptr, str, "Exception", MB_OK);
 #endif
-    logger->log(str);
+    cerr << str << endl;
 }
