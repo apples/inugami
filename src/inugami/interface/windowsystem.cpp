@@ -44,9 +44,15 @@ void pollEvents()
 
         window.characterBuffer.clear();
         for (auto& kd : window.keys)
-            kd.delta = 0;
+        {
+            kd.presses = 0;
+            kd.releases = 0;
+        }
         for (auto& kd : window.mouseButtons)
-            kd.delta = 0;
+        {
+            kd.presses = 0;
+            kd.releases = 0;
+        }
     }
 
     glfwPollEvents();

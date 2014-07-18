@@ -23,8 +23,9 @@ struct Mouse
 
 struct KeyData
 {
-    signed char delta;
-    bool is_down;
+    int presses = 0;
+    int releases = 0;
+    bool is_down = false;
 };
 
 class KeyHandle
@@ -39,7 +40,6 @@ class KeyHandle
         bool down() const;
         bool pressed() const;
         bool released() const;
-        int edge() const;
 
         explicit operator bool() const;
 };

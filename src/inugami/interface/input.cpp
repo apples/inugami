@@ -142,17 +142,12 @@ bool KeyHandle::down() const
 
 bool KeyHandle::pressed() const
 {
-    return (edge()==1);
+    return (data->presses > 0);
 }
 
 bool KeyHandle::released() const
 {
-    return (edge()==-1);
-}
-
-int KeyHandle::edge() const
-{
-    return data->delta;
+    return (data->releases > 0);
 }
 
 KeyHandle::operator bool() const

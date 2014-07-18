@@ -30,7 +30,10 @@ void Window::keyCB(GLFWwindow* handle, int key, int, int action, int) // static
     Window& window = getWindow(handle);
     auto& k = window.keys[key];
     bool pressed = (action == GLFW_PRESS);
-    k.delta = (pressed? 1 : -1);
+    if (pressed)
+        ++k.presses;
+    else
+        ++k.releases;
     k.is_down = pressed;
 }
 
@@ -45,7 +48,10 @@ void Window::mouseButtonCB(GLFWwindow* handle, int button, int action, int) // s
     Window& window = getWindow(handle);
     auto& k = window.mouseButtons[button];
     bool pressed = (action == GLFW_PRESS);
-    k.delta = (pressed? 1 : -1);
+    if (pressed)
+        ++k.presses;
+    else
+        ++k.releases;
     k.is_down = pressed;
 }
 
