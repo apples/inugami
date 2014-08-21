@@ -103,13 +103,15 @@ Window::Window(WindowParams wp, Tracker* tp)
 
     glfwSetWindowUserPointer(raw, this);
 
+    activate();
+
     glfwSetKeyCallback(raw, keyCB);
     glfwSetCharCallback(raw, charCB);
     glfwSetMouseButtonCallback(raw, mouseButtonCB);
     glfwSetCursorPosCallback(raw, cursorPosCB);
     glfwSetScrollCallback(raw, scrollCB);
 
-    glewExperimental = GL_TRUE;
+    //glewExperimental = GL_TRUE;
     glewInit();
 
     tp->window = this;
@@ -157,6 +159,11 @@ void Window::activate()
 void Window::swapBuffers()
 {
     glfwSwapBuffers(handle.get());
+}
+
+void Window::clearBuffer()
+{
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
 bool Window::shouldClose() const

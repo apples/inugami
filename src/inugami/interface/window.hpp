@@ -73,6 +73,8 @@ class Window
 
         void swapBuffers();
 
+        void clearBuffer();
+
         bool shouldClose() const;
 };
 

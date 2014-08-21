@@ -110,7 +110,8 @@ int lookupName(const string& str)
 
 const string& lookupValue(int value)
 {
-    return lookup(value, &KTEntry::second, &KTEntry::first, "UNKNOWN");
+    static string unknown = "UNKNOWN";
+    return lookup(value, &KTEntry::second, &KTEntry::first, unknown);
 }
 
 template <size_t N>
