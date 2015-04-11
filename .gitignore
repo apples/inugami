@@ -1,7 +1,8 @@
-*
+/*
 !.gitignore
 !*.md
 !*.sh
-!src/**
-!data/**
-!shaders/**
+!*.txt
+!src
+!data
+!shaders
